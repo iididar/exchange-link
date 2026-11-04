@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "Exchange App",
+  "short_name": "Exchange",
+  "description": "Kurdish currency exchange converter",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#11100d",
+  "theme_color": "#11100d",
+  "icons": [
+    {
+      "src": "IMG_6140.jpg",
+      "sizes": "1600x1600",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
