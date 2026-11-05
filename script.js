@@ -117,6 +117,21 @@ const TRANSLATIONS = {
     language: 'زمان',
     currenciesLabel: 'هەڵبژاردنی دراو',
     refresh: 'نوێکردنەوەی نرخەکان',
+    metals: 'زێـڕ و زیـو',
+    goldTitle: 'نرخی زێـڕ',
+    silverTitle: 'نرخی زیـو',
+    metalNames: {
+      goldOunce: 'ئۆنسەی زێـڕ',
+      gold18k: 'زێـڕی عەیارە 18',
+      gold21k: 'زێـڕی عەیارە 21',
+      gold22k: 'زێـڕی عەیارە 22',
+      gold24k: 'زێـڕی عەیارە 24',
+      dubaiLira: 'لیرەی دوبەی',
+      silverOunce: 'ئۆنسەی زیـو',
+      silverKg: 'زیـو بە کیلۆ'
+    },
+    metalsLoading: 'نوێکردنەوەی نرخەکان...',
+    metalsUnavailable: 'نرخەکانی زێـڕ و زیـو بەردەست نین.',
     menu: 'مێنیو',
     swap: 'گۆڕین',
     dateHelp: 'گرتە بکە بۆ بینینی ڕۆژ',
@@ -150,6 +165,23 @@ const TRANSLATIONS = {
     language: 'اللغة',
     currenciesLabel: 'اختيار العملة',
     refresh: 'تحديث الأسعار',
+    metals: 'الذهب والفضة',
+    goldTitle: 'أسعار الذهب',
+    silverTitle: 'أسعار الفضة',
+    switchToSilver: 'أسعار الفضة',
+    switchToGold: 'الذهب',
+    metalNames: {
+      goldOunce: 'أونصة الذهب',
+      gold18k: 'ذهب عيار 18',
+      gold21k: 'ذهب عيار 21',
+      gold22k: 'ذهب عيار 22',
+      gold24k: 'ذهب عيار 24',
+      dubaiLira: 'ليرة دبي',
+      silverOunce: 'أونصة الفضة',
+      silverKg: 'الفضة لكل كيلوغرام'
+    },
+    metalsLoading: 'جارٍ تحديث الأسعار...',
+    metalsUnavailable: 'أسعار الذهب والفضة غير متاحة.',
     menu: 'القائمة',
     swap: 'تبديل',
     dateHelp: 'اضغط لعرض اليوم',
@@ -183,6 +215,23 @@ const TRANSLATIONS = {
     language: 'Language',
     currenciesLabel: 'Select currency',
     refresh: 'Refresh rates',
+    metals: 'Precious metals',
+    goldTitle: 'Gold Prices',
+    silverTitle: 'Silver Prices',
+    switchToSilver: 'Silver Prices',
+    switchToGold: 'Gold',
+    metalNames: {
+      goldOunce: 'Gold Ounce',
+      gold18k: '18K Gold',
+      gold21k: '21K Gold',
+      gold22k: '22K Gold',
+      gold24k: '24K Gold',
+      dubaiLira: 'Dubai Lira',
+      silverOunce: 'Silver Ounce',
+      silverKg: 'Silver per Kilogram'
+    },
+    metalsLoading: 'Updating prices...',
+    metalsUnavailable: 'Gold and silver prices are unavailable.',
     menu: 'Menu',
     swap: 'Swap currencies',
     dateHelp: 'Tap to show weekday',
@@ -212,21 +261,33 @@ const savedDarkPref = localStorage.getItem('darkMode');
 const initialDarkMode = savedDarkPref !== null ? savedDarkPref === 'true' : true;
 const savedBaseRate = Number(localStorage.getItem('telegramRate_USD')) || 0;
 const savedRudawTomanBuy = Number(localStorage.getItem('rudawTomanBuy')) || 26450000;
+const savedGbpUsdQuote = Number(localStorage.getItem('liveFxQuote_GBP')) ||
+  (Number(localStorage.getItem('rudawQuote_GBP')) || 0) / 100;
+const savedEurUsdQuote = Number(localStorage.getItem('liveFxQuote_EUR')) ||
+  (Number(localStorage.getItem('rudawQuote_EUR')) || 0) / 100;
+const savedUsdTryQuote = Number(localStorage.getItem('liveFxQuote_USDTRY')) || 0;
 
 const state = {
   // هەمیشە لە کاتی کردنەوەی وێبسایتەکەدا ڕاستەوخۆ دۆلار هەڵبژێردراوە
   selectedCurrency: 'USD',
   baseRatePer100USD: savedBaseRate,
   otherRates: {
-    GBP: Number(localStorage.getItem('rudawRate_GBP')) || 225000,   // نرخی ١٠٠ پاوەند بە دینار
-    EUR: Number(localStorage.getItem('rudawRate_EUR')) || 185000,   // نرخی ١٠٠ یۆرۆ بە دینار
-    TRY: Number(localStorage.getItem('rudawRate_TRY')) || 33682,    // نرخی ١٠٠٠ لیرە بە دینار
+    GBP: savedGbpUsdQuote > 0 && savedBaseRate > 0
+      ? Math.round(savedGbpUsdQuote * savedBaseRate)
+      : Number(localStorage.getItem('liveFxRate_GBP')) || Number(localStorage.getItem('rudawRate_GBP')) || 225000,
+    EUR: savedEurUsdQuote > 0 && savedBaseRate > 0
+      ? Math.round(savedEurUsdQuote * savedBaseRate)
+      : Number(localStorage.getItem('liveFxRate_EUR')) || Number(localStorage.getItem('rudawRate_EUR')) || 185000,
+    TRY: savedUsdTryQuote > 0 && savedBaseRate > 0
+      ? Math.round((1000 / savedUsdTryQuote) * (savedBaseRate / 100))
+      : Number(localStorage.getItem('liveFxRate_TRY')) || Number(localStorage.getItem('rudawRate_TRY')) || 33682,
     IRR: Number.isFinite(savedRudawTomanBuy) && savedRudawTomanBuy > 0 ? savedRudawTomanBuy : 26450000
   },
   rudawTomanBuy: Number.isFinite(savedRudawTomanBuy) && savedRudawTomanBuy > 0 ? savedRudawTomanBuy : 26450000,
-  rudawUsdQuotes: {
-    GBP: Number(localStorage.getItem('rudawQuote_GBP')) || 0,
-    EUR: Number(localStorage.getItem('rudawQuote_EUR')) || 0
+  usdFxQuotes: {
+    GBP: savedGbpUsdQuote,
+    EUR: savedEurUsdQuote,
+    USDTRY: savedUsdTryQuote
   },
   telegramTimestamp: Number(localStorage.getItem('telegramRateTime')) || 0,
   isTopForeign: true,
@@ -254,6 +315,13 @@ const swapBtn = document.getElementById('swapBtn');
 const keypad = document.getElementById('keypad');
 
 const refreshBtn = document.getElementById('refreshBtn');
+const metalsBtn = document.getElementById('metalsBtn');
+const metalsView = document.getElementById('metalsView');
+const metalsHeading = document.querySelector('.metals-heading');
+const goldTab = document.getElementById('goldTab');
+const silverTab = document.getElementById('silverTab');
+const metalsStatus = document.getElementById('metalsStatus');
+const metalPriceList = document.getElementById('metalPriceList');
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const menuBackdrop = document.getElementById('menuBackdrop');
 const menuCloseBtn = document.getElementById('menuCloseBtn');
@@ -268,6 +336,41 @@ const discountToggle = document.getElementById('discountToggle');
 const darkModeToggle = document.getElementById('darkModeToggle');
 const currSelectBtns = document.querySelectorAll('.curr-select-btn');
 const languageSelectBtns = document.querySelectorAll('.language-select-btn');
+
+const METAL_PRIMARY_URL = 'https://data-asg.goldprice.org/dbXRates/USD';
+const METAL_FALLBACK_URLS = {
+  gold: 'https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD',
+  silver: 'https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAG/USD'
+};
+const FX_INSTRUMENTS = {
+  GBP: 'GBP/USD',
+  EUR: 'EUR/USD',
+  USDTRY: 'USD/TRY'
+};
+const metalState = {
+  isSilver: false,
+  isOpen: false,
+  isFetching: false,
+  isSwitching: false,
+  goldOunce: null,
+  silverOunce: null,
+  flashTimers: new Map()
+};
+const rateFlashTimers = new Map();
+const rateBannerPreviousValues = new Map();
+
+const GOLD_PRICE_ITEMS = [
+  { key: 'goldOunce', currency: 'USD', calculate: gold => gold },
+  { key: 'dubaiLira', currency: 'USD', calculate: gold => gold * 0.2035 },
+  { key: 'gold18k', currency: 'IQD', calculate: gold => (gold / 31.1035) * 5 * (18 / 24) },
+  { key: 'gold21k', currency: 'IQD', calculate: gold => (gold / 31.1035) * 5 * (21 / 24) },
+  { key: 'gold22k', currency: 'IQD', calculate: gold => (gold / 31.1035) * 5 * (22 / 24) },
+  { key: 'gold24k', currency: 'IQD', calculate: gold => (gold / 31.1035) * 5 }
+];
+const SILVER_PRICE_ITEMS = [
+  { key: 'silverOunce', currency: 'USD', calculate: silver => silver },
+  { key: 'silverKg', currency: 'USD', calculate: silver => silver * 32.1507 }
+];
 
 // جێگیرکردنی دۆخی سەرەتایی دوگمەکان
 discountToggle.checked = state.minus1000Active;
@@ -305,6 +408,8 @@ function applyLanguage(language) {
   menuFooterEl.textContent = text.footer;
   refreshBtn.setAttribute('aria-label', text.refresh);
   refreshBtn.title = text.refresh;
+  metalsBtn.setAttribute('aria-label', text.metals);
+  metalsBtn.title = text.metals;
   hamburgerBtn.setAttribute('aria-label', text.menu);
   swapBtn.setAttribute('aria-label', text.swap);
   dateDisplayEl.title = text.dateHelp;
@@ -321,7 +426,282 @@ function applyLanguage(language) {
   renderConverterLabels();
   renderRateBanner();
   renderDateOrDay();
+  renderMetalLabels();
+  renderMetalPrices();
   calculateAndRender();
+}
+
+function renderMetalLabels() {
+  const text = getTranslations();
+  goldTab.textContent = text.goldTitle;
+  silverTab.textContent = text.silverTitle;
+  metalsHeading.classList.toggle('silver-active', metalState.isSilver);
+  goldTab.classList.toggle('active', !metalState.isSilver);
+  silverTab.classList.toggle('active', metalState.isSilver);
+  goldTab.setAttribute('aria-selected', String(!metalState.isSilver));
+  silverTab.setAttribute('aria-selected', String(metalState.isSilver));
+
+  metalPriceList.querySelectorAll('.metal-price-card').forEach((card) => {
+    const key = card.dataset.metal;
+    const label = card.querySelector('.metal-price-name');
+    const item = [...GOLD_PRICE_ITEMS, ...SILVER_PRICE_ITEMS].find(priceItem => priceItem.key === key);
+    if (item && label) label.textContent = text.metalNames[item.key];
+  });
+}
+
+function initializeMetalPriceCards() {
+  metalPriceList.replaceChildren();
+  [...GOLD_PRICE_ITEMS, ...SILVER_PRICE_ITEMS].forEach((item) => {
+    const card = document.createElement('article');
+    card.className = 'metal-price-card';
+    card.dataset.metal = item.key;
+
+    const name = document.createElement('h2');
+    name.className = 'metal-price-name';
+    name.textContent = getTranslations().metalNames[item.key];
+
+    const amount = document.createElement('div');
+    amount.className = 'metal-price-amount';
+    amount.setAttribute('dir', 'ltr');
+    const number = document.createElement('span');
+    number.className = 'metal-price-number';
+    number.setAttribute('aria-hidden', 'true');
+    number.textContent = '--';
+    const unit = document.createElement('small');
+    unit.className = 'metal-price-unit';
+    amount.append(number, unit);
+
+    card.append(name, amount);
+    metalPriceList.append(card);
+  });
+  renderMetalLabels();
+}
+
+function renderOdometer(element, formattedValue) {
+  const oldDigits = new Map(
+    [...element.querySelectorAll('.odometer-digit')].map(digit => [digit.dataset.position, digit])
+  );
+  const digitCount = [...formattedValue].filter(character => /\d/.test(character)).length;
+  let digitIndex = 0;
+  const pendingDigits = [];
+  const fragment = document.createDocumentFragment();
+
+  [...formattedValue].forEach((character) => {
+    if (!/\d/.test(character)) {
+      fragment.append(document.createTextNode(character));
+      return;
+    }
+
+    const position = String(digitCount - digitIndex - 1);
+    let digit = oldDigits.get(position);
+    const isNewDigit = !digit;
+    if (isNewDigit) {
+      digit = document.createElement('span');
+      digit.className = 'odometer-digit';
+      digit.dataset.position = position;
+      digit.setAttribute('aria-hidden', 'true');
+      const strip = document.createElement('span');
+      strip.className = 'odometer-strip';
+      strip.setAttribute('aria-hidden', 'true');
+      for (let value = 0; value < 10; value += 1) {
+        const cell = document.createElement('span');
+        cell.textContent = String(value);
+        strip.append(cell);
+      }
+      digit.append(strip);
+    }
+    const strip = digit.firstElementChild;
+    if (isNewDigit) strip.style.transition = 'none';
+    pendingDigits.push({ strip, value: Number(character), isNewDigit });
+    fragment.append(digit);
+    digitIndex += 1;
+  });
+
+  element.replaceChildren(fragment);
+  requestAnimationFrame(() => {
+    pendingDigits.forEach(({ strip, value }) => {
+      strip.style.transform = `translateY(-${value * 1.15}em)`;
+    });
+    requestAnimationFrame(() => {
+      pendingDigits.filter(digit => digit.isNewDigit).forEach(({ strip }) => {
+        strip.style.transition = '';
+      });
+    });
+  });
+}
+
+function renderMetalPrices() {
+  const items = metalState.isSilver ? SILVER_PRICE_ITEMS : GOLD_PRICE_ITEMS;
+  const ouncePrice = metalState.isSilver ? metalState.silverOunce : metalState.goldOunce;
+
+  metalPriceList.querySelectorAll('.metal-price-card').forEach(card => {
+    card.hidden = !items.some(item => item.key === card.dataset.metal);
+  });
+
+  if (!Number.isFinite(ouncePrice)) return;
+  items.forEach((item) => {
+    const card = metalPriceList.querySelector(`[data-metal="${item.key}"]`);
+    const amount = card.querySelector('.metal-price-amount');
+    const number = card.querySelector('.metal-price-number');
+    const unit = card.querySelector('.metal-price-unit');
+    if (item.currency === 'IQD' && state.baseRatePer100USD <= 0) return;
+    const rawPrice = item.calculate(ouncePrice);
+    const price = item.currency === 'IQD'
+      ? Math.round((rawPrice * state.baseRatePer100USD / 100) / 1000) * 1000
+      : rawPrice;
+    if (!Number.isFinite(price)) return;
+
+    const previousPrice = Number(card.dataset.price);
+    const formattedValue = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: item.currency === 'USD' ? 2 : 0,
+      maximumFractionDigits: item.currency === 'USD' ? 2 : 0
+    }).format(price);
+    renderOdometer(number, item.currency === 'USD' ? `$ ${formattedValue}` : formattedValue);
+    unit.textContent = item.currency === 'IQD' ? 'دینار' : '';
+    amount.setAttribute('aria-label', `${formattedValue} ${item.currency === 'USD' ? 'USD' : 'دینار'}`);
+
+    if (Number.isFinite(previousPrice) && previousPrice !== price) {
+      const direction = price > previousPrice ? 'is-up' : 'is-down';
+      const existingTimer = metalState.flashTimers.get(item.key);
+      if (existingTimer) clearTimeout(existingTimer);
+      card.classList.remove('is-up', 'is-down');
+      void card.offsetWidth;
+      card.classList.add(direction);
+      metalState.flashTimers.set(item.key, setTimeout(() => {
+        card.classList.remove(direction);
+        metalState.flashTimers.delete(item.key);
+      }, 1000));
+    }
+    card.dataset.price = String(price);
+  });
+}
+
+function switchMetalTab(isSilver) {
+  if (metalState.isSilver === isSilver || metalState.isSwitching) return;
+
+  metalState.isSwitching = true;
+  const isMovingToSilver = isSilver;
+  metalPriceList.classList.remove('list-enter', 'enter-from-left', 'enter-from-right', 'list-exit-to-left', 'list-exit-to-right');
+  metalPriceList.classList.add(isMovingToSilver ? 'list-exit-to-right' : 'list-exit-to-left');
+
+  setTimeout(() => {
+    metalState.isSilver = isSilver;
+    renderMetalLabels();
+    renderMetalPrices();
+    metalsHeading.classList.remove('shimmer');
+    void metalsHeading.offsetWidth;
+    metalsHeading.classList.add('shimmer');
+    metalPriceList.classList.remove('list-exit-to-left', 'list-exit-to-right');
+    metalPriceList.classList.add('list-enter', isMovingToSilver ? 'enter-from-left' : 'enter-from-right');
+    requestAnimationFrame(() => {
+      metalPriceList.querySelectorAll('.metal-price-card:not([hidden])').forEach((card, index) => {
+        card.style.setProperty('--row-index', index);
+      });
+    });
+    setTimeout(() => {
+      metalPriceList.classList.remove('list-enter', 'enter-from-left', 'enter-from-right');
+      metalPriceList.querySelectorAll('.metal-price-card').forEach(card => {
+        card.style.removeProperty('--row-index');
+      });
+      metalState.isSwitching = false;
+    }, 650);
+  }, 180);
+}
+
+function getPositivePrice(value) {
+  const price = Number(value);
+  return Number.isFinite(price) && price > 0 ? price : null;
+}
+
+function extractSwissquotePrice(data) {
+  const pending = [data];
+  while (pending.length) {
+    const value = pending.pop();
+    if (!value || typeof value !== 'object') continue;
+    if (Array.isArray(value)) {
+      pending.push(...value);
+      continue;
+    }
+
+    const bid = getPositivePrice(value.bid);
+    const ask = getPositivePrice(value.ask);
+    if (bid && ask) return (bid + ask) / 2;
+    if (bid) return bid;
+    pending.push(...Object.values(value));
+  }
+  return null;
+}
+
+async function fetchSwissquoteQuote(url, label) {
+  const response = await fetch(url, { cache: 'no-store' });
+  if (!response.ok) throw new Error(`Swissquote ${label} quote returned HTTP ${response.status}`);
+  const price = extractSwissquotePrice(await response.json());
+  if (!price) throw new Error(`Swissquote ${label} quote did not contain a valid bid or ask`);
+  return price;
+}
+
+function getSwissquoteUrl(instrument) {
+  return `https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/${instrument}`;
+}
+
+async function fetchMetalPrices() {
+  if (metalState.isFetching) return;
+  metalState.isFetching = true;
+  metalsStatus.textContent = getTranslations().metalsLoading;
+
+  try {
+    let goldPrice = null;
+    let silverPrice = null;
+    try {
+      const response = await fetch(`${METAL_PRIMARY_URL}?t=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`GoldPrice API returned HTTP ${response.status}`);
+      const data = await response.json();
+      const item = data?.items?.[0];
+      goldPrice = getPositivePrice(item?.xauPrice);
+      silverPrice = getPositivePrice(item?.xagPrice);
+      if (!goldPrice && !silverPrice) throw new Error('GoldPrice API response contained no valid spot prices');
+    } catch (error) {
+      console.warn('Primary precious-metals API failed; trying independent quote fallbacks.', error);
+    }
+
+    const fallbackTasks = [];
+    if (!goldPrice) {
+      fallbackTasks.push(fetchSwissquoteQuote(METAL_FALLBACK_URLS.gold, 'gold').then(
+        price => { goldPrice = price; },
+        error => { console.error('Unable to fetch the gold fallback quote.', error); }
+      ));
+    }
+    if (!silverPrice) {
+      fallbackTasks.push(fetchSwissquoteQuote(METAL_FALLBACK_URLS.silver, 'silver').then(
+        price => { silverPrice = price; },
+        error => { console.error('Unable to fetch the silver fallback quote.', error); }
+      ));
+    }
+    await Promise.all(fallbackTasks);
+
+    if (goldPrice) metalState.goldOunce = goldPrice;
+    if (silverPrice) metalState.silverOunce = silverPrice;
+    renderMetalPrices();
+    metalsStatus.textContent = goldPrice || silverPrice ? '' : getTranslations().metalsUnavailable;
+    if ((!goldPrice || !silverPrice) && (metalState.goldOunce || metalState.silverOunce)) {
+      metalsStatus.textContent = getTranslations().metalsUnavailable;
+    }
+  } finally {
+    metalState.isFetching = false;
+  }
+}
+
+function setMetalsViewOpen(isOpen) {
+  metalState.isOpen = isOpen;
+  if (isOpen) metalState.isSilver = false;
+  metalsView.hidden = !isOpen;
+  document.body.classList.toggle('metals-open', isOpen);
+  metalsBtn.setAttribute('aria-pressed', String(isOpen));
+  if (isOpen) {
+    renderMetalLabels();
+    renderMetalPrices();
+    fetchMetalPrices();
+  }
 }
 
 // فۆرماتکردنی ژمارە بەبێ لەدەستدانی وردبینی بۆ ژمارەی زۆر درێژ (١٤+ ژمارە)
@@ -400,11 +780,13 @@ function renderRateBanner(animate = false) {
   rateTitleEl.textContent = text.currencyTitles[curr];
   const usdRatePer100 = getEffectiveUsdRate();
   if (!Number.isFinite(usdRatePer100) || usdRatePer100 <= 0) {
-    liveRateBannerEl.textContent = '...';
+    renderOdometer(liveRateBannerEl, '...');
     adjustRateBannerFontSize();
     return;
   }
 
+  let numericRate;
+  let displayText;
   const rateInSelectedCurrency = (rateInIqd) =>
     state.secondaryCurrency === 'USD'
       ? formatNumber(((rateInIqd * 100) / usdRatePer100).toFixed(2), 2)
@@ -413,21 +795,38 @@ function renderRateBanner(animate = false) {
 
   // بەکارهێنانی کۆدی پاراستنی ئاراستە (\u2066 و \u2069) بۆ ئەوەی نووسینی کوردی و ژمارەکان تێکەڵ نەبن
   if (curr === 'USD') {
-    const effectiveUsd = getEffectiveUsdRate();
-    liveRateBannerEl.textContent = `\u2066100$\u2069 = \u2066${formatRoundedInteger(effectiveUsd)} ${text.iqd}\u2069`;
+    numericRate = usdRatePer100;
+    displayText = `\u2066100$\u2069 = \u2066${formatRoundedInteger(usdRatePer100)} ${text.iqd}\u2069`;
   } else if (curr === 'GBP') {
-    liveRateBannerEl.textContent = `\u2066100£\u2069 = \u2066${rateInSelectedCurrency(state.otherRates.GBP)} ${selectedUnit}\u2069`;
+    numericRate = state.secondaryCurrency === 'USD'
+      ? state.otherRates.GBP * 100 / usdRatePer100 : state.otherRates.GBP;
+    displayText = `\u2066100£\u2069 = \u2066${rateInSelectedCurrency(state.otherRates.GBP)} ${selectedUnit}\u2069`;
   } else if (curr === 'EUR') {
-    liveRateBannerEl.textContent = `\u2066100€\u2069 = \u2066${rateInSelectedCurrency(state.otherRates.EUR)} ${selectedUnit}\u2069`;
+    numericRate = state.secondaryCurrency === 'USD'
+      ? state.otherRates.EUR * 100 / usdRatePer100 : state.otherRates.EUR;
+    displayText = `\u2066100€\u2069 = \u2066${rateInSelectedCurrency(state.otherRates.EUR)} ${selectedUnit}\u2069`;
   } else if (curr === 'TRY') {
-    liveRateBannerEl.textContent = `\u20661000 ${text.lira}\u2069 = \u2066${rateInSelectedCurrency(state.otherRates.TRY)} ${selectedUnit}\u2069`;
+    numericRate = state.secondaryCurrency === 'USD'
+      ? state.otherRates.TRY * 1000 / usdRatePer100 : state.otherRates.TRY;
+    displayText = `\u20661000 ${text.lira}\u2069 = \u2066${rateInSelectedCurrency(state.otherRates.TRY)} ${selectedUnit}\u2069`;
   } else if (curr === 'IRR') {
-    liveRateBannerEl.textContent = state.otherRates.IRR > 0
+    numericRate = state.secondaryCurrency === 'USD'
+      ? (state.otherRates.IRR * usdRatePer100) / 100000 : state.otherRates.IRR;
+    displayText = state.otherRates.IRR > 0
       ? state.secondaryCurrency === 'USD'
         ? `\u2066100$\u2069 = \u2066${formatRoundedInteger((state.otherRates.IRR * usdRatePer100) / 100000)} ${text.toman}\u2069`
         : `\u2066100,000 ${text.iqd}\u2069 = \u2066${formatRoundedInteger(state.otherRates.IRR)} ${text.toman}\u2069`
       : text.unavailable;
   }
+
+  renderOdometer(liveRateBannerEl, displayText || '...');
+  liveRateBannerEl.setAttribute('aria-label', displayText || '...');
+  const rateKey = `${curr}:${state.secondaryCurrency}`;
+  const previousRate = rateBannerPreviousValues.get(rateKey);
+  if (Number.isFinite(previousRate) && Number.isFinite(numericRate) && previousRate !== numericRate) {
+    flashRateBanner(numericRate > previousRate ? 'is-up' : 'is-down');
+  }
+  if (Number.isFinite(numericRate)) rateBannerPreviousValues.set(rateKey, numericRate);
 
   adjustRateBannerFontSize();
 
@@ -435,6 +834,18 @@ function renderRateBanner(animate = false) {
     liveRateBannerEl.classList.add('pulse');
     setTimeout(() => liveRateBannerEl.classList.remove('pulse'), 300);
   }
+}
+
+function flashRateBanner(direction) {
+  const existingTimer = rateFlashTimers.get('banner');
+  if (existingTimer) clearTimeout(existingTimer);
+  liveRateBannerEl.classList.remove('is-up', 'is-down');
+  void liveRateBannerEl.offsetWidth;
+  liveRateBannerEl.classList.add(direction);
+  rateFlashTimers.set('banner', setTimeout(() => {
+    liveRateBannerEl.classList.remove(direction);
+    rateFlashTimers.delete('banner');
+  }, 1000));
 }
 
 // نوێکردنەوەی ناوی دراوەکان لەسەر هەردوو کارتی حاسیبەکە
@@ -506,13 +917,15 @@ function getIqdPerSecondaryUnit() {
 // هەژمارکردنی ورد بۆ هەر ٥ دراوەکە (بە پاڵپشتیی BigInt بۆ تمەن تا ٢٠ ژمارە)
 function calculateAndRender() {
   const formattedTop = formatNumber(state.rawInput, 4);
-  topAmountEl.textContent = formattedTop;
+  renderOdometer(topAmountEl, formattedTop);
+  topAmountEl.setAttribute('aria-label', formattedTop);
   adjustAmountFontSize(topAmountEl);
   topAmountEl.scrollLeft = topAmountEl.scrollWidth;
 
   const inputValue = parseFloat(state.rawInput);
   if (isNaN(inputValue) || inputValue === 0) {
-    bottomAmountEl.textContent = '0';
+    renderOdometer(bottomAmountEl, '0');
+    bottomAmountEl.setAttribute('aria-label', '0');
     adjustAmountFontSize(bottomAmountEl);
     return;
   }
@@ -568,7 +981,8 @@ function calculateAndRender() {
       : formatNumber(Number.isInteger(result) ? result.toString() : result.toFixed(2).replace(/\.?0+$/, ''), 2);
   }
 
-  bottomAmountEl.textContent = bottomText;
+  renderOdometer(bottomAmountEl, bottomText);
+  bottomAmountEl.setAttribute('aria-label', bottomText);
   adjustAmountFontSize(bottomAmountEl);
   bottomAmountEl.scrollLeft = bottomAmountEl.scrollWidth;
 }
@@ -579,10 +993,11 @@ function updateTelegramRate(newBaseRate, timestampMs) {
   state.telegramTimestamp = timestampMs;
   localStorage.setItem('telegramRate_USD', String(newBaseRate));
   localStorage.setItem('telegramRateTime', String(timestampMs));
-  recalculateRudawUsdQuotes();
+  recalculateUsdFxQuotes();
   renderRateBanner(isChanged);
   renderDateOrDay();
   calculateAndRender();
+  renderMetalPrices();
 }
 
 // هەڵبژاردنی دراوەکان لەناو مێنۆی Hamburger
@@ -633,6 +1048,18 @@ hamburgerBtn.addEventListener('click', () => {
   menuBackdrop.classList.add('open');
 });
 
+metalsBtn.addEventListener('click', () => {
+  setMetalsViewOpen(!metalState.isOpen);
+});
+
+goldTab.addEventListener('click', () => {
+  switchMetalTab(false);
+});
+
+silverTab.addEventListener('click', () => {
+  switchMetalTab(true);
+});
+
 menuCloseBtn.addEventListener('click', () => {
   menuBackdrop.classList.remove('open');
 });
@@ -660,11 +1087,15 @@ darkModeToggle.addEventListener('change', (e) => {
   }
 });
 
-// دوگمەی Refresh لە تەنیشت Hamburger
+// Refreshes only the data pipeline for the currently visible screen.
 refreshBtn.addEventListener('click', async () => {
   refreshBtn.classList.add('spinning');
-  await fetchExchangeRates();
-  renderRateBanner(true);
+  if (metalState.isOpen) {
+    await fetchMetalPrices();
+  } else {
+    await fetchExchangeRates();
+    renderRateBanner(true);
+  }
   setTimeout(() => {
     refreshBtn.classList.remove('spinning');
   }, 600);
@@ -727,43 +1158,69 @@ swapBtn.addEventListener('touchend', () => {
 
 swapBtn.addEventListener('mousedown', toggleSwap);
 
-function recalculateRudawUsdQuotes() {
+function recalculateUsdFxQuotes() {
   if (state.baseRatePer100USD <= 0) return;
 
   ['GBP', 'EUR'].forEach((currency) => {
-    const usdQuote = state.rudawUsdQuotes[currency];
+    const usdQuote = state.usdFxQuotes[currency];
     if (usdQuote > 0) {
-      state.otherRates[currency] = Math.round((usdQuote * state.baseRatePer100USD) / 100);
-      localStorage.setItem(`rudawRate_${currency}`, String(state.otherRates[currency]));
+      state.otherRates[currency] = Math.round(usdQuote * state.baseRatePer100USD);
+      localStorage.setItem(`liveFxRate_${currency}`, String(state.otherRates[currency]));
     }
   });
+  if (state.usdFxQuotes.USDTRY > 0) {
+    state.otherRates.TRY = Math.round((1000 / state.usdFxQuotes.USDTRY) * (state.baseRatePer100USD / 100));
+    localStorage.setItem('liveFxRate_TRY', String(state.otherRates.TRY));
+  }
 }
 
-function applyRudawRates(data) {
-  const rates = {
-    GBP: Number(data?.gbpUsdPer100),
-    EUR: Number(data?.eurUsdPer100),
-    TRY: Number(data?.tryPer100),
-    IRR: Number(data?.tomanPer100000Iqd)
-  };
-  if (Object.values(rates).some(rate => !Number.isFinite(rate) || rate <= 0)) {
-    throw new Error('Rates snapshot is missing a valid Rudaw Buy rate');
+function applyRudawTomanRate(data) {
+  const tomanRate = Number(data?.tomanPer100000Iqd);
+  if (!Number.isFinite(tomanRate) || tomanRate <= 0) {
+    throw new Error('Rates snapshot is missing a valid Rudaw Toman buy rate');
   }
-
-  state.rudawUsdQuotes.GBP = rates.GBP;
-  state.rudawUsdQuotes.EUR = rates.EUR;
-  state.otherRates.TRY = Math.round(rates.TRY * 10);
-  state.otherRates.IRR = Math.round(rates.IRR);
-  state.rudawTomanBuy = rates.IRR;
-
-  localStorage.setItem('rudawQuote_GBP', String(rates.GBP));
-  localStorage.setItem('rudawQuote_EUR', String(rates.EUR));
-  localStorage.setItem('rudawRate_TRY', String(state.otherRates.TRY));
+  state.otherRates.IRR = Math.round(tomanRate);
+  state.rudawTomanBuy = state.otherRates.IRR;
   localStorage.setItem('rudawRate_IRR', String(state.otherRates.IRR));
-  localStorage.setItem('rudawTomanBuy', String(rates.IRR));
-  recalculateRudawUsdQuotes();
+  localStorage.setItem('rudawTomanBuy', String(state.otherRates.IRR));
   renderRateBanner();
   calculateAndRender();
+}
+
+let isFetchingLiveForeignRates = false;
+async function fetchLiveForeignRates() {
+  if (isFetchingLiveForeignRates) return;
+  isFetchingLiveForeignRates = true;
+  try {
+    const results = await Promise.allSettled(
+      Object.entries(FX_INSTRUMENTS).map(async ([currency, instrument]) => ({
+        currency,
+        instrument,
+        quote: await fetchSwissquoteQuote(getSwissquoteUrl(instrument), instrument)
+      }))
+    );
+
+    let updated = false;
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error(`Unable to fetch the live ${Object.keys(FX_INSTRUMENTS)[index]} exchange quote.`, result.reason);
+        return;
+      }
+
+      const { currency, quote } = result.value;
+      state.usdFxQuotes[currency] = quote;
+      localStorage.setItem(`liveFxQuote_${currency}`, String(quote));
+      updated = true;
+    });
+
+    if (updated) {
+      recalculateUsdFxQuotes();
+      renderRateBanner();
+      calculateAndRender();
+    }
+  } finally {
+    isFetchingLiveForeignRates = false;
+  }
 }
 
 let isFetchingExchangeRates = false;
@@ -781,15 +1238,17 @@ async function fetchExchangeRates() {
     }
 
     updateTelegramRate(telegramRate, telegramTimestamp);
-    applyRudawRates(data.rudaw);
+    applyRudawTomanRate(data.rudaw);
   } catch (error) {
-    console.warn('Unable to load the latest Telegram and Rudaw exchange rates.', error);
+    console.warn('Unable to load the latest USD/IQD and Toman rates.', error);
   } finally {
     isFetchingExchangeRates = false;
   }
+  await fetchLiveForeignRates();
 }
 
 // دەستپێکردنی سەرەتایی بەرنامەکە
+initializeMetalPriceCards();
 applyLanguage(state.language);
 renderRateBanner();
 renderDateOrDay();
@@ -800,7 +1259,13 @@ document.fonts.ready.then(calculateAndRender);
 fetchExchangeRates();
 
 setInterval(fetchExchangeRates, 60000);
+setInterval(() => {
+  if (metalState.isOpen) fetchMetalPrices();
+}, 30000);
 
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) fetchExchangeRates();
+  if (!document.hidden) {
+    fetchExchangeRates();
+    if (metalState.isOpen) fetchMetalPrices();
+  }
 });
