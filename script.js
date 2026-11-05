@@ -100,7 +100,7 @@ resolveImageFile(
 // =====================================================
 // ٣. سیستمی حاسیبە، دراوەکان و ڕێکخستنەکان
 // =====================================================
-const RUDAW_PRICES_API_URL = 'https://rudawindex.net/api/prices';
+const RATES_URL = 'rates.json';
 
 const TRANSLATIONS = {
   ku: {
@@ -210,7 +210,7 @@ const initialLanguage = Object.hasOwn(TRANSLATIONS, savedLanguage) ? savedLangua
 
 const savedDarkPref = localStorage.getItem('darkMode');
 const initialDarkMode = savedDarkPref !== null ? savedDarkPref === 'true' : true;
-const savedBaseRate = Number(localStorage.getItem('rudawRate_USD')) || 168000;
+const savedBaseRate = Number(localStorage.getItem('telegramRate_USD')) || 0;
 const savedRudawTomanBuy = Number(localStorage.getItem('rudawTomanBuy')) || 26450000;
 
 const state = {
@@ -224,7 +224,11 @@ const state = {
     IRR: Number.isFinite(savedRudawTomanBuy) && savedRudawTomanBuy > 0 ? savedRudawTomanBuy : 26450000
   },
   rudawTomanBuy: Number.isFinite(savedRudawTomanBuy) && savedRudawTomanBuy > 0 ? savedRudawTomanBuy : 26450000,
-  lastTimestamp: Number(localStorage.getItem('rudawRateTime')) || Date.now(),
+  rudawUsdQuotes: {
+    GBP: Number(localStorage.getItem('rudawQuote_GBP')) || 0,
+    EUR: Number(localStorage.getItem('rudawQuote_EUR')) || 0
+  },
+  telegramTimestamp: Number(localStorage.getItem('telegramRateTime')) || 0,
   isTopForeign: true,
   rawInput: '0',
   minus1000Active: localStorage.getItem('minus1000Active') === 'true',
@@ -370,7 +374,13 @@ function adjustAmountFontSize(el) {
 }
 
 function renderDateOrDay() {
-  const postDate = new Date(state.lastTimestamp);
+  if (!state.telegramTimestamp) {
+    dateDisplayEl.textContent = '--/--/----';
+    timeDisplayEl.textContent = '--:--';
+    return;
+  }
+
+  const postDate = new Date(state.telegramTimestamp);
   if (state.showDayName) {
     dateDisplayEl.textContent = getTranslations().days[postDate.getDay()];
   } else {
@@ -380,12 +390,7 @@ function renderDateOrDay() {
     dateDisplayEl.textContent = `${year}/${month}/${day}`;
   }
 
-  const timeLocale = state.language === 'ku' ? 'ku-IQ' : state.language === 'ar' ? 'ar-IQ' : 'en-US';
-  timeDisplayEl.textContent = postDate.toLocaleTimeString(timeLocale, {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
+  timeDisplayEl.textContent = `${String(postDate.getHours()).padStart(2, '0')}:${String(postDate.getMinutes()).padStart(2, '0')}`;
 }
 
 // نوێکردنەوەی ناونیشان و بانەری نرخ بەپێی دراوی هەڵبژێردراو
@@ -394,6 +399,12 @@ function renderRateBanner(animate = false) {
   const text = getTranslations();
   rateTitleEl.textContent = text.currencyTitles[curr];
   const usdRatePer100 = getEffectiveUsdRate();
+  if (!Number.isFinite(usdRatePer100) || usdRatePer100 <= 0) {
+    liveRateBannerEl.textContent = '...';
+    adjustRateBannerFontSize();
+    return;
+  }
+
   const rateInSelectedCurrency = (rateInIqd) =>
     state.secondaryCurrency === 'USD'
       ? formatNumber(((rateInIqd * 100) / usdRatePer100).toFixed(2), 2)
@@ -562,12 +573,13 @@ function calculateAndRender() {
   bottomAmountEl.scrollLeft = bottomAmountEl.scrollWidth;
 }
 
-function updateLiveRate(newBaseRate, timestampMs) {
-  const isChanged = state.baseRatePer100USD !== newBaseRate || state.lastTimestamp !== timestampMs;
+function updateTelegramRate(newBaseRate, timestampMs) {
+  const isChanged = state.baseRatePer100USD !== newBaseRate || state.telegramTimestamp !== timestampMs;
   state.baseRatePer100USD = newBaseRate;
-  state.lastTimestamp = timestampMs;
-  localStorage.setItem('rudawRate_USD', newBaseRate);
-  localStorage.setItem('rudawRateTime', timestampMs);
+  state.telegramTimestamp = timestampMs;
+  localStorage.setItem('telegramRate_USD', String(newBaseRate));
+  localStorage.setItem('telegramRateTime', String(timestampMs));
+  recalculateRudawUsdQuotes();
   renderRateBanner(isChanged);
   renderDateOrDay();
   calculateAndRender();
@@ -651,7 +663,7 @@ darkModeToggle.addEventListener('change', (e) => {
 // دوگمەی Refresh لە تەنیشت Hamburger
 refreshBtn.addEventListener('click', async () => {
   refreshBtn.classList.add('spinning');
-  await fetchRudawRates(true);
+  await fetchExchangeRates();
   renderRateBanner(true);
   setTimeout(() => {
     refreshBtn.classList.remove('spinning');
@@ -715,98 +727,80 @@ swapBtn.addEventListener('touchend', () => {
 
 swapBtn.addEventListener('mousedown', toggleSwap);
 
-// =====================================================
-// Fetch every currency Buy quote from Rudaw Index.
-// Rudaw quotes USD directly per 100 USD; GBP/EUR Buy are USD per 100 units;
-// TRY Buy is IQD per 100 lira; IRR Buy is toman per 100,000 IQD.
-// =====================================================
-function getRudawBuy(data, codes) {
-  if (!Array.isArray(data?.currencies)) return null;
-  const currency = data.currencies.find(item =>
-    item && codes.includes(String(item.code || item.id || '').toLowerCase())
-  );
-  const buy = Number(String(currency?.buy ?? '').replace(/,/g, ''));
-  return Number.isFinite(buy) && buy > 0 ? buy : null;
+function recalculateRudawUsdQuotes() {
+  if (state.baseRatePer100USD <= 0) return;
+
+  ['GBP', 'EUR'].forEach((currency) => {
+    const usdQuote = state.rudawUsdQuotes[currency];
+    if (usdQuote > 0) {
+      state.otherRates[currency] = Math.round((usdQuote * state.baseRatePer100USD) / 100);
+      localStorage.setItem(`rudawRate_${currency}`, String(state.otherRates[currency]));
+    }
+  });
 }
 
 function applyRudawRates(data) {
-  const usdBuy = getRudawBuy(data, ['us', 'usd']);
-  const gbpBuy = getRudawBuy(data, ['gb', 'gbp']);
-  const eurBuy = getRudawBuy(data, ['eu', 'eur']);
-  const tryBuy = getRudawBuy(data, ['tr', 'try']);
-  const tomanBuy = getRudawBuy(data, ['ir', 'irr', 'irt']);
-
-  if ([usdBuy, gbpBuy, eurBuy, tryBuy, tomanBuy].some(rate => rate === null)) {
-    throw new Error('Rudaw response is missing a valid Buy rate for one or more currencies');
+  const rates = {
+    GBP: Number(data?.gbpUsdPer100),
+    EUR: Number(data?.eurUsdPer100),
+    TRY: Number(data?.tryPer100),
+    IRR: Number(data?.tomanPer100000Iqd)
+  };
+  if (Object.values(rates).some(rate => !Number.isFinite(rate) || rate <= 0)) {
+    throw new Error('Rates snapshot is missing a valid Rudaw Buy rate');
   }
 
-  state.otherRates.GBP = Math.round((gbpBuy * usdBuy) / 100);
-  state.otherRates.EUR = Math.round((eurBuy * usdBuy) / 100);
-  state.otherRates.TRY = Math.round(tryBuy * 10);
-  state.otherRates.IRR = Math.round(tomanBuy);
-  state.rudawTomanBuy = tomanBuy;
+  state.rudawUsdQuotes.GBP = rates.GBP;
+  state.rudawUsdQuotes.EUR = rates.EUR;
+  state.otherRates.TRY = Math.round(rates.TRY * 10);
+  state.otherRates.IRR = Math.round(rates.IRR);
+  state.rudawTomanBuy = rates.IRR;
 
-  localStorage.setItem('rudawRate_GBP', String(state.otherRates.GBP));
-  localStorage.setItem('rudawRate_EUR', String(state.otherRates.EUR));
+  localStorage.setItem('rudawQuote_GBP', String(rates.GBP));
+  localStorage.setItem('rudawQuote_EUR', String(rates.EUR));
   localStorage.setItem('rudawRate_TRY', String(state.otherRates.TRY));
   localStorage.setItem('rudawRate_IRR', String(state.otherRates.IRR));
-  localStorage.setItem('rudawTomanBuy', String(tomanBuy));
-
-  const timestamp = Date.parse(data.lastUpdate);
-  updateLiveRate(usdBuy, Number.isFinite(timestamp) ? timestamp : Date.now());
+  localStorage.setItem('rudawTomanBuy', String(rates.IRR));
+  recalculateRudawUsdQuotes();
+  renderRateBanner();
+  calculateAndRender();
 }
 
-let isFetchingRudawRates = false;
-async function fetchRudawRates(force = false) {
-  if (isFetchingRudawRates && !force) return;
-  isFetchingRudawRates = true;
-
-  const url = `${RUDAW_PRICES_API_URL}?t=${Date.now()}`;
-  const endpoints = [
-    { url, wrapped: false },
-    { url: `https://corsproxy.io/?url=${encodeURIComponent(url)}`, wrapped: false },
-    { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, wrapped: false },
-    { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, wrapped: false },
-    { url: `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`, wrapped: true }
-  ];
-
+let isFetchingExchangeRates = false;
+async function fetchExchangeRates() {
+  if (isFetchingExchangeRates) return;
+  isFetchingExchangeRates = true;
   try {
-    const fetchJson = async (endpoint) => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-      try {
-        const response = await fetch(endpoint.url, { cache: 'no-store', signal: controller.signal });
-        if (!response.ok) throw new Error(`Rudaw returned HTTP ${response.status}`);
-        const data = await response.json();
-        const parsedData = endpoint.wrapped && data.contents ? JSON.parse(data.contents) : data;
-        if (!Array.isArray(parsedData?.currencies)) {
-          throw new Error('Rudaw response does not contain currency data');
-        }
-        return parsedData;
-      } finally {
-        clearTimeout(timeoutId);
-      }
-    };
+    const response = await fetch(`${RATES_URL}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Rate snapshot returned HTTP ${response.status}`);
+    const data = await response.json();
+    const telegramRate = Number(data?.telegram?.iqdPer100Usd);
+    const telegramTimestamp = Date.parse(data?.telegram?.latestPostAt);
+    if (!Number.isFinite(telegramRate) || telegramRate <= 0 || !Number.isFinite(telegramTimestamp)) {
+      throw new Error('Rate snapshot is missing a valid Telegram USD rate or post time');
+    }
 
-    const data = await Promise.any(endpoints.map(fetchJson));
-    applyRudawRates(data);
+    updateTelegramRate(telegramRate, telegramTimestamp);
+    applyRudawRates(data.rudaw);
   } catch (error) {
-    console.warn('Unable to fetch currency Buy rates from Rudaw Index.', error);
+    console.warn('Unable to load the latest Telegram and Rudaw exchange rates.', error);
   } finally {
-    isFetchingRudawRates = false;
+    isFetchingExchangeRates = false;
   }
 }
 
 // دەستپێکردنی سەرەتایی بەرنامەکە
 applyLanguage(state.language);
-updateLiveRate(state.baseRatePer100USD, state.lastTimestamp);
+renderRateBanner();
+renderDateOrDay();
+calculateAndRender();
 window.addEventListener('resize', calculateAndRender);
 window.addEventListener('resize', adjustRateBannerFontSize);
 document.fonts.ready.then(calculateAndRender);
-fetchRudawRates();
+fetchExchangeRates();
 
-setInterval(fetchRudawRates, 60000);
+setInterval(fetchExchangeRates, 60000);
 
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) fetchRudawRates();
+  if (!document.hidden) fetchExchangeRates();
 });

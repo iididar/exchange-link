@@ -1,0 +1,44 @@
+name: Update exchange rates
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - rates.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-exchange-rates
+  cancel-in-progress: false
+
+jobs:
+  update-rates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the site
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update rates from the public sources
+        run: python3 update-rates.py
+
+      - name: Commit changed rates
+        run: |
+          if git diff --quiet -- rates.json; then
+            echo "Rates have not changed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add rates.json
+          git commit -m "Update exchange rate snapshot" \
+            -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+          git push
