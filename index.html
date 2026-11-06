@@ -33,7 +33,7 @@
       </div>
 
       <!-- دەستەواژەی یەکەم: ڕاست = کوژاوە (Off) | چەپ = کارا (On) -->
-      <div class="menu-item">
+      <div id="discountSettingRow" class="menu-item">
         <div id="discountText" class="menu-item-text">کاراکردنی ١٠٠٠دینار کەمتر بۆ وەرگرتنی دۆلار</div>
         <label class="toggle-switch">
           <input type="checkbox" id="discountToggle">
@@ -100,6 +100,13 @@
             </svg>
           </button>
 
+          <button id="metalsBtn" class="refresh-btn metals-btn" aria-label="Precious metals" title="زێـڕ و زیـو">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 3 3.5 8v8L12 21l8.5-5V8L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="m3.8 8.2 8.2 4.9 8.2-4.9M12 13.1V21M8 5.4l8.4 5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
           <button id="hamburgerBtn" class="hamburger-btn" aria-label="Menu">
             <span></span>
             <span></span>
@@ -162,6 +169,16 @@
         </svg>
       </button>
     </div>
+
+    <section id="metalsView" class="metals-view" aria-label="Precious metals" hidden>
+      <div class="metals-heading" role="tablist" aria-label="Precious metals">
+        <span class="tab-glider" aria-hidden="true"></span>
+        <button id="goldTab" class="metal-tab active" type="button" role="tab" aria-controls="metalPriceList" aria-selected="true">نرخی زێـڕ</button>
+        <button id="silverTab" class="metal-tab" type="button" role="tab" aria-controls="metalPriceList" aria-selected="false">نرخی زیـو</button>
+      </div>
+      <div id="metalsStatus" class="metals-status" role="status" aria-live="polite"></div>
+      <div id="metalPriceList" class="metal-price-list"></div>
+    </section>
   </div>
 
   <!-- فایلی جاڤاسکریپت -->

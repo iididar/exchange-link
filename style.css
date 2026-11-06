@@ -128,8 +128,10 @@ html[dir="ltr"] .toggle-switch input:checked + .toggle-slider::before { transfor
 
 .rate-header { text-align: center; margin: 0 0 6px; }
 .rate-title { font-size: 1.8rem; font-weight: 800; color: var(--title-color); text-shadow: 0 0 18px var(--gold-glow); margin-bottom: 4px; }
-.rate-banner { direction: ltr; font-family: 'NRT', 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--rate-color); text-shadow: 0 0 20px var(--gold-glow); letter-spacing: 0.5px; transition: transform 0.25s ease; }
+.rate-banner { direction: ltr; font-family: 'NRT', 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--rate-color); filter: drop-shadow(0 0 10px rgba(255, 183, 17, 0.45)); letter-spacing: 0.5px; transition: transform 0.25s ease; }
 .rate-banner.pulse { transform: scale(1.06); }
+.rate-banner.is-up { color: #22c55e; }
+.rate-banner.is-down { color: #ef4444; }
 
 .converter-section { position: relative; display: flex; flex-direction: column; gap: 14px; margin-bottom: 8px; }
 .currency-card { width: 100%; height: 96px; min-width: 0; flex: 0 0 96px; background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: 20px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; direction: ltr; box-shadow: var(--card-shadow); }
@@ -230,6 +232,306 @@ html[lang="en"] .rate-banner {
 
 html[lang="en"] .rate-banner.pulse {
   transform: none;
+}
+
+body.metals-open {
+  overflow: hidden;
+}
+
+body.metals-open .rate-header,
+body.metals-open .converter-section,
+body.metals-open .keypad {
+  display: none;
+}
+
+body.metals-open .app-container {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+body.metals-open .top-bar {
+  flex: 0 0 auto;
+}
+
+body.metals-open #discountSettingRow,
+body.metals-open .currency-selector-box,
+body.metals-open .menu-footer {
+  display: none;
+}
+
+.metals-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.metals-view {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  padding: 2px 0 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.metals-view[hidden],
+.metal-price-card[hidden] {
+  display: none;
+}
+
+.metals-heading {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  direction: rtl;
+  min-height: 58px;
+  margin-bottom: 12px;
+  padding: 4px;
+  border: 1px solid var(--card-border);
+  border-radius: 15px;
+  background: var(--menu-item-bg);
+  isolation: isolate;
+}
+
+.tab-glider {
+  position: absolute;
+  z-index: 0;
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  width: calc((100% - 8px) / 2);
+  border: 1px solid var(--card-active-border);
+  border-radius: 11px;
+  background: var(--card-bg);
+  box-shadow: 0 0 15px rgba(255, 183, 17, 0.35);
+  pointer-events: none;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
+}
+
+.metals-heading.silver-active .tab-glider {
+  transform: translateX(-100%);
+}
+
+.tab-glider::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 221, 130, 0.02) 38%, rgba(255, 221, 130, 0.34) 50%, rgba(255, 221, 130, 0.02) 62%, transparent 80%);
+  content: "";
+  opacity: 0;
+  transform: translateX(-100%);
+}
+
+.metals-heading.shimmer .tab-glider::after {
+  animation: tabGliderShimmer 650ms ease-out 450ms;
+}
+
+@keyframes tabGliderShimmer {
+  0% { opacity: 0; transform: translateX(-100%); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(100%); }
+}
+
+.metal-tab {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 50%;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-white);
+  font-family: 'NRT', 'Inter', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.28s ease, text-shadow 0.28s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.metal-tab.active {
+  color: #ffb711;
+  text-shadow: 0 0 12px rgba(255, 183, 17, 0.55);
+  transform: scale(1.05);
+}
+
+.metal-tab:active {
+  transform: scale(0.96);
+}
+
+.metal-price-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 2px 1px 10px;
+}
+
+.metal-price-list.list-exit-to-left {
+  animation: metalListExitLeft 180ms ease-in forwards;
+}
+
+.metal-price-list.list-exit-to-right {
+  animation: metalListExitRight 180ms ease-in forwards;
+}
+
+.metal-price-list.list-enter .metal-price-card:not([hidden]) {
+  animation: metalCardEnter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--row-index, 0) * 40ms);
+}
+
+.metal-price-list.enter-from-left {
+  --enter-x: -12px;
+}
+
+.metal-price-list.enter-from-right {
+  --enter-x: 12px;
+}
+
+@keyframes metalListExitLeft {
+  to { opacity: 0; transform: translateX(-14px) scale(0.99); filter: blur(3px); }
+}
+
+@keyframes metalListExitRight {
+  to { opacity: 0; transform: translateX(14px) scale(0.99); filter: blur(3px); }
+}
+
+@keyframes metalCardEnter {
+  from { opacity: 0; transform: translate(var(--enter-x, 0), 12px) scale(0.98); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+.metal-price-card {
+  display: flex;
+  min-height: 65px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 15px;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.metal-price-name {
+  min-width: 0;
+  color: var(--text-white);
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.metal-price-amount {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  color: var(--gold-primary);
+  direction: ltr;
+  font-family: 'NRT', 'Inter', sans-serif;
+  font-size: clamp(0.9rem, 4.5vw, 1.1rem);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.metal-price-number {
+  display: inline-flex;
+  align-items: center;
+}
+
+.metal-price-unit {
+  color: var(--text-muted);
+  font-family: 'NRT', 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.metal-price-unit:empty {
+  display: none;
+}
+
+.odometer-digit {
+  display: inline-block;
+  width: 0.62em;
+  height: 1.15em;
+  overflow: hidden;
+  vertical-align: bottom;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  text-shadow: none !important;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 15%, #000 85%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 15%, #000 85%, transparent 100%);
+}
+
+.odometer-strip {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(0);
+  transition: transform 0.55s cubic-bezier(0.22, 0.75, 0.25, 1);
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  text-shadow: none !important;
+}
+
+.odometer-strip > span {
+  display: block;
+  height: 1.15em;
+  line-height: 1.15em;
+  text-align: center;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  text-shadow: none !important;
+}
+
+.metal-price-card.is-up .metal-price-amount {
+  color: #22c55e;
+}
+
+.metal-price-card.is-down .metal-price-amount {
+  color: #ef4444;
+}
+
+.metals-status {
+  min-height: 1.2em;
+  margin: 0 0 6px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+@media (max-width: 360px) {
+  .metal-price-card { min-height: 60px; padding: 10px 11px; }
+  .metal-price-name { font-size: 0.88rem; }
+  .metal-price-amount { font-size: 0.86rem; }
+  .metal-tab { font-size: 1.05rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-glider,
+  .metal-tab {
+    transition-duration: 0.01ms;
+  }
+
+  .metals-heading.shimmer .tab-glider::after,
+  .metal-price-list.list-exit-to-left,
+  .metal-price-list.list-exit-to-right,
+  .metal-price-list.list-enter .metal-price-card:not([hidden]) {
+    animation-duration: 0.01ms;
+    animation-delay: 0ms;
+  }
 }
 
 html {
