@@ -483,15 +483,26 @@ function renderOdometer(element, formattedValue) {
   );
   const digitCount = [...formattedValue].filter(character => /\d/.test(character)).length;
   let digitIndex = 0;
+  let textBuffer = '';
   const pendingDigits = [];
   const fragment = document.createDocumentFragment();
 
+  function appendText() {
+    if (!textBuffer) return;
+    const text = document.createElement('span');
+    text.className = /[\u0600-\u06FF]/.test(textBuffer) ? 'odometer-text rate-unit' : 'odometer-text';
+    text.textContent = textBuffer;
+    fragment.append(text);
+    textBuffer = '';
+  }
+
   [...formattedValue].forEach((character) => {
     if (!/\d/.test(character)) {
-      fragment.append(document.createTextNode(character));
+      textBuffer += character;
       return;
     }
 
+    appendText();
     const position = String(digitCount - digitIndex - 1);
     let digit = oldDigits.get(position);
     const isNewDigit = !digit;
@@ -517,6 +528,7 @@ function renderOdometer(element, formattedValue) {
     digitIndex += 1;
   });
 
+  appendText();
   element.replaceChildren(fragment);
   requestAnimationFrame(() => {
     pendingDigits.forEach(({ strip, value }) => {

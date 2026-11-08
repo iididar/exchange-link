@@ -129,6 +129,12 @@ html[dir="ltr"] .toggle-switch input:checked + .toggle-slider::before { transfor
 .rate-header { text-align: center; margin: 0 0 6px; }
 .rate-title { font-size: 1.8rem; font-weight: 800; color: var(--title-color); text-shadow: 0 0 18px var(--gold-glow); margin-bottom: 4px; }
 .rate-banner { direction: ltr; font-family: 'NRT', 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--rate-color); filter: drop-shadow(0 0 10px rgba(255, 183, 17, 0.45)); letter-spacing: 0.5px; transition: transform 0.25s ease; }
+.rate-unit,
+.exchange-rate-line {
+  letter-spacing: 0 !important;
+  font-kerning: normal;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
 .rate-banner.pulse { transform: scale(1.06); }
 .rate-banner.is-up { color: #22c55e; }
 .rate-banner.is-down { color: #ef4444; }
