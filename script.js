@@ -675,6 +675,50 @@ function getSwissquoteUrl(instrument) {
   return `https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/${instrument}`;
 }
 
+async function fetchLiveGoldAndSilver() {
+  let goldOunce = null;
+  let silverOunce = null;
+
+  try {
+    const [auRes, agRes] = await Promise.all([
+      fetch('https://api.gold-api.com/price/XAU'),
+      fetch('https://api.gold-api.com/price/XAG')
+    ]);
+    if (auRes.ok && agRes.ok) {
+      const auData = await auRes.json();
+      const agData = await agRes.json();
+      goldOunce = Number(auData.price);
+      silverOunce = Number(agData.price);
+    }
+  } catch (e) {}
+
+  if (!goldOunce || !silverOunce) {
+    try {
+      const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://data-asg.goldprice.org/dbXRates/USD')}&t=${Date.now()}`);
+      if (res.ok) {
+        const wrapper = await res.json();
+        const parsed = JSON.parse(wrapper.contents);
+        if (parsed?.items?.[0]) {
+          goldOunce = Number(parsed.items[0].xauPrice);
+          silverOunce = Number(parsed.items[0].xagPrice);
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (!goldOunce) {
+    try {
+      const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT');
+      if (res.ok) {
+        const data = await res.json();
+        goldOunce = parseFloat(data.price);
+      }
+    } catch (e) {}
+  }
+
+  return { goldOunce, silverOunce };
+}
+
 async function fetchMetalPrices() {
   if (metalState.isFetching) return;
   metalState.isFetching = true;
@@ -683,75 +727,28 @@ async function fetchMetalPrices() {
   }
 
   try {
-    let goldPrice = null;
-    let silverPrice = null;
-    const readGoldPrice = data => getPositivePrice(data?.items?.[0]?.xauPrice);
-    const readSilverPrice = data => getPositivePrice(data?.items?.[0]?.xagPrice);
-    const tryGoldPriceEndpoint = async (url, label, readPrices) => {
-      const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
-      if (!response.ok) throw new Error(`${label} returned HTTP ${response.status}`);
-      const data = await response.json();
-      const prices = readPrices(data);
-      if (prices.gold && !goldPrice) goldPrice = prices.gold;
-      if (prices.silver && !silverPrice) silverPrice = prices.silver;
-      if (!prices.gold && !prices.silver) throw new Error(`${label} response contained no valid spot prices`);
-    };
-    const tryGoldApiPrice = async (metal, url) => {
-      const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
-      if (!response.ok) throw new Error(`Gold-API.com ${metal} quote returned HTTP ${response.status}`);
-      const price = getPositivePrice((await response.json())?.price);
-      if (!price) throw new Error(`Gold-API.com ${metal} response contained no valid spot price`);
-      if (metal === 'gold') goldPrice = price;
-      else silverPrice = price;
-    };
-    const tryFallback = async (label, loadPrices) => {
-      try {
-        await loadPrices();
-      } catch (error) {
-        console.warn(`${label} precious-metals source failed.`, error);
-      }
-    };
+    const livePrices = await fetchLiveGoldAndSilver();
+    const nextGold = getPositivePrice(livePrices.goldOunce);
+    const nextSilver = getPositivePrice(livePrices.silverOunce);
 
-    await tryFallback('Direct GoldPrice', () => tryGoldPriceEndpoint(
-      METAL_PRIMARY_URL,
-      'GoldPrice API',
-      data => ({ gold: readGoldPrice(data), silver: readSilverPrice(data) })
-    ));
-    if (!goldPrice || !silverPrice) {
-      await tryFallback('AllOrigins', () => tryGoldPriceEndpoint(
-        `${METAL_ALL_ORIGINS_URL}?url=${encodeURIComponent(METAL_PRIMARY_URL)}&t=${Date.now()}`,
-        'AllOrigins GoldPrice API',
-        data => ({ gold: readGoldPrice(data), silver: readSilverPrice(data) })
-      ));
+    if (nextGold) {
+      metalState.goldOunce = nextGold;
     }
-    if (!goldPrice || !silverPrice) {
-      await tryFallback('Corsproxy GoldPrice', () => tryGoldPriceEndpoint(
-        METAL_CORS_PROXY_URL,
-        'Corsproxy GoldPrice API',
-        data => ({ gold: readGoldPrice(data), silver: readSilverPrice(data) })
-      ));
-    }
-    if (!goldPrice) {
-      await tryFallback('Corsproxy Swissquote gold', async () => {
-        goldPrice = await fetchSwissquoteQuote(METAL_SWISSQUOTE_PROXY_URL, 'gold');
-      });
-    }
-    if (!goldPrice) {
-      await tryFallback('Gold-API.com gold', () => tryGoldApiPrice('gold', METAL_GOLD_API_URLS.gold));
-    }
-    if (!silverPrice) {
-      await tryFallback('Gold-API.com silver', () => tryGoldApiPrice('silver', METAL_GOLD_API_URLS.silver));
+    if (nextSilver) {
+      metalState.silverOunce = nextSilver;
     }
 
-    if (goldPrice) metalState.goldOunce = goldPrice;
-    if (silverPrice) metalState.silverOunce = silverPrice;
-    if (goldPrice || silverPrice) {
+    if (metalState.goldOunce || metalState.silverOunce) {
       cacheMetalPrices(metalState.goldOunce, metalState.silverOunce);
     }
+
     renderMetalPrices();
     metalsStatus.textContent = metalState.goldOunce || metalState.silverOunce
       ? ''
       : getTranslations().metalsUnavailable;
+  } catch (error) {
+    console.warn('Unable to load live Gold and Silver prices.', error);
+    metalsStatus.textContent = getTranslations().metalsUnavailable;
   } finally {
     metalState.isFetching = false;
   }
