@@ -5,8 +5,8 @@
     "usdRatePostAt": "2026-11-12T12:58:49Z"
   },
   "rudaw": {
-    "gbpUsdPer100": 131.25,
-    "eurUsdPer100": 110.25,
+    "gbpUsdPer100": 131.0,
+    "eurUsdPer100": 110.0,
     "tryPer100": 5050.0,
     "tomanPer100000Iqd": 25500000.0
   }
