@@ -337,23 +337,33 @@ const darkModeToggle = document.getElementById('darkModeToggle');
 const currSelectBtns = document.querySelectorAll('.curr-select-btn');
 const languageSelectBtns = document.querySelectorAll('.language-select-btn');
 
-const METAL_PRIMARY_URL = 'https://data-asg.goldprice.org/dbXRates/USD';
-const METAL_FALLBACK_URLS = {
-  gold: 'https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD',
-  silver: 'https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAG/USD'
-};
 const FX_INSTRUMENTS = {
   GBP: 'GBP/USD',
   EUR: 'EUR/USD',
   USDTRY: 'USD/TRY'
+};
+const METAL_API_URLS = {
+  swissquote: {
+    gold: 'https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD',
+    silver: 'https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAG/USD'
+  },
+  goldApi: {
+    gold: 'https://api.gold-api.com/price/XAU',
+    silver: 'https://api.gold-api.com/price/XAG'
+  },
+  goldPrice: 'https://data-asg.goldprice.org/dbXRates/USD'
+};
+const METAL_CACHE_KEYS = {
+  gold: 'liveMetalGoldOunce',
+  silver: 'liveMetalSilverOunce'
 };
 const metalState = {
   isSilver: false,
   isOpen: false,
   isFetching: false,
   isSwitching: false,
-  goldOunce: null,
-  silverOunce: null,
+  goldOunce: getPositivePrice(localStorage.getItem(METAL_CACHE_KEYS.gold)),
+  silverOunce: getPositivePrice(localStorage.getItem(METAL_CACHE_KEYS.silver)),
   flashTimers: new Map()
 };
 const rateFlashTimers = new Map();
@@ -656,48 +666,90 @@ function getSwissquoteUrl(instrument) {
   return `https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/${instrument}`;
 }
 
-async function fetchMetalPrices() {
+async function fetchJsonWithTimeout(url, label) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2500);
+  try {
+    const response = await fetch(url, { cache: 'no-store', signal: controller.signal });
+    if (!response.ok) throw new Error(`${label} returned HTTP ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchMetalQuote(url, label, readPrice) {
+  const data = await fetchJsonWithTimeout(url, label);
+  const price = getPositivePrice(readPrice(data));
+  if (!price) throw new Error(`${label} response did not contain a valid price`);
+  return price;
+}
+
+function cacheMetalPrice(key, price) {
+  try {
+    localStorage.setItem(key, String(price));
+  } catch (error) {
+    console.warn('Unable to cache the latest precious-metals price.', error);
+  }
+}
+
+async function fetchLiveMetals() {
   if (metalState.isFetching) return;
   metalState.isFetching = true;
-  metalsStatus.textContent = getTranslations().metalsLoading;
+  if (!metalState.goldOunce && !metalState.silverOunce) {
+    metalsStatus.textContent = getTranslations().metalsLoading;
+  } else {
+    metalsStatus.textContent = '';
+  }
 
   try {
     let goldPrice = null;
     let silverPrice = null;
-    try {
-      const response = await fetch(`${METAL_PRIMARY_URL}?t=${Date.now()}`, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`GoldPrice API returned HTTP ${response.status}`);
-      const data = await response.json();
-      const item = data?.items?.[0];
-      goldPrice = getPositivePrice(item?.xauPrice);
-      silverPrice = getPositivePrice(item?.xagPrice);
-      if (!goldPrice && !silverPrice) throw new Error('GoldPrice API response contained no valid spot prices');
-    } catch (error) {
-      console.warn('Primary precious-metals API failed; trying independent quote fallbacks.', error);
+    const readSwissquotePrice = data => {
+      const quote = data?.[0]?.spreadProfilePrices?.[0];
+      return getPositivePrice(quote?.ask) || getPositivePrice(quote?.bid);
+    };
+    const readGoldApiPrice = data => data?.price;
+
+    const primaryResults = await Promise.allSettled([
+      fetchMetalQuote(METAL_API_URLS.swissquote.gold, 'Swissquote gold', readSwissquotePrice),
+      fetchMetalQuote(METAL_API_URLS.swissquote.silver, 'Swissquote silver', readSwissquotePrice)
+    ]);
+    if (primaryResults[0].status === 'fulfilled') goldPrice = primaryResults[0].value;
+    if (primaryResults[1].status === 'fulfilled') silverPrice = primaryResults[1].value;
+
+    const fallbackResults = await Promise.allSettled([
+      goldPrice ? Promise.resolve(goldPrice) :
+        fetchMetalQuote(METAL_API_URLS.goldApi.gold, 'Gold-API gold', readGoldApiPrice),
+      silverPrice ? Promise.resolve(silverPrice) :
+        fetchMetalQuote(METAL_API_URLS.goldApi.silver, 'Gold-API silver', readGoldApiPrice)
+    ]);
+    if (!goldPrice && fallbackResults[0].status === 'fulfilled') goldPrice = fallbackResults[0].value;
+    if (!silverPrice && fallbackResults[1].status === 'fulfilled') silverPrice = fallbackResults[1].value;
+
+    if (!goldPrice || !silverPrice) {
+      try {
+        const data = await fetchJsonWithTimeout(METAL_API_URLS.goldPrice, 'GoldPrice.org');
+        const item = data?.items?.[0];
+        goldPrice = goldPrice || getPositivePrice(item?.xauPrice);
+        silverPrice = silverPrice || getPositivePrice(item?.xagPrice);
+      } catch {
+        // Keep the latest valid quote if the final fallback is unavailable.
+      }
     }
 
-    const fallbackTasks = [];
-    if (!goldPrice) {
-      fallbackTasks.push(fetchSwissquoteQuote(METAL_FALLBACK_URLS.gold, 'gold').then(
-        price => { goldPrice = price; },
-        error => { console.error('Unable to fetch the gold fallback quote.', error); }
-      ));
+    if (goldPrice) {
+      metalState.goldOunce = goldPrice;
+      cacheMetalPrice(METAL_CACHE_KEYS.gold, goldPrice);
     }
-    if (!silverPrice) {
-      fallbackTasks.push(fetchSwissquoteQuote(METAL_FALLBACK_URLS.silver, 'silver').then(
-        price => { silverPrice = price; },
-        error => { console.error('Unable to fetch the silver fallback quote.', error); }
-      ));
+    if (silverPrice) {
+      metalState.silverOunce = silverPrice;
+      cacheMetalPrice(METAL_CACHE_KEYS.silver, silverPrice);
     }
-    await Promise.all(fallbackTasks);
-
-    if (goldPrice) metalState.goldOunce = goldPrice;
-    if (silverPrice) metalState.silverOunce = silverPrice;
     renderMetalPrices();
-    metalsStatus.textContent = goldPrice || silverPrice ? '' : getTranslations().metalsUnavailable;
-    if ((!goldPrice || !silverPrice) && (metalState.goldOunce || metalState.silverOunce)) {
-      metalsStatus.textContent = getTranslations().metalsUnavailable;
-    }
+    metalsStatus.textContent = metalState.goldOunce || metalState.silverOunce
+      ? ''
+      : getTranslations().metalsUnavailable;
   } finally {
     metalState.isFetching = false;
   }
@@ -712,7 +764,7 @@ function setMetalsViewOpen(isOpen) {
   if (isOpen) {
     renderMetalLabels();
     renderMetalPrices();
-    fetchMetalPrices();
+    fetchLiveMetals();
   }
 }
 
@@ -1103,7 +1155,7 @@ darkModeToggle.addEventListener('change', (e) => {
 refreshBtn.addEventListener('click', async () => {
   refreshBtn.classList.add('spinning');
   if (metalState.isOpen) {
-    await fetchMetalPrices();
+    await fetchLiveMetals();
   } else {
     await fetchExchangeRates();
     renderRateBanner(true);
@@ -1271,13 +1323,19 @@ document.fonts.ready.then(calculateAndRender);
 fetchExchangeRates();
 
 setInterval(fetchExchangeRates, 60000);
-setInterval(() => {
-  if (metalState.isOpen) fetchMetalPrices();
-}, 30000);
+const startLiveMetalUpdates = () => {
+  fetchLiveMetals();
+  setInterval(fetchLiveMetals, 3000);
+};
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startLiveMetalUpdates, { once: true });
+} else {
+  startLiveMetalUpdates();
+}
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
     fetchExchangeRates();
-    if (metalState.isOpen) fetchMetalPrices();
+    fetchLiveMetals();
   }
 });
