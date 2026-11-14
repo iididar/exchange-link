@@ -16,7 +16,7 @@ document.addEventListener('keydown', (e) => {
 // ٢. بارکردنی خێرای وێنەکان (.jpeg لە پێشەوەیە)
 // =====================================================
 function resolveImageFile(baseName, onSuccess, onFail) {
-  const extensions = ['.jpeg', '.JPEG', '.PNG', '.png', '.JPG', '.jpg', '.webp', ''];
+  const extensions = ['.JPG', '.jpg', '.jpeg', '.JPEG', '.PNG', '.png', '.webp', ''];
   let idx = 0;
 
   function tryNext() {
@@ -337,11 +337,7 @@ const darkModeToggle = document.getElementById('darkModeToggle');
 const currSelectBtns = document.querySelectorAll('.curr-select-btn');
 const languageSelectBtns = document.querySelectorAll('.language-select-btn');
 
-const FX_INSTRUMENTS = {
-  GBP: 'GBP/USD',
-  EUR: 'EUR/USD',
-  USDTRY: 'USD/TRY'
-};
+const FX_QUOTES_URL = 'https://api.frankfurter.app/latest?from=USD&to=GBP,EUR,TRY';
 const METAL_API_URLS = {
   swissquote: {
     gold: 'https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD',
@@ -696,60 +692,14 @@ function cacheMetalPrice(key, price) {
 async function fetchLiveMetals() {
   if (metalState.isFetching) return;
   metalState.isFetching = true;
-  if (!metalState.goldOunce && !metalState.silverOunce) {
-    metalsStatus.textContent = getTranslations().metalsLoading;
-  } else {
-    metalsStatus.textContent = '';
-  }
-
   try {
-    let goldPrice = null;
-    let silverPrice = null;
-    const readSwissquotePrice = data => {
-      const quote = data?.[0]?.spreadProfilePrices?.[0];
-      return getPositivePrice(quote?.ask) || getPositivePrice(quote?.bid);
-    };
-    const readGoldApiPrice = data => data?.price;
-
-    const primaryResults = await Promise.allSettled([
-      fetchMetalQuote(METAL_API_URLS.swissquote.gold, 'Swissquote gold', readSwissquotePrice),
-      fetchMetalQuote(METAL_API_URLS.swissquote.silver, 'Swissquote silver', readSwissquotePrice)
-    ]);
-    if (primaryResults[0].status === 'fulfilled') goldPrice = primaryResults[0].value;
-    if (primaryResults[1].status === 'fulfilled') silverPrice = primaryResults[1].value;
-
-    const fallbackResults = await Promise.allSettled([
-      goldPrice ? Promise.resolve(goldPrice) :
-        fetchMetalQuote(METAL_API_URLS.goldApi.gold, 'Gold-API gold', readGoldApiPrice),
-      silverPrice ? Promise.resolve(silverPrice) :
-        fetchMetalQuote(METAL_API_URLS.goldApi.silver, 'Gold-API silver', readGoldApiPrice)
-    ]);
-    if (!goldPrice && fallbackResults[0].status === 'fulfilled') goldPrice = fallbackResults[0].value;
-    if (!silverPrice && fallbackResults[1].status === 'fulfilled') silverPrice = fallbackResults[1].value;
-
-    if (!goldPrice || !silverPrice) {
-      try {
-        const data = await fetchJsonWithTimeout(METAL_API_URLS.goldPrice, 'GoldPrice.org');
-        const item = data?.items?.[0];
-        goldPrice = goldPrice || getPositivePrice(item?.xauPrice);
-        silverPrice = silverPrice || getPositivePrice(item?.xagPrice);
-      } catch {
-        // Keep the latest valid quote if the final fallback is unavailable.
-      }
-    }
-
-    if (goldPrice) {
-      metalState.goldOunce = goldPrice;
-      cacheMetalPrice(METAL_CACHE_KEYS.gold, goldPrice);
-    }
-    if (silverPrice) {
-      metalState.silverOunce = silverPrice;
-      cacheMetalPrice(METAL_CACHE_KEYS.silver, silverPrice);
+    const translations = getTranslations();
+    if (!metalState.goldOunce && !metalState.silverOunce) {
+      metalsStatus.textContent = translations.metalsUnavailable;
+    } else {
+      metalsStatus.textContent = '';
     }
     renderMetalPrices();
-    metalsStatus.textContent = metalState.goldOunce || metalState.silverOunce
-      ? ''
-      : getTranslations().metalsUnavailable;
   } finally {
     metalState.isFetching = false;
   }
@@ -1238,6 +1188,36 @@ function recalculateUsdFxQuotes() {
   }
 }
 
+function applyRudawFxQuotes(data) {
+  const gbpQuote = Number(data?.gbpUsdPer100);
+  const eurQuote = Number(data?.eurUsdPer100);
+  const usdTryQuote = Number(data?.tryPer100);
+
+  if (Number.isFinite(gbpQuote) && gbpQuote > 0) {
+    const quote = gbpQuote / 100;
+    state.usdFxQuotes.GBP = quote;
+    localStorage.setItem('liveFxQuote_GBP', String(quote));
+    state.otherRates.GBP = Math.round(quote * state.baseRatePer100USD);
+    localStorage.setItem('liveFxRate_GBP', String(state.otherRates.GBP));
+  }
+
+  if (Number.isFinite(eurQuote) && eurQuote > 0) {
+    const quote = eurQuote / 100;
+    state.usdFxQuotes.EUR = quote;
+    localStorage.setItem('liveFxQuote_EUR', String(quote));
+    state.otherRates.EUR = Math.round(quote * state.baseRatePer100USD);
+    localStorage.setItem('liveFxRate_EUR', String(state.otherRates.EUR));
+  }
+
+  if (Number.isFinite(usdTryQuote) && usdTryQuote > 0) {
+    const quote = usdTryQuote / 100;
+    state.usdFxQuotes.USDTRY = quote;
+    localStorage.setItem('liveFxQuote_USDTRY', String(quote));
+    state.otherRates.TRY = Math.round((1000 / quote) * (state.baseRatePer100USD / 100));
+    localStorage.setItem('liveFxRate_TRY', String(state.otherRates.TRY));
+  }
+}
+
 function applyRudawTomanRate(data) {
   const tomanRate = Number(data?.tomanPer100000Iqd);
   if (!Number.isFinite(tomanRate) || tomanRate <= 0) {
@@ -1256,28 +1236,7 @@ async function fetchLiveForeignRates() {
   if (isFetchingLiveForeignRates) return;
   isFetchingLiveForeignRates = true;
   try {
-    const results = await Promise.allSettled(
-      Object.entries(FX_INSTRUMENTS).map(async ([currency, instrument]) => ({
-        currency,
-        instrument,
-        quote: await fetchSwissquoteQuote(getSwissquoteUrl(instrument), instrument)
-      }))
-    );
-
-    let updated = false;
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        console.error(`Unable to fetch the live ${Object.keys(FX_INSTRUMENTS)[index]} exchange quote.`, result.reason);
-        return;
-      }
-
-      const { currency, quote } = result.value;
-      state.usdFxQuotes[currency] = quote;
-      localStorage.setItem(`liveFxQuote_${currency}`, String(quote));
-      updated = true;
-    });
-
-    if (updated) {
+    if (state.usdFxQuotes.GBP > 0 || state.usdFxQuotes.EUR > 0 || state.usdFxQuotes.USDTRY > 0) {
       recalculateUsdFxQuotes();
       renderRateBanner();
       calculateAndRender();
@@ -1302,6 +1261,7 @@ async function fetchExchangeRates() {
     }
 
     updateTelegramRate(telegramRate, telegramTimestamp);
+    applyRudawFxQuotes(data.rudaw);
     applyRudawTomanRate(data.rudaw);
   } catch (error) {
     console.warn('Unable to load the latest USD/IQD and Toman rates.', error);

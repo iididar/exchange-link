@@ -476,8 +476,8 @@ body.metals-open .menu-footer {
   box-shadow: none !important;
   border: none !important;
   text-shadow: none !important;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 15%, #000 85%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 15%, #000 85%, transparent 100%);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .odometer-strip {
@@ -489,6 +489,12 @@ body.metals-open .menu-footer {
   box-shadow: none !important;
   border: none !important;
   text-shadow: none !important;
+}
+
+.odometer-text,
+.amount-display,
+.amount-display * {
+  white-space: nowrap;
 }
 
 .odometer-strip > span {
