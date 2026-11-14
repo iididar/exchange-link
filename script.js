@@ -16,7 +16,7 @@ document.addEventListener('keydown', (e) => {
 // ٢. بارکردنی خێرای وێنەکان (.jpeg لە پێشەوەیە)
 // =====================================================
 function resolveImageFile(baseName, onSuccess, onFail) {
-  const extensions = ['.jpeg', '.JPEG', '.PNG', '.png', '.JPG', '.jpg', '.webp', ''];
+  const extensions = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.webp', ''];
   let idx = 0;
 
   function tryNext() {
@@ -980,14 +980,14 @@ function getIqdPerSecondaryUnit() {
 // هەژمارکردنی ورد بۆ هەر ٥ دراوەکە (بە پاڵپشتیی BigInt بۆ تمەن تا ٢٠ ژمارە)
 function calculateAndRender() {
   const formattedTop = formatNumber(state.rawInput, 4);
-  renderOdometer(topAmountEl, formattedTop);
+  topAmountEl.textContent = formattedTop;
   topAmountEl.setAttribute('aria-label', formattedTop);
   adjustAmountFontSize(topAmountEl);
   topAmountEl.scrollLeft = topAmountEl.scrollWidth;
 
   const inputValue = parseFloat(state.rawInput);
   if (isNaN(inputValue) || inputValue === 0) {
-    renderOdometer(bottomAmountEl, '0');
+    bottomAmountEl.textContent = '0';
     bottomAmountEl.setAttribute('aria-label', '0');
     adjustAmountFontSize(bottomAmountEl);
     return;
@@ -1044,7 +1044,7 @@ function calculateAndRender() {
       : formatNumber(Number.isInteger(result) ? result.toString() : result.toFixed(2).replace(/\.?0+$/, ''), 2);
   }
 
-  renderOdometer(bottomAmountEl, bottomText);
+  bottomAmountEl.textContent = bottomText;
   bottomAmountEl.setAttribute('aria-label', bottomText);
   adjustAmountFontSize(bottomAmountEl);
   bottomAmountEl.scrollLeft = bottomAmountEl.scrollWidth;
