@@ -145,6 +145,60 @@ html[dir="ltr"] .toggle-switch input:checked + .toggle-slider::before { transfor
 .currency-card.active-input { border-color: var(--card-active-border); }
 .amount-display { flex: 1 1 0; min-width: 0; max-width: none; font-family: 'NRT', 'Inter', sans-serif; font-size: 2.1rem; font-weight: 600; line-height: 1.15; color: var(--text-white); overflow: hidden; white-space: nowrap; scrollbar-width: none; }
 .amount-display::-webkit-scrollbar { display: none; }
+
+/* ─── Per-digit slot-machine animations ────────────────────── */
+.amt-digit {
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+/* New digit slides in from BELOW (typing) */
+.amt-digit[data-anim="in-up"] {
+  animation: amtInUp 170ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* New digit slides in from ABOVE (backspace) */
+.amt-digit[data-anim="in-down"] {
+  animation: amtInDown 170ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Result digit rolls up (value increasing) */
+.amt-digit[data-anim="roll-up"] {
+  animation: amtRollUp 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Result digit rolls down (value decreasing) */
+.amt-digit[data-anim="roll-down"] {
+  animation: amtRollDown 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Input digit: stamp in with a little bounce */
+@keyframes amtInUp {
+  0%   { transform: translateY(65%) scaleY(0.6); opacity: 0; }
+  65%  { transform: translateY(-6%) scaleY(1.05); opacity: 1; }
+  100% { transform: translateY(0)  scaleY(1);    opacity: 1; }
+}
+@keyframes amtInDown {
+  0%   { transform: translateY(-65%) scaleY(0.6); opacity: 0; }
+  65%  { transform: translateY(6%)   scaleY(1.05); opacity: 1; }
+  100% { transform: translateY(0)    scaleY(1);    opacity: 1; }
+}
+
+/* Result digit: slot-machine roll with blur */
+@keyframes amtRollUp {
+  0%   { transform: translateY(55%) scale(0.82); opacity: 0; filter: blur(4px); }
+  55%  { opacity: 1; filter: blur(0px); }
+  100% { transform: translateY(0)   scale(1);    opacity: 1; filter: blur(0px); }
+}
+@keyframes amtRollDown {
+  0%   { transform: translateY(-55%) scale(0.82); opacity: 0; filter: blur(4px); }
+  55%  { opacity: 1; filter: blur(0px); }
+  100% { transform: translateY(0)    scale(1);    opacity: 1; filter: blur(0px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .amt-digit[data-anim] { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
+}
 .currency-info { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
 .currency-label-button { appearance: none; border: 0; padding: 6px 8px; margin: -6px -8px; background: transparent; color: inherit; font: inherit; cursor: default; border-radius: 10px; text-align: right; }
 .secondary-currency-toggle { cursor: pointer; touch-action: manipulation; }
@@ -259,8 +313,7 @@ body.metals-open .top-bar {
 }
 
 body.metals-open #discountSettingRow,
-body.metals-open .currency-selector-box,
-body.metals-open .menu-footer {
+body.metals-open .currency-selector-box {
   display: none;
 }
 
@@ -283,11 +336,275 @@ body.metals-open .menu-footer {
   touch-action: pan-y;
 }
 
+.metal-investment-view {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  width: 100%;
+  padding: 2px 0 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.metal-investment-heading {
+  text-align: center;
+}
+
+.metal-investment-heading .rate-title {
+  margin: 0 0 5px;
+  font-size: 1.45rem;
+}
+
+.metal-investment-item-name {
+  color: var(--text-muted);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.metal-investment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.metal-investment-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 13px 15px;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  color: var(--text-white);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.metal-investment-field input {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 11px;
+  border: 1px solid var(--card-border);
+  border-radius: 11px;
+  outline: none;
+  background: var(--btn-bg);
+  color: var(--text-white);
+  font: 700 1.1rem 'NRT', 'Inter', sans-serif;
+  text-align: left;
+  direction: ltr;
+}
+
+.metal-investment-field input:focus-visible {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+}
+
+.metal-investment-field-unit {
+  min-height: 1.1em;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.metal-investment-currency {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: var(--menu-item-bg);
+}
+
+.metal-investment-currency-option {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-white);
+  font: 700 0.95rem 'NRT', 'Inter', sans-serif;
+  cursor: pointer;
+}
+
+.metal-investment-currency-option.active {
+  border-color: var(--gold-primary);
+  background: var(--card-bg);
+  color: var(--gold-primary);
+  box-shadow: var(--card-shadow);
+}
+
+.metal-investment-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 15px;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.metal-investment-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.metal-investment-result-row + .metal-investment-result-row {
+  border-top: 1px solid var(--card-border);
+}
+
+.metal-investment-result-row strong {
+  color: var(--text-white);
+  direction: ltr;
+  font-size: 1rem;
+  text-align: end;
+}
+
+.metal-investment-result-row strong.is-positive { color: #16804a; }
+.metal-investment-result-row strong.is-negative { color: #d44747; }
+
 .metals-view[hidden],
+.metal-investment-view[hidden],
 .currency-rates-view[hidden],
 .calculator-view[hidden],
 .metal-price-card[hidden] {
   display: none;
+}
+
+/* ─── Hero Morph Overlay — Liquid Glass ─────────────────────── */
+#heroMorphOverlay {
+  position: fixed;
+  z-index: 800;
+  pointer-events: none;
+
+  /* Liquid glass: semi-transparent + strong blur */
+  background: rgba(28, 28, 28, 0.35);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+
+  /* Soft glass edge */
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+
+  /* Inner highlight shimmer — top-left bright, bottom-right dark */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04);
+
+  opacity: 0;
+  will-change: transform, border-radius, opacity;
+}
+
+/* Light-mode glass */
+body.light-mode #heroMorphOverlay {
+  background: rgba(252, 247, 238, 0.45);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(184, 115, 26, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(166, 97, 18, 0.12),
+    0 12px 40px rgba(140, 95, 30, 0.18),
+    0 0 0 0.5px rgba(255, 255, 255, 0.3);
+}
+
+#heroMorphOverlay.expanding {
+  pointer-events: none;
+  animation: heroExpand 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+#heroMorphOverlay.collapsing {
+  pointer-events: none;
+  animation: heroCollapse 380ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes heroExpand {
+  0%   { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+@keyframes heroCollapse {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Gold shimmer sweep across the glass surface during expansion */
+#heroMorphOverlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    125deg,
+    rgba(245, 166, 35, 0.07) 40%,
+    rgba(255, 255, 255, 0.10) 50%,
+    rgba(245, 166, 35, 0.07) 60%,
+    rgba(255, 255, 255, 0.00) 80%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+#heroMorphOverlay[style*="opacity: 1"]::after,
+#heroMorphOverlay[style*="width"]::after {
+  opacity: 1;
+}
+
+/* Fade-out for the currency list items during hero morph */
+#currencyRateList.hero-fading-out .currency-rate-card {
+  transition: opacity 220ms ease, transform 220ms ease;
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+/* Keep the clicked card visible during fade-out */
+#currencyRateList.hero-fading-out .currency-rate-card.hero-source {
+  opacity: 0 !important;
+}
+
+/* Calculator content fade states for hero transition */
+.calculator-view.hero-content-hidden {
+  opacity: 0;
+}
+
+.calculator-view.hero-content-visible {
+  opacity: 1;
+  transition: opacity 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Override existing enter/exit when hero morph is active */
+.calculator-view.hero-active {
+  transition: none !important;
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #heroMorphOverlay.expanding,
+  #heroMorphOverlay.collapsing {
+    animation-duration: 0.01ms;
+  }
+  #currencyRateList.hero-fading-out .currency-rate-card {
+    transition-duration: 0.01ms;
+  }
+  .calculator-view.hero-content-visible {
+    transition-duration: 0.01ms;
+  }
 }
 
 .currency-rates-view,
@@ -322,7 +639,7 @@ body.metals-open .menu-footer {
 }
 
 .currency-rates-title {
-  color: #f5a623;
+  color: var(--gold-primary);
   font-size: 1.2rem;
   font-weight: 800;
   text-align: center;
@@ -351,10 +668,32 @@ body.metals-open .menu-footer {
   width: calc((100% - 8px) / 2);
   border: 1.5px solid #f5a623;
   border-radius: 11px;
+  overflow: hidden;
   background: #1d1d1d;
   box-shadow: 0 0 12px rgba(255, 209, 0, 0.35);
   pointer-events: none;
   transition: all 0.3s ease;
+}
+
+.currency-base-indicator::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 221, 130, 0.02) 38%, rgba(255, 221, 130, 0.34) 50%, rgba(255, 221, 130, 0.02) 62%, transparent 80%);
+  content: "";
+  opacity: 0;
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+
+.currency-base-toggle.shimmer .currency-base-indicator::after {
+  animation: tabGliderShimmer 650ms ease-out;
+}
+
+body.light-mode .currency-base-indicator {
+  border-color: var(--gold-primary);
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(166, 97, 18, 0.14);
 }
 
 .currency-base-toggle.is-usd .currency-base-indicator {
@@ -388,8 +727,8 @@ html[dir="ltr"] .currency-base-toggle.is-usd .currency-base-indicator {
 }
 
 .currency-base-option.active {
-  color: #f5a623;
-  text-shadow: 0 0 12px rgba(255, 209, 0, 0.55);
+  color: var(--gold-primary);
+  text-shadow: 0 0 12px var(--gold-glow);
   transform: scale(1.05);
 }
 
@@ -536,6 +875,7 @@ html[dir="ltr"] .currency-base-toggle.is-usd .currency-base-indicator {
   width: calc((100% - 8px) / 2);
   border: 1px solid var(--card-active-border);
   border-radius: 11px;
+  overflow: hidden;
   background: var(--card-bg);
   box-shadow: 0 0 15px rgba(255, 183, 17, 0.35);
   pointer-events: none;
@@ -544,6 +884,10 @@ html[dir="ltr"] .currency-base-toggle.is-usd .currency-base-indicator {
 
 .metals-heading.silver-active .tab-glider {
   transform: translateX(-100%);
+}
+
+body.light-mode .tab-glider {
+  box-shadow: 0 3px 10px rgba(166, 97, 18, 0.14);
 }
 
 .tab-glider::after {
@@ -584,8 +928,8 @@ html[dir="ltr"] .currency-base-toggle.is-usd .currency-base-indicator {
 }
 
 .metal-tab.active {
-  color: #ffb711;
-  text-shadow: 0 0 12px rgba(255, 183, 17, 0.55);
+  color: var(--gold-primary);
+  text-shadow: 0 0 12px var(--gold-glow);
   transform: scale(1.05);
 }
 
@@ -646,6 +990,15 @@ html[dir="ltr"] .currency-base-toggle.is-usd .currency-base-indicator {
   background: var(--card-bg);
   box-shadow: var(--card-shadow);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.metal-price-card[data-metal] {
+  cursor: pointer;
+}
+
+.metal-price-card[data-metal]:focus-visible {
+  outline: 2px solid var(--gold-primary);
+  outline-offset: 2px;
 }
 
 .metal-price-name {

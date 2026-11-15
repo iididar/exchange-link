@@ -15,7 +15,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- فایلی دیزاین -->
-  <link rel="stylesheet" href="style.css?v=20261115-5">
+  <link rel="stylesheet" href="style.css?v=20261115-9">
 </head>
 <body>
 
@@ -192,6 +192,9 @@
     </section>
 
     <section id="metalsView" class="metals-view" aria-label="Precious metals" hidden>
+      <div class="currency-rates-heading">
+        <h1 id="metalsTitle" class="currency-rates-title">کانزاکان</h1>
+      </div>
       <div class="metals-heading" role="tablist" aria-label="Precious metals">
         <span class="tab-glider" aria-hidden="true"></span>
         <button id="goldTab" class="metal-tab active" type="button" role="tab" aria-controls="metalPriceList" aria-selected="true">نرخی زێـڕ</button>
@@ -200,9 +203,49 @@
       <div id="metalsStatus" class="metals-status" role="status" aria-live="polite"></div>
       <div id="metalPriceList" class="metal-price-list"></div>
     </section>
+
+    <section id="metalInvestmentView" class="metal-investment-view" aria-labelledby="metalInvestmentTitle" hidden>
+      <button id="backToMetalsBtn" class="back-to-rates-btn" type="button">
+        <span aria-hidden="true">←</span>
+        <span id="backToMetalsLabel">گەڕانەوە بۆ نرخی زێڕ و زیو</span>
+      </button>
+      <div class="metal-investment-heading">
+        <h1 id="metalInvestmentTitle" class="rate-title">ژمێریاری زێڕ و زیو</h1>
+        <p id="metalInvestmentItemName" class="metal-investment-item-name"></p>
+      </div>
+      <div class="metal-investment-form">
+        <label class="metal-investment-field" for="metalInvestmentQuantity">
+          <span id="metalInvestmentQuantityLabel">بڕی خاوەندارێتی</span>
+          <input id="metalInvestmentQuantity" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
+          <small id="metalInvestmentQuantityUnit" class="metal-investment-field-unit"></small>
+        </label>
+      </div>
+      <div id="metalInvestmentCurrency" class="metal-investment-currency" role="group" aria-label="Currency">
+        <button id="metalInvestmentIQD" class="metal-investment-currency-option active" type="button" aria-pressed="true">دینار</button>
+        <button id="metalInvestmentUSD" class="metal-investment-currency-option" type="button" aria-pressed="false">دۆلار</button>
+      </div>
+      <label class="metal-investment-field" for="metalInvestmentPaid">
+        <span id="metalInvestmentPaidLabel">کۆی ئەو پارەیەی پێت داوە</span>
+        <input id="metalInvestmentPaid" type="number" min="0" step="any" inputmode="decimal" placeholder="0">
+        <small id="metalInvestmentPaidUnit" class="metal-investment-field-unit">دینار</small>
+      </label>
+      <div class="metal-investment-results" aria-live="polite">
+        <div class="metal-investment-result-row">
+          <span id="metalInvestmentCurrentLabel">بەهای ئێستا</span>
+          <strong id="metalInvestmentCurrentValue">—</strong>
+        </div>
+        <div class="metal-investment-result-row investment-difference-row">
+          <span id="metalInvestmentDifferenceLabel">قازانج / زیان</span>
+          <strong id="metalInvestmentDifference">—</strong>
+        </div>
+      </div>
+    </section>
   </div>
 
+  <!-- Hero Morph Overlay — animated card-expansion layer -->
+  <div id="heroMorphOverlay" aria-hidden="true"></div>
+
   <!-- فایلی جاڤاسکریپت -->
-  <script src="script.js?v=20261115-4" defer></script>
+  <script src="script.js?v=20261115-8" defer></script>
 </body>
 </html>
