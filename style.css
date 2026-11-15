@@ -7,6 +7,9 @@
 }
 
 :root {
+  /* Adjust these sizes to change the rate number/symbol ratio. */
+  --rate-number-font-size: 1em;
+  --rate-symbol-font-size: 0.8em;
   --bg-gradient: radial-gradient(circle at 50% 20%, #2a241b 0%, #141414 60%, #0d0d0d 100%);
   --gold-primary: #f5a623;
   --title-color: #f5a623;
@@ -128,16 +131,14 @@ html[dir="ltr"] .toggle-switch input:checked + .toggle-slider::before { transfor
 
 .rate-header { text-align: center; margin: 0 0 6px; }
 .rate-title { font-size: 1.8rem; font-weight: 800; color: var(--title-color); text-shadow: 0 0 18px var(--gold-glow); margin-bottom: 4px; }
-.rate-banner { direction: ltr; font-family: 'NRT', 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--rate-color); filter: drop-shadow(0 0 10px rgba(255, 183, 17, 0.45)); letter-spacing: 0.5px; transition: transform 0.25s ease; }
-.rate-unit,
+.rate-banner { direction: ltr; font-family: 'NRT', 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--rate-color); filter: drop-shadow(0 0 10px rgba(255, 183, 17, 0.45)); letter-spacing: 0.5px; }
 .exchange-rate-line {
   letter-spacing: 0 !important;
   font-kerning: normal;
   font-feature-settings: "liga" 1, "calt" 1;
 }
-.rate-banner.pulse { transform: scale(1.06); }
-.rate-banner.is-up { color: #22c55e; }
-.rate-banner.is-down { color: #ef4444; }
+.rate-number { font-size: var(--rate-number-font-size); }
+.rate-currency-symbol { font-size: var(--rate-symbol-font-size); }
 
 .converter-section { position: relative; display: flex; flex-direction: column; gap: 14px; margin-bottom: 8px; }
 .currency-card { width: 100%; height: 96px; min-width: 0; flex: 0 0 96px; background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: 20px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; direction: ltr; box-shadow: var(--card-shadow); }
@@ -227,6 +228,10 @@ body { padding-bottom: 0; }
 }
 
 .rate-banner {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
   font-size: clamp(0.9rem, 5.3vw, 1.5rem);
 }
@@ -236,18 +241,8 @@ html[lang="en"] .rate-banner {
   letter-spacing: 0;
 }
 
-html[lang="en"] .rate-banner.pulse {
-  transform: none;
-}
-
 body.metals-open {
   overflow: hidden;
-}
-
-body.metals-open .rate-header,
-body.metals-open .converter-section,
-body.metals-open .keypad {
-  display: none;
 }
 
 body.metals-open .app-container {
@@ -289,8 +284,232 @@ body.metals-open .menu-footer {
 }
 
 .metals-view[hidden],
+.currency-rates-view[hidden],
+.calculator-view[hidden],
 .metal-price-card[hidden] {
   display: none;
+}
+
+.currency-rates-view,
+.calculator-view {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+.currency-rates-view {
+  gap: 12px;
+  padding: 2px 0 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.currency-rates-heading {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.currency-rates-title {
+  color: #f5a623;
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 0 12px var(--gold-glow);
+}
+
+.currency-base-toggle {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  min-height: 58px;
+  padding: 4px;
+  border: 1px solid var(--card-border);
+  border-radius: 15px;
+  background: var(--menu-item-bg);
+  isolation: isolate;
+}
+
+.currency-base-indicator {
+  position: absolute;
+  z-index: 0;
+  top: 4px;
+  right: 4px;
+  bottom: 4px;
+  width: calc((100% - 8px) / 2);
+  border: 1.5px solid #f5a623;
+  border-radius: 11px;
+  background: #1d1d1d;
+  box-shadow: 0 0 12px rgba(255, 209, 0, 0.35);
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.currency-base-toggle.is-usd .currency-base-indicator {
+  transform: translateX(-100%);
+}
+
+html[dir="ltr"] .currency-base-indicator {
+  right: auto;
+  left: 4px;
+}
+
+html[dir="ltr"] .currency-base-toggle.is-usd .currency-base-indicator {
+  transform: translateX(100%);
+}
+
+.currency-base-option {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 50%;
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-white);
+  font-family: 'NRT', 'Inter', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.currency-base-option.active {
+  color: #f5a623;
+  text-shadow: 0 0 12px rgba(255, 209, 0, 0.55);
+  transform: scale(1.05);
+}
+
+.currency-rate-value-changing {
+  animation: currencyRateValueChange 250ms ease-in-out;
+}
+
+@keyframes currencyRateValueChange {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.currency-rate-identity {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.currency-rate-identity .metal-price-name {
+  text-align: start;
+}
+
+.currency-rate-identity .metal-price-unit {
+  text-align: start;
+}
+
+.currency-base-option:focus-visible {
+  outline: 2px solid var(--gold-primary);
+  outline-offset: 2px;
+}
+
+
+.currency-rate-list {
+  flex: 1 0 auto;
+  width: 100%;
+}
+
+.currency-rate-card {
+  width: 100%;
+  color: inherit;
+  font-family: 'NRT', 'Inter', sans-serif;
+  text-align: start;
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.currency-rate-card:active {
+  transform: scale(0.97);
+}
+
+.currency-rate-card:focus-visible,
+.back-to-rates-btn:focus-visible {
+  outline: 2px solid var(--gold-primary);
+  outline-offset: 2px;
+}
+
+.calculator-view {
+  justify-content: space-between;
+  gap: 12px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transform-origin: center;
+  transition: opacity 400ms cubic-bezier(0.22, 1, 0.36, 1), transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.calculator-view.is-entering {
+  opacity: 0;
+  transform: translateY(24px) scale(0.96);
+}
+
+.calculator-view.is-exiting {
+  opacity: 0;
+  transform: translateY(24px) scale(0.97);
+  pointer-events: none;
+}
+
+.back-to-rates-btn {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  align-self: center;
+  justify-content: center;
+  direction: rtl;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1px solid rgba(255, 209, 0, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-white);
+  font-family: 'NRT', 'Inter', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.back-to-rates-btn:hover,
+.back-to-rates-btn:active {
+  background: rgba(255, 209, 0, 0.12);
+  border-color: rgba(255, 209, 0, 0.75);
+  box-shadow: 0 0 14px rgba(255, 209, 0, 0.18);
+}
+
+.back-to-rates-btn:active {
+  transform: scale(0.98);
+}
+
+.back-to-rates-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: #f5a623;
 }
 
 .metals-heading {
@@ -466,48 +685,9 @@ body.metals-open .menu-footer {
   display: none;
 }
 
-.odometer-digit {
-  display: inline-block;
-  width: 0.62em;
-  height: 1.15em;
-  overflow: hidden;
-  vertical-align: bottom;
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  text-shadow: none !important;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 15%, #000 85%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 15%, #000 85%, transparent 100%);
-}
-
-.odometer-strip {
-  display: flex;
-  flex-direction: column;
-  transform: translateY(0);
-  transition: transform 0.55s cubic-bezier(0.22, 0.75, 0.25, 1);
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  text-shadow: none !important;
-}
-
-.odometer-strip > span {
-  display: block;
-  height: 1.15em;
-  line-height: 1.15em;
-  text-align: center;
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  text-shadow: none !important;
-}
-
-.metal-price-card.is-up .metal-price-amount {
-  color: #22c55e;
-}
-
-.metal-price-card.is-down .metal-price-amount {
-  color: #ef4444;
+.amount-display,
+.amount-display * {
+  white-space: nowrap;
 }
 
 .metals-status {
@@ -527,8 +707,16 @@ body.metals-open .menu-footer {
 
 @media (prefers-reduced-motion: reduce) {
   .tab-glider,
-  .metal-tab {
+  .metal-tab,
+  .currency-rate-card,
+  .currency-base-indicator,
+  .currency-base-option,
+  .calculator-view {
     transition-duration: 0.01ms;
+  }
+
+  .currency-rate-value-changing {
+    animation-duration: 0.01ms;
   }
 
   .metals-heading.shimmer .tab-glider::after,

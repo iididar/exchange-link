@@ -120,6 +120,13 @@ const TRANSLATIONS = {
     metals: 'زێـڕ و زیـو',
     goldTitle: 'نرخی زێـڕ',
     silverTitle: 'نرخی زیـو',
+    currencyRatesTitle: 'نرخی دراوەکان',
+    comparisonBase: 'نرخی بەرامبەر',
+    currencyRateSubtitles: {
+      USD: '100$', GBP: '100£', EUR: '100€', IRR: '1,000,000 تمەن',
+      TRY: '1000 لیرە', IQD: '100,000 IQD'
+    },
+    backToRates: 'گەڕانەوە بۆ نرخی دراوەکان',
     metalNames: {
       goldOunce: 'ئۆنسەی زێـڕ',
       gold18k: 'زێـڕی عەیارە 18',
@@ -142,11 +149,11 @@ const TRANSLATIONS = {
     toman: 'تمەن',
     lira: 'لیرە',
     currencyTitles: {
-      USD: 'نرخی دۆلار', GBP: 'نرخی پاوەند', EUR: 'نرخی یۆرۆ',
+      USD: 'نرخی دۆلار', GBP: 'نرخی پاوەند', EUR: 'نرخی یۆرۆ', IQD: 'نرخی دینار',
       TRY: 'نرخی لیرەی تورکی', IRR: 'نرخی تمەنی ئێرانی'
     },
     currencies: {
-      USD: 'دۆلار', GBP: 'پاوەند', EUR: 'یۆرۆ',
+      USD: 'دۆلار', GBP: 'پاوەند', EUR: 'یۆرۆ', IQD: 'دینار',
       TRY: 'لیرەی تورکی', IRR: 'تمەن'
     },
     days: ['یەک شەممە', 'دوو شەممە', 'سێ شەممە', 'چوار شەممە', 'پێنج شەممە', 'هەینی', 'شەممە']
@@ -168,6 +175,13 @@ const TRANSLATIONS = {
     metals: 'الذهب والفضة',
     goldTitle: 'أسعار الذهب',
     silverTitle: 'أسعار الفضة',
+    currencyRatesTitle: 'أسعار العملات',
+    comparisonBase: 'الأسعار مقابل',
+    currencyRateSubtitles: {
+      USD: '100$', GBP: '100£', EUR: '100€', IRR: '1,000,000 تومان',
+      TRY: '1000 ليرة', IQD: '100,000 IQD'
+    },
+    backToRates: 'العودة إلى أسعار العملات',
     switchToSilver: 'أسعار الفضة',
     switchToGold: 'الذهب',
     metalNames: {
@@ -192,11 +206,11 @@ const TRANSLATIONS = {
     toman: 'تومان',
     lira: 'ليرة',
     currencyTitles: {
-      USD: 'سعر الدولار', GBP: 'سعر الجنيه الإسترليني', EUR: 'سعر اليورو',
+      USD: 'سعر الدولار', GBP: 'سعر الجنيه الإسترليني', EUR: 'سعر اليورو', IQD: 'سعر الدينار',
       TRY: 'سعر الليرة التركية', IRR: 'سعر التومان الإيراني'
     },
     currencies: {
-      USD: 'دولار', GBP: 'جنيه إسترليني', EUR: 'يورو',
+      USD: 'دولار', GBP: 'جنيه إسترليني', EUR: 'يورو', IQD: 'دينار',
       TRY: 'ليرة تركية', IRR: 'تومان'
     },
     days: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
@@ -218,6 +232,13 @@ const TRANSLATIONS = {
     metals: 'Precious metals',
     goldTitle: 'Gold Prices',
     silverTitle: 'Silver Prices',
+    currencyRatesTitle: 'Currency Rates',
+    comparisonBase: 'Rates against',
+    currencyRateSubtitles: {
+      USD: '100$', GBP: '100£', EUR: '100€', IRR: '1,000,000 Toman',
+      TRY: '1000 Lira', IQD: '100,000 IQD'
+    },
+    backToRates: 'Back to currency rates',
     switchToSilver: 'Silver Prices',
     switchToGold: 'Gold',
     metalNames: {
@@ -242,18 +263,18 @@ const TRANSLATIONS = {
     toman: 'Toman',
     lira: 'Lira',
     currencyTitles: {
-      USD: 'US Dollar Rate', GBP: 'British Pound Rate', EUR: 'Euro Rate',
+      USD: 'US Dollar Rate', GBP: 'British Pound Rate', EUR: 'Euro Rate', IQD: 'Iraqi Dinar Rate',
       TRY: 'Turkish Lira Rate', IRR: 'Iranian Toman Rate'
     },
     currencies: {
-      USD: 'US Dollar', GBP: 'British Pound', EUR: 'Euro',
+      USD: 'US Dollar', GBP: 'British Pound', EUR: 'Euro', IQD: 'Iraqi Dinar',
       TRY: 'Turkish Lira', IRR: 'Toman'
     },
     days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   }
 };
 
-const CURRENCY_SYMBOLS = { USD: '$', GBP: '£', EUR: '€', TRY: 'TRY', IRR: 'IRR' };
+const CURRENCY_SYMBOLS = { USD: '$', GBP: '£', EUR: '€', TRY: 'TRY', IRR: 'IRR', IQD: 'IQD' };
 const savedLanguage = localStorage.getItem('language');
 const initialLanguage = Object.hasOwn(TRANSLATIONS, savedLanguage) ? savedLanguage : 'ku';
 
@@ -268,8 +289,9 @@ const savedEurUsdQuote = Number(localStorage.getItem('liveFxQuote_EUR')) ||
 const savedUsdTryQuote = Number(localStorage.getItem('liveFxQuote_USDTRY')) || 0;
 
 const state = {
-  // هەمیشە لە کاتی کردنەوەی وێبسایتەکەدا ڕاستەوخۆ دۆلار هەڵبژێردراوە
   selectedCurrency: 'USD',
+  currencyRateBase: 'IQD',
+  currentView: 'rates',
   baseRatePer100USD: savedBaseRate,
   otherRates: {
     GBP: savedGbpUsdQuote > 0 && savedBaseRate > 0
@@ -317,6 +339,16 @@ const keypad = document.getElementById('keypad');
 const refreshBtn = document.getElementById('refreshBtn');
 const metalsBtn = document.getElementById('metalsBtn');
 const metalsView = document.getElementById('metalsView');
+const currencyRatesView = document.getElementById('currencyRatesView');
+const currencyRateList = document.getElementById('currencyRateList');
+const currencyRatesTitle = document.getElementById('currencyRatesTitle');
+const baseCurrencyToggle = document.getElementById('baseCurrencyToggle');
+const baseIQDButton = document.getElementById('baseIQDButton');
+const baseUSDButton = document.getElementById('baseUSDButton');
+const calculatorView = document.getElementById('calculatorView');
+const backToRatesBtn = document.getElementById('backToRatesBtn');
+const backToRatesLabel = document.getElementById('backToRatesLabel');
+let calculatorTransitionTimer = null;
 const metalsHeading = document.querySelector('.metals-heading');
 const goldTab = document.getElementById('goldTab');
 const silverTab = document.getElementById('silverTab');
@@ -363,11 +395,8 @@ const metalState = {
   isFetching: false,
   isSwitching: false,
   goldOunce: getPositivePrice(localStorage.getItem(METAL_CACHE_KEYS.gold)),
-  silverOunce: getPositivePrice(localStorage.getItem(METAL_CACHE_KEYS.silver)),
-  flashTimers: new Map()
+  silverOunce: getPositivePrice(localStorage.getItem(METAL_CACHE_KEYS.silver))
 };
-const rateFlashTimers = new Map();
-const rateBannerPreviousValues = new Map();
 
 const GOLD_PRICE_ITEMS = [
   { key: 'goldOunce', currency: 'USD', calculate: gold => gold },
@@ -397,7 +426,7 @@ function getTranslations() {
   return TRANSLATIONS[state.language];
 }
 
-function applyLanguage(language) {
+function applyLanguage(language, animateCurrencyRates = false) {
   if (!Object.prototype.hasOwnProperty.call(TRANSLATIONS, language)) return;
   state.language = language;
   localStorage.setItem('language', language);
@@ -416,6 +445,16 @@ function applyLanguage(language) {
   languageSelectorLabelEl.textContent = text.language;
   currencySelectorLabelEl.textContent = text.currenciesLabel;
   menuFooterEl.textContent = text.footer;
+  currencyRatesTitle.textContent = text.currencyRatesTitle;
+  baseCurrencyToggle.setAttribute('aria-label', text.comparisonBase);
+  baseIQDButton.textContent = text.iqd;
+  baseUSDButton.textContent = text.usd;
+  baseIQDButton.classList.toggle('active', state.currencyRateBase === 'IQD');
+  baseUSDButton.classList.toggle('active', state.currencyRateBase === 'USD');
+  baseCurrencyToggle.classList.toggle('is-usd', state.currencyRateBase === 'USD');
+  baseIQDButton.setAttribute('aria-pressed', String(state.currencyRateBase === 'IQD'));
+  baseUSDButton.setAttribute('aria-pressed', String(state.currencyRateBase === 'USD'));
+  backToRatesLabel.textContent = text.backToRates;
   refreshBtn.setAttribute('aria-label', text.refresh);
   refreshBtn.title = text.refresh;
   metalsBtn.setAttribute('aria-label', text.metals);
@@ -435,6 +474,7 @@ function applyLanguage(language) {
 
   renderConverterLabels();
   renderRateBanner();
+  renderCurrencyRateList(animateCurrencyRates);
   renderDateOrDay();
   renderMetalLabels();
   renderMetalPrices();
@@ -487,69 +527,152 @@ function initializeMetalPriceCards() {
   renderMetalLabels();
 }
 
-function renderOdometer(element, formattedValue) {
-  const oldDigits = new Map(
-    [...element.querySelectorAll('.odometer-digit')].map(digit => [digit.dataset.position, digit])
-  );
-  const digitCount = [...formattedValue].filter(character => /\d/.test(character)).length;
-  let digitIndex = 0;
-  let textBuffer = '';
-  const pendingDigits = [];
-  const fragment = document.createDocumentFragment();
+const CURRENCY_RATE_BASIS = {
+  USD: 100,
+  GBP: 100,
+  EUR: 100,
+  TRY: 1000,
+  IRR: 1000000,
+  IQD: 100000
+};
 
-  function appendText() {
-    if (!textBuffer) return;
-    const text = document.createElement('span');
-    text.className = /[\u0600-\u06FF]/.test(textBuffer) ? 'odometer-text rate-unit' : 'odometer-text';
-    text.textContent = textBuffer;
-    fragment.append(text);
-    textBuffer = '';
+function getCurrencyRate(currency) {
+  const usdRate = getEffectiveUsdRate();
+  if (state.currencyRateBase === 'IQD') {
+    if (currency === 'USD') return usdRate;
+    if (currency === 'GBP' || currency === 'EUR') return state.otherRates[currency];
+    if (currency === 'TRY') return state.otherRates.TRY;
+    if (currency === 'IRR' && state.otherRates.IRR > 0) {
+      return CURRENCY_RATE_BASIS.IRR * 100000 / state.otherRates.IRR;
+    }
+    return null;
   }
 
-  [...formattedValue].forEach((character) => {
-    if (!/\d/.test(character)) {
-      textBuffer += character;
-      return;
-    }
+  if (!Number.isFinite(usdRate) || usdRate <= 0) return null;
+  if (currency === 'IQD') return CURRENCY_RATE_BASIS.IQD * 100 / usdRate;
+  if (currency === 'GBP' || currency === 'EUR') {
+    return state.otherRates[currency] * 100 / usdRate;
+  }
+  if (currency === 'TRY') return state.otherRates.TRY * 100 / usdRate;
+  if (currency === 'IRR' && state.otherRates.IRR > 0) {
+    return CURRENCY_RATE_BASIS.IRR * 100000 / state.otherRates.IRR * 100 / usdRate;
+  }
+  return null;
+}
 
-    appendText();
-    const position = String(digitCount - digitIndex - 1);
-    let digit = oldDigits.get(position);
-    const isNewDigit = !digit;
-    if (isNewDigit) {
-      digit = document.createElement('span');
-      digit.className = 'odometer-digit';
-      digit.dataset.position = position;
-      digit.setAttribute('aria-hidden', 'true');
-      const strip = document.createElement('span');
-      strip.className = 'odometer-strip';
-      strip.setAttribute('aria-hidden', 'true');
-      for (let value = 0; value < 10; value += 1) {
-        const cell = document.createElement('span');
-        cell.textContent = String(value);
-        strip.append(cell);
-      }
-      digit.append(strip);
-    }
-    const strip = digit.firstElementChild;
-    if (isNewDigit) strip.style.transition = 'none';
-    pendingDigits.push({ strip, value: Number(character), isNewDigit });
-    fragment.append(digit);
-    digitIndex += 1;
+function renderCurrencyRateList(animateChanges = false) {
+  const text = getTranslations();
+  const currencies = state.currencyRateBase === 'IQD'
+    ? ['USD', 'GBP', 'EUR', 'IRR', 'TRY']
+    : ['IQD', 'GBP', 'EUR', 'IRR', 'TRY'];
+  const fragment = document.createDocumentFragment();
+
+  currencies.forEach((currency) => {
+    const rate = getCurrencyRate(currency);
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'metal-price-card currency-rate-card';
+    card.dataset.currency = currency;
+
+    const name = document.createElement('span');
+    name.className = 'metal-price-name';
+    name.textContent = `${text.currencies[currency]} (${currency})`;
+
+    const identity = document.createElement('span');
+    identity.className = 'currency-rate-identity';
+    const subtitle = document.createElement('small');
+    subtitle.className = 'metal-price-unit';
+    if (animateChanges) subtitle.classList.add('currency-rate-value-changing');
+    subtitle.setAttribute('dir', 'auto');
+    subtitle.textContent = text.currencyRateSubtitles[currency];
+    identity.append(name, subtitle);
+
+    const amount = document.createElement('span');
+    amount.className = 'metal-price-amount';
+    amount.setAttribute('dir', 'ltr');
+    const number = document.createElement('span');
+    number.className = 'metal-price-number';
+    if (animateChanges) number.classList.add('currency-rate-value-changing');
+    const decimals = state.currencyRateBase === 'USD' ? 2 : 0;
+    number.textContent = Number.isFinite(rate) && rate > 0
+      ? `${state.currencyRateBase === 'USD' ? '$' : ''}${formatNumber(rate.toFixed(decimals), decimals)}`
+      : '—';
+
+    const unit = document.createElement('small');
+    unit.className = 'metal-price-unit';
+    if (animateChanges) unit.classList.add('currency-rate-value-changing');
+    unit.textContent = state.currencyRateBase === 'USD' ? text.usd : text.iqd;
+    amount.append(number, unit);
+    card.append(identity, amount);
+    card.setAttribute('aria-label', `${name.textContent}: ${number.textContent} ${unit.textContent}`);
+    fragment.append(card);
   });
 
-  appendText();
-  element.replaceChildren(fragment);
+  currencyRateList.replaceChildren(fragment);
+}
+
+function openCalculatorForCurrency(currency) {
+  if (!Object.prototype.hasOwnProperty.call(CURRENCY_SYMBOLS, currency)) return;
+  clearCalculatorTransitionTimer();
+  state.selectedCurrency = currency;
+  state.secondaryCurrency = currency === 'USD' ? 'IQD' : state.currencyRateBase;
+  state.rawInput = String(CURRENCY_RATE_BASIS[currency]);
+  state.isTopForeign = true;
+  state.currentView = 'calculator';
+  currencyRatesView.hidden = true;
+  metalsView.hidden = true;
+  calculatorView.classList.remove('is-exiting');
+  calculatorView.classList.add('is-entering');
+  calculatorView.hidden = false;
+  metalState.isOpen = false;
+  currSelectBtns.forEach(button => button.classList.toggle('active', button.dataset.curr === currency));
+  document.body.classList.remove('metals-open');
+  metalsBtn.setAttribute('aria-pressed', 'false');
+  renderConverterLabels();
+  renderRateBanner();
+  calculateAndRender();
+  adjustRateBannerFontSize();
+  void calculatorView.offsetWidth;
   requestAnimationFrame(() => {
-    pendingDigits.forEach(({ strip, value }) => {
-      strip.style.transform = `translateY(-${value * 1.15}em)`;
-    });
-    requestAnimationFrame(() => {
-      pendingDigits.filter(digit => digit.isNewDigit).forEach(({ strip }) => {
-        strip.style.transition = '';
-      });
-    });
+    if (state.currentView === 'calculator') {
+      calculatorView.classList.remove('is-entering');
+    }
   });
+}
+
+function showCurrencyRates() {
+  const shouldAnimate = state.currentView === 'calculator' && !calculatorView.hidden;
+  clearCalculatorTransitionTimer();
+  state.currentView = 'rates';
+  metalState.isOpen = false;
+  metalsView.hidden = true;
+  if (shouldAnimate) {
+    calculatorView.classList.remove('is-entering');
+    calculatorView.classList.add('is-exiting');
+  } else {
+    calculatorView.classList.remove('is-entering', 'is-exiting');
+    calculatorView.hidden = true;
+  }
+  currencyRatesView.hidden = shouldAnimate;
+  document.body.classList.remove('metals-open');
+  metalsBtn.setAttribute('aria-pressed', 'false');
+  renderCurrencyRateList();
+  if (shouldAnimate) {
+    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 400;
+    calculatorTransitionTimer = window.setTimeout(() => {
+      calculatorTransitionTimer = null;
+      calculatorView.hidden = true;
+      calculatorView.classList.remove('is-exiting');
+      currencyRatesView.hidden = state.currentView !== 'rates' || metalState.isOpen;
+    }, duration);
+  }
+}
+
+function clearCalculatorTransitionTimer() {
+  if (calculatorTransitionTimer !== null) {
+    window.clearTimeout(calculatorTransitionTimer);
+    calculatorTransitionTimer = null;
+  }
 }
 
 function renderMetalPrices() {
@@ -573,27 +696,14 @@ function renderMetalPrices() {
       : rawPrice;
     if (!Number.isFinite(price)) return;
 
-    const previousPrice = Number(card.dataset.price);
     const formattedValue = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: item.currency === 'USD' ? 2 : 0,
       maximumFractionDigits: item.currency === 'USD' ? 2 : 0
     }).format(price);
-    renderOdometer(number, item.currency === 'USD' ? `$ ${formattedValue}` : formattedValue);
+    number.textContent = item.currency === 'USD' ? `$ ${formattedValue}` : formattedValue;
     unit.textContent = item.currency === 'IQD' ? 'دینار' : '';
     amount.setAttribute('aria-label', `${formattedValue} ${item.currency === 'USD' ? 'USD' : 'دینار'}`);
 
-    if (Number.isFinite(previousPrice) && previousPrice !== price) {
-      const direction = price > previousPrice ? 'is-up' : 'is-down';
-      const existingTimer = metalState.flashTimers.get(item.key);
-      if (existingTimer) clearTimeout(existingTimer);
-      card.classList.remove('is-up', 'is-down');
-      void card.offsetWidth;
-      card.classList.add(direction);
-      metalState.flashTimers.set(item.key, setTimeout(() => {
-        card.classList.remove(direction);
-        metalState.flashTimers.delete(item.key);
-      }, 1000));
-    }
     card.dataset.price = String(price);
   });
 }
@@ -759,6 +869,8 @@ function setMetalsViewOpen(isOpen) {
   metalState.isOpen = isOpen;
   if (isOpen) metalState.isSilver = false;
   metalsView.hidden = !isOpen;
+  currencyRatesView.hidden = isOpen || state.currentView !== 'rates';
+  calculatorView.hidden = isOpen || state.currentView !== 'calculator';
   document.body.classList.toggle('metals-open', isOpen);
   metalsBtn.setAttribute('aria-pressed', String(isOpen));
   if (isOpen) {
@@ -838,18 +950,17 @@ function renderDateOrDay() {
 }
 
 // نوێکردنەوەی ناونیشان و بانەری نرخ بەپێی دراوی هەڵبژێردراو
-function renderRateBanner(animate = false) {
+function renderRateBanner() {
   const curr = state.selectedCurrency;
   const text = getTranslations();
   rateTitleEl.textContent = text.currencyTitles[curr];
   const usdRatePer100 = getEffectiveUsdRate();
   if (!Number.isFinite(usdRatePer100) || usdRatePer100 <= 0) {
-    renderOdometer(liveRateBannerEl, '...');
+    renderRateBannerText('...');
     adjustRateBannerFontSize();
     return;
   }
 
-  let numericRate;
   let displayText;
   const rateInSelectedCurrency = (rateInIqd) =>
     state.secondaryCurrency === 'USD'
@@ -858,24 +969,17 @@ function renderRateBanner(animate = false) {
   const selectedUnit = state.secondaryCurrency === 'USD' ? text.usd : text.iqd;
 
   // بەکارهێنانی کۆدی پاراستنی ئاراستە (\u2066 و \u2069) بۆ ئەوەی نووسینی کوردی و ژمارەکان تێکەڵ نەبن
-  if (curr === 'USD') {
-    numericRate = usdRatePer100;
+  if (curr === 'IQD') {
+    displayText = `\u2066100,000 IQD\u2069 = \u2066${formatNumber(((100000 * 100) / usdRatePer100).toFixed(2), 2)} $\u2069`;
+  } else if (curr === 'USD') {
     displayText = `\u2066100$\u2069 = \u2066${formatRoundedInteger(usdRatePer100)} ${text.iqd}\u2069`;
   } else if (curr === 'GBP') {
-    numericRate = state.secondaryCurrency === 'USD'
-      ? state.otherRates.GBP * 100 / usdRatePer100 : state.otherRates.GBP;
     displayText = `\u2066100£\u2069 = \u2066${rateInSelectedCurrency(state.otherRates.GBP)} ${selectedUnit}\u2069`;
   } else if (curr === 'EUR') {
-    numericRate = state.secondaryCurrency === 'USD'
-      ? state.otherRates.EUR * 100 / usdRatePer100 : state.otherRates.EUR;
     displayText = `\u2066100€\u2069 = \u2066${rateInSelectedCurrency(state.otherRates.EUR)} ${selectedUnit}\u2069`;
   } else if (curr === 'TRY') {
-    numericRate = state.secondaryCurrency === 'USD'
-      ? state.otherRates.TRY * 1000 / usdRatePer100 : state.otherRates.TRY;
     displayText = `\u20661000 ${text.lira}\u2069 = \u2066${rateInSelectedCurrency(state.otherRates.TRY)} ${selectedUnit}\u2069`;
   } else if (curr === 'IRR') {
-    numericRate = state.secondaryCurrency === 'USD'
-      ? (state.otherRates.IRR * usdRatePer100) / 100000 : state.otherRates.IRR;
     displayText = state.otherRates.IRR > 0
       ? state.secondaryCurrency === 'USD'
         ? `\u2066100$\u2069 = \u2066${formatRoundedInteger((state.otherRates.IRR * usdRatePer100) / 100000)} ${text.toman}\u2069`
@@ -883,33 +987,25 @@ function renderRateBanner(animate = false) {
       : text.unavailable;
   }
 
-  renderOdometer(liveRateBannerEl, displayText || '...');
+  renderRateBannerText(displayText || '...');
   liveRateBannerEl.setAttribute('aria-label', displayText || '...');
-  const rateKey = `${curr}:${state.secondaryCurrency}`;
-  const previousRate = rateBannerPreviousValues.get(rateKey);
-  if (Number.isFinite(previousRate) && Number.isFinite(numericRate) && previousRate !== numericRate) {
-    flashRateBanner(numericRate > previousRate ? 'is-up' : 'is-down');
-  }
-  if (Number.isFinite(numericRate)) rateBannerPreviousValues.set(rateKey, numericRate);
-
   adjustRateBannerFontSize();
-
-  if (animate) {
-    liveRateBannerEl.classList.add('pulse');
-    setTimeout(() => liveRateBannerEl.classList.remove('pulse'), 300);
-  }
 }
 
-function flashRateBanner(direction) {
-  const existingTimer = rateFlashTimers.get('banner');
-  if (existingTimer) clearTimeout(existingTimer);
-  liveRateBannerEl.classList.remove('is-up', 'is-down');
-  void liveRateBannerEl.offsetWidth;
-  liveRateBannerEl.classList.add(direction);
-  rateFlashTimers.set('banner', setTimeout(() => {
-    liveRateBannerEl.classList.remove(direction);
-    rateFlashTimers.delete('banner');
-  }, 1000));
+function renderRateBannerText(value) {
+  const fragment = document.createDocumentFragment();
+  value.split(/([0-9][0-9,.]*|[€£$])/g).forEach((part) => {
+    if (!part) return;
+    if (/^[€£$]$/.test(part) || /^\d/.test(part)) {
+      const span = document.createElement('span');
+      span.className = /^[€£$]$/.test(part) ? 'rate-currency-symbol' : 'rate-number';
+      span.textContent = part;
+      fragment.append(span);
+    } else {
+      fragment.append(document.createTextNode(part));
+    }
+  });
+  liveRateBannerEl.replaceChildren(fragment);
 }
 
 // نوێکردنەوەی ناوی دراوەکان لەسەر هەردوو کارتی حاسیبەکە
@@ -919,7 +1015,7 @@ function renderConverterLabels() {
   const secondarySymbol = state.secondaryCurrency;
   const currencyName = text.currencies[state.selectedCurrency];
   const currencySymbol = CURRENCY_SYMBOLS[state.selectedCurrency];
-  const canToggleSecondary = state.selectedCurrency !== 'USD';
+  const canToggleSecondary = state.selectedCurrency !== 'USD' && state.selectedCurrency !== 'IQD';
   const topHoldsSecondaryCurrency = !state.isTopForeign;
   const toggleLabel = state.secondaryCurrency === 'USD'
     ? state.language === 'en' ? 'Switch secondary currency to Iraqi Dinar' : state.language === 'ar' ? 'تبديل العملة إلى الدينار العراقي' : 'گۆڕینی دراوەی دووەم بۆ دیناری عێراقی'
@@ -967,6 +1063,7 @@ function adjustRateBannerFontSize() {
 
 function getIqdPerForeignUnit() {
   const curr = state.selectedCurrency;
+  if (curr === 'IQD') return 1;
   if (curr === 'USD') return getEffectiveUsdRate() / 100;
   if (curr === 'GBP' || curr === 'EUR') return state.otherRates[curr] / 100;
   if (curr === 'TRY') return state.otherRates.TRY / 1000;
@@ -981,14 +1078,14 @@ function getIqdPerSecondaryUnit() {
 // هەژمارکردنی ورد بۆ هەر ٥ دراوەکە (بە پاڵپشتیی BigInt بۆ تمەن تا ٢٠ ژمارە)
 function calculateAndRender() {
   const formattedTop = formatNumber(state.rawInput, 4);
-  renderOdometer(topAmountEl, formattedTop);
+  topAmountEl.textContent = formattedTop;
   topAmountEl.setAttribute('aria-label', formattedTop);
   adjustAmountFontSize(topAmountEl);
   topAmountEl.scrollLeft = topAmountEl.scrollWidth;
 
   const inputValue = parseFloat(state.rawInput);
   if (isNaN(inputValue) || inputValue === 0) {
-    renderOdometer(bottomAmountEl, '0');
+    bottomAmountEl.textContent = '0';
     bottomAmountEl.setAttribute('aria-label', '0');
     adjustAmountFontSize(bottomAmountEl);
     return;
@@ -1045,22 +1142,22 @@ function calculateAndRender() {
       : formatNumber(Number.isInteger(result) ? result.toString() : result.toFixed(2).replace(/\.?0+$/, ''), 2);
   }
 
-  renderOdometer(bottomAmountEl, bottomText);
+  bottomAmountEl.textContent = bottomText;
   bottomAmountEl.setAttribute('aria-label', bottomText);
   adjustAmountFontSize(bottomAmountEl);
   bottomAmountEl.scrollLeft = bottomAmountEl.scrollWidth;
 }
 
 function updateTelegramRate(newBaseRate, timestampMs) {
-  const isChanged = state.baseRatePer100USD !== newBaseRate || state.telegramTimestamp !== timestampMs;
   state.baseRatePer100USD = newBaseRate;
   state.telegramTimestamp = timestampMs;
   localStorage.setItem('telegramRate_USD', String(newBaseRate));
   localStorage.setItem('telegramRateTime', String(timestampMs));
   recalculateUsdFxQuotes();
-  renderRateBanner(isChanged);
+  renderRateBanner();
   renderDateOrDay();
   calculateAndRender();
+  renderCurrencyRateList();
   renderMetalPrices();
 }
 
@@ -1069,18 +1166,9 @@ currSelectBtns.forEach((btn) => {
   btn.addEventListener('click', () => {
     const chosen = btn.dataset.curr;
     if (!chosen) return;
-
-    state.selectedCurrency = chosen;
-    if (chosen === 'USD') state.secondaryCurrency = 'IQD';
-    state.rawInput = '0';
-    state.isTopForeign = true;
-
     currSelectBtns.forEach((b) => b.classList.remove('active'));
     btn.classList.add('active');
-
-    renderConverterLabels();
-    renderRateBanner(true);
-    calculateAndRender();
+    openCalculatorForCurrency(chosen);
 
     setTimeout(() => {
       menuBackdrop.classList.remove('open');
@@ -1096,7 +1184,7 @@ function toggleSecondaryCurrency() {
   if (state.selectedCurrency === 'USD') return;
   state.secondaryCurrency = state.secondaryCurrency === 'IQD' ? 'USD' : 'IQD';
   renderConverterLabels();
-  renderRateBanner(true);
+  renderRateBanner();
   calculateAndRender();
 }
 
@@ -1115,6 +1203,25 @@ hamburgerBtn.addEventListener('click', () => {
 metalsBtn.addEventListener('click', () => {
   setMetalsViewOpen(!metalState.isOpen);
 });
+
+currencyRateList.addEventListener('click', (event) => {
+  const card = event.target.closest('.currency-rate-card');
+  if (card && currencyRateList.contains(card)) openCalculatorForCurrency(card.dataset.currency);
+});
+
+baseIQDButton.addEventListener('click', () => {
+  if (state.currencyRateBase === 'IQD') return;
+  state.currencyRateBase = 'IQD';
+  applyLanguage(state.language, true);
+});
+
+baseUSDButton.addEventListener('click', () => {
+  if (state.currencyRateBase === 'USD') return;
+  state.currencyRateBase = 'USD';
+  applyLanguage(state.language, true);
+});
+
+backToRatesBtn.addEventListener('click', showCurrencyRates);
 
 goldTab.addEventListener('click', () => {
   switchMetalTab(false);
@@ -1137,8 +1244,9 @@ menuBackdrop.addEventListener('click', (e) => {
 discountToggle.addEventListener('change', (e) => {
   state.minus1000Active = e.target.checked;
   localStorage.setItem('minus1000Active', state.minus1000Active);
-  renderRateBanner(true);
+  renderRateBanner();
   calculateAndRender();
+  renderCurrencyRateList();
 });
 
 darkModeToggle.addEventListener('change', (e) => {
@@ -1158,7 +1266,7 @@ refreshBtn.addEventListener('click', async () => {
     await fetchLiveMetals();
   } else {
     await fetchExchangeRates();
-    renderRateBanner(true);
+    renderRateBanner();
   }
   setTimeout(() => {
     refreshBtn.classList.remove('spinning');
@@ -1238,6 +1346,37 @@ function recalculateUsdFxQuotes() {
   }
 }
 
+function applyRudawFxQuotes(data) {
+  const gbpQuote = Number(data?.gbpUsdPer100);
+  const eurQuote = Number(data?.eurUsdPer100);
+  const usdTryQuote = Number(data?.tryPer100);
+
+  if (Number.isFinite(gbpQuote) && gbpQuote > 0) {
+    const quote = gbpQuote / 100;
+    state.usdFxQuotes.GBP = quote;
+    localStorage.setItem('liveFxQuote_GBP', String(quote));
+    state.otherRates.GBP = Math.round(quote * state.baseRatePer100USD);
+    localStorage.setItem('liveFxRate_GBP', String(state.otherRates.GBP));
+  }
+
+  if (Number.isFinite(eurQuote) && eurQuote > 0) {
+    const quote = eurQuote / 100;
+    state.usdFxQuotes.EUR = quote;
+    localStorage.setItem('liveFxQuote_EUR', String(quote));
+    state.otherRates.EUR = Math.round(quote * state.baseRatePer100USD);
+    localStorage.setItem('liveFxRate_EUR', String(state.otherRates.EUR));
+  }
+
+  if (Number.isFinite(usdTryQuote) && usdTryQuote > 0) {
+    const quote = usdTryQuote / 100;
+    state.usdFxQuotes.USDTRY = quote;
+    localStorage.setItem('liveFxQuote_USDTRY', String(quote));
+    state.otherRates.TRY = Math.round((1000 / quote) * (state.baseRatePer100USD / 100));
+    localStorage.setItem('liveFxRate_TRY', String(state.otherRates.TRY));
+  }
+  renderCurrencyRateList();
+}
+
 function applyRudawTomanRate(data) {
   const tomanRate = Number(data?.tomanPer100000Iqd);
   if (!Number.isFinite(tomanRate) || tomanRate <= 0) {
@@ -1249,6 +1388,7 @@ function applyRudawTomanRate(data) {
   localStorage.setItem('rudawTomanBuy', String(state.otherRates.IRR));
   renderRateBanner();
   calculateAndRender();
+  renderCurrencyRateList();
 }
 
 let isFetchingLiveForeignRates = false;
@@ -1281,6 +1421,7 @@ async function fetchLiveForeignRates() {
       recalculateUsdFxQuotes();
       renderRateBanner();
       calculateAndRender();
+      renderCurrencyRateList();
     }
   } finally {
     isFetchingLiveForeignRates = false;
@@ -1302,6 +1443,7 @@ async function fetchExchangeRates() {
     }
 
     updateTelegramRate(telegramRate, telegramTimestamp);
+    applyRudawFxQuotes(data.rudaw);
     applyRudawTomanRate(data.rudaw);
   } catch (error) {
     console.warn('Unable to load the latest USD/IQD and Toman rates.', error);
@@ -1309,6 +1451,7 @@ async function fetchExchangeRates() {
     isFetchingExchangeRates = false;
   }
   await fetchLiveForeignRates();
+  renderCurrencyRateList();
 }
 
 // دەستپێکردنی سەرەتایی بەرنامەکە
