@@ -15,7 +15,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- فایلی دیزاین -->
-  <link rel="stylesheet" href="style.css?v=20261115-9">
+  <link rel="stylesheet" href="style.css?v=20261117-1">
 </head>
 <body>
 
@@ -97,13 +97,6 @@
               <path d="M3 3v5h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M21 21v-5h-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-
-          <button id="metalsBtn" class="refresh-btn metals-btn" aria-label="Precious metals" title="زێـڕ و زیـو">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M12 3 3.5 8v8L12 21l8.5-5V8L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-              <path d="m3.8 8.2 8.2 4.9 8.2-4.9M12 13.1V21M8 5.4l8.4 5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
             </svg>
           </button>
 
@@ -243,9 +236,101 @@
   </div>
 
   <!-- Hero Morph Overlay — animated card-expansion layer -->
+  <section id="walletView" class="wallet-view" aria-label="Wallet" hidden>
+    <div id="walletDashboard">
+      <header class="wallet-page-heading"><h1 id="walletTitle" class="currency-rates-title"></h1></header>
+      <article class="wallet-summary">
+        <div class="wallet-summary-top">
+          <span id="walletEstimatedLabel"></span>
+          <div class="wallet-currency-toggle">
+            <button type="button" data-wallet-currency="USD">USD</button>
+            <button class="active" type="button" data-wallet-currency="IQD">IQD</button>
+          </div>
+        </div>
+        <strong id="walletTotal" class="wallet-total">—</strong>
+        <div class="wallet-summary-bottom">
+          <span id="walletProfit">—</span>
+          <span id="walletProfitPercent" class="wallet-profit-badge">—</span>
+        </div>
+      </article>
+      <div id="walletAssetList" class="wallet-asset-list"></div>
+      <div id="walletEmptyState" class="wallet-empty" hidden>
+        <div class="wallet-empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H19v16H6.5A2.5 2.5 0 0 1 4 17.5v-11Z"/><path d="M4 7h12a2 2 0 0 1 2 2v1h-4a2.5 2.5 0 0 0 0 5h4v1a2 2 0 0 1-2 2H4"/><path d="M15 12.5h.01"/></svg>
+        </div>
+        <h2 id="walletEmptyTitle"></h2>
+        <p id="walletEmptySubtitle"></p>
+        <button id="walletEmptyAdd" class="wallet-primary-button" type="button"></button>
+      </div>
+    </div>
+    <section id="walletFormView" class="wallet-form-view" hidden>
+      <button id="walletFormBack" class="back-to-rates-btn" type="button">
+        <span aria-hidden="true">←</span><span id="walletFormTitle"></span>
+      </button>
+      <label class="wallet-field">
+        <span id="walletAssetLabel"></span>
+        <button id="walletAssetPicker" class="wallet-picker-button" type="button">
+          <span id="walletSelectedAsset"></span><span>⌄</span>
+        </button>
+      </label>
+      <div class="wallet-input-row">
+        <label class="wallet-field">
+          <span id="walletAmountLabel"></span>
+          <input id="walletAmountInput" type="number" min="0" step="any" placeholder="0.00" inputmode="decimal">
+        </label>
+        <label class="wallet-field">
+          <span id="walletPurchaseLabel"></span>
+          <input id="walletPurchaseInput" type="number" min="0" step="any" placeholder="0.00" inputmode="decimal">
+        </label>
+      </div>
+      <label class="wallet-field">
+        <span id="walletDateLabel"></span>
+        <input id="walletDateInput" type="date">
+      </label>
+      <label class="wallet-field">
+        <span id="walletNotesLabel"></span>
+        <textarea id="walletNotesInput" rows="3"></textarea>
+      </label>
+      <button id="walletSaveButton" class="wallet-primary-button wallet-save-button" type="button"></button>
+    </section>
+    <div id="walletPickerBackdrop" class="wallet-picker-backdrop" hidden>
+      <div class="wallet-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="walletPickerTitle">
+        <div class="wallet-picker-heading">
+          <h2 id="walletPickerTitle"></h2>
+          <button id="walletPickerClose" type="button" aria-label="Close">×</button>
+        </div>
+        <div class="wallet-picker-tabs">
+          <button class="active" type="button" data-picker-category="currencies"></button>
+          <button type="button" data-picker-category="metals"></button>
+        </div>
+        <div id="walletPickerOptions" class="wallet-picker-options"></div>
+      </div>
+    </div>
+    <button id="walletFab" class="wallet-fab" type="button" aria-label="Add asset">+</button>
+  </section>
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <button class="bottom-nav-item active" type="button" data-view="rates">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h4M7 14h.01M17 14h.01M15 10h2"/></svg>
+      <span id="navRatesLabel"></span>
+    </button>
+    <button class="bottom-nav-item" type="button" data-view="metals">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 8 3-4h12l3 4-3 12H6L3 8Z"/><path d="M3 8h18M8 8l2 12m6-12-2 12"/></svg>
+      <span id="navMetalsLabel"></span>
+    </button>
+    <button class="bottom-nav-item" type="button" data-view="calculator">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2.5" width="16" height="19" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01"/></svg>
+      <span id="navCalculatorLabel"></span>
+    </button>
+    <button class="bottom-nav-item wallet-nav-item" type="button" data-view="wallet">
+      <span class="wallet-nav-orb">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H19v16H6.5A2.5 2.5 0 0 1 4 17.5v-11Z"/><path d="M4 7h12a2 2 0 0 1 2 2v1h-4a2.5 2.5 0 0 0 0 5h4v1a2 2 0 0 1-2 2H4"/><path d="M15 12.5h.01"/></svg>
+      </span>
+      <span id="navWalletLabel"></span>
+    </button>
+  </nav>
   <div id="heroMorphOverlay" aria-hidden="true"></div>
 
   <!-- فایلی جاڤاسکریپت -->
-  <script src="script.js?v=20261115-8" defer></script>
+  <script src="script.js?v=20261117-1" defer></script>
 </body>
 </html>

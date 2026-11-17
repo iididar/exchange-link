@@ -358,7 +358,6 @@ const swapBtn = document.getElementById('swapBtn');
 const keypad = document.getElementById('keypad');
 
 const refreshBtn = document.getElementById('refreshBtn');
-const metalsBtn = document.getElementById('metalsBtn');
 const metalsView = document.getElementById('metalsView');
 const metalsTitleEl = document.getElementById('metalsTitle');
 const metalInvestmentView = document.getElementById('metalInvestmentView');
@@ -580,8 +579,6 @@ function applyLanguage(language, animateCurrencyRates = false, animateCurrencyRo
   updateMetalInvestmentResults();
   refreshBtn.setAttribute('aria-label', text.refresh);
   refreshBtn.title = text.refresh;
-  metalsBtn.setAttribute('aria-label', text.metals);
-  metalsBtn.title = text.metals;
   metalsTitleEl.textContent = text.metalsTitle;
   hamburgerBtn.setAttribute('aria-label', text.menu);
   swapBtn.setAttribute('aria-label', text.swap);
@@ -602,6 +599,7 @@ function applyLanguage(language, animateCurrencyRates = false, animateCurrencyRo
   renderDateOrDay();
   renderMetalLabels();
   renderMetalPrices();
+  if (window.walletInitialized) renderWalletLabels();
   calculateAndRender();
 }
 
@@ -773,9 +771,9 @@ function openCalculatorForCurrency(currency, sourceCardEl) {
   state.rawInput = String(CURRENCY_RATE_BASIS[currency]);
   state.isTopForeign = true;
   state.currentView = 'calculator';
+  setBottomNavActive('calculator');
   metalState.isOpen = false;
   document.body.classList.remove('metals-open');
-  metalsBtn.setAttribute('aria-pressed', 'false');
   // Reset digit animation state so all digits animate in fresh for the new currency
   amtDisplayState.topPrev = '';
   amtDisplayState.bottomPrev = '';
@@ -916,10 +914,10 @@ function showCurrencyRates() {
   }
 
   state.currentView = 'rates';
+  setBottomNavActive('rates');
   metalState.isOpen = false;
   metalsView.hidden = true;
   document.body.classList.remove('metals-open');
-  metalsBtn.setAttribute('aria-pressed', 'false');
 
   if (!useHero) {
     // ── Fallback: existing slide-out animation ────────────────────
@@ -1306,6 +1304,7 @@ async function fetchLiveMetals() {
       cacheMetalPrice(METAL_CACHE_KEYS.silver, silverPrice);
     }
     renderMetalPrices();
+    window.dispatchEvent(new Event('wallet-rates-updated'));
     metalsStatus.textContent = metalState.goldOunce || metalState.silverOunce
       ? ''
       : getTranslations().metalsUnavailable;
@@ -1322,7 +1321,6 @@ function setMetalsViewOpen(isOpen) {
   currencyRatesView.hidden = isOpen || state.currentView !== 'rates';
   calculatorView.hidden = isOpen || state.currentView !== 'calculator';
   document.body.classList.toggle('metals-open', isOpen);
-  metalsBtn.setAttribute('aria-pressed', String(isOpen));
   if (isOpen) {
     metalState.investmentItemKey = null;
     renderMetalLabels();
@@ -1620,6 +1618,7 @@ function updateTelegramRate(newBaseRate, timestampMs) {
   calculateAndRender();
   renderCurrencyRateList();
   renderMetalPrices();
+  window.dispatchEvent(new Event('wallet-rates-updated'));
 }
 
 // هەڵبژاردنی دراوەکان لەناو مێنۆی Hamburger
@@ -1661,9 +1660,6 @@ hamburgerBtn.addEventListener('click', () => {
   menuBackdrop.classList.add('open');
 });
 
-metalsBtn.addEventListener('click', () => {
-  setMetalsViewOpen(!metalState.isOpen);
-});
 
 metalPriceList.addEventListener('click', (event) => {
   const card = event.target.closest('.metal-price-card[data-metal]');
@@ -1864,6 +1860,7 @@ function applyRudawFxQuotes(data) {
     localStorage.setItem('liveFxRate_TRY', String(state.otherRates.TRY));
   }
   renderCurrencyRateList();
+  window.dispatchEvent(new Event('wallet-rates-updated'));
 }
 
 function applyRudawTomanRate(data) {
@@ -1911,6 +1908,7 @@ async function fetchLiveForeignRates() {
       renderRateBanner();
       calculateAndRender();
       renderCurrencyRateList();
+      window.dispatchEvent(new Event('wallet-rates-updated'));
     }
   } finally {
     isFetchingLiveForeignRates = false;
@@ -1971,3 +1969,195 @@ document.addEventListener('visibilitychange', () => {
     fetchLiveMetals();
   }
 });
+
+// Wallet portfolio and bottom navigation.
+const walletCopy = {
+  ku: { rates: 'نرخی دراوەکان', metals: 'کانزاکان', calculator: 'ژمێرەر', wallet: 'جزدان', title: 'پۆرتفۆلیۆ', estimate: 'خەمڵێنراو', empty: 'هێشتا هیچ سامانێکت نییە', emptyHint: 'یەکەم کڕینەکەت زیاد بکە بۆ بەدواداچوونی وەبەرهێنانەکانت', add: '+ زیادکردنی سامان', addTitle: 'زیادکردنی سامان', asset: 'سامان هەڵبژێرە', amount: 'بڕ', purchase: 'نرخی کڕین', date: 'بەرواری کڕین', notes: 'تێبینی (ئارەزوومەندانە)', save: 'پاشەکەوتکردن', currencies: 'دراو', metalsTab: 'کانزا', picker: 'سامان هەڵبژێرە', edit: 'دەستکاری', delete: 'سڕینەوە', unit: 'دانە', saved: 'پاشەکەوت کرا' },
+  ar: { rates: 'أسعار العملات', metals: 'المعادن', calculator: 'الحاسبة', wallet: 'المحفظة', title: 'المحفظة', estimate: 'القيمة التقديرية', empty: 'لا توجد أصول بعد', emptyHint: 'أضف أول أصل لمتابعة استثماراتك', add: '+ إضافة أصل', addTitle: 'إضافة أصل', asset: 'اختر الأصل', amount: 'الكمية', purchase: 'سعر الشراء', date: 'تاريخ الشراء', notes: 'ملاحظات (اختياري)', save: 'حفظ', currencies: 'العملات', metalsTab: 'المعادن', picker: 'اختر الأصل', edit: 'تعديل', delete: 'حذف', unit: 'وحدة', saved: 'تم الحفظ' },
+  en: { rates: 'Rates', metals: 'Metals', calculator: 'Calculator', wallet: 'Wallet', title: 'Portfolio', estimate: 'Estimated value', empty: 'Your wallet is empty', emptyHint: 'Add your first asset to track your investments', add: '+ Add asset', addTitle: 'Add asset', asset: 'Select asset', amount: 'Amount', purchase: 'Purchase price', date: 'Purchase date', notes: 'Notes (optional)', save: 'Save', currencies: 'Currencies', metalsTab: 'Metals', picker: 'Select asset', edit: 'Edit', delete: 'Delete', unit: 'units', saved: 'Saved' }
+};
+const walletAssets = [
+  ...['USD', 'GBP', 'EUR', 'IRR', 'TRY', 'IQD'].map(key => ({ key, type: 'currency' })),
+  ...['gold24k', 'gold21k', 'gold18k', 'dubaiLira', 'goldOunce', 'silverOunce', 'silverKg'].map(key => ({ key, type: 'metal' }))
+];
+const walletEls = Object.fromEntries(['walletView','walletDashboard','walletFormView','walletTitle','walletEstimatedLabel','walletTotal','walletProfit','walletProfitPercent','walletAssetList','walletEmptyState','walletEmptyTitle','walletEmptySubtitle','walletEmptyAdd','walletFormTitle','walletAssetLabel','walletAssetPicker','walletSelectedAsset','walletAmountLabel','walletPurchaseLabel','walletDateLabel','walletNotesLabel','walletSaveButton','walletAmountInput','walletPurchaseInput','walletDateInput','walletNotesInput','walletPickerBackdrop','walletPickerTitle','walletPickerOptions','walletPickerClose','walletFab','walletFormBack'].map(id => [id, document.getElementById(id)]));
+let walletState = { items: [], currency: localStorage.getItem('walletCurrency') === 'USD' ? 'USD' : 'IQD', editingId: null, selectedKey: null, pickerCategory: 'currencies' };
+try { walletState.items = JSON.parse(localStorage.getItem('exchangeWallet') || '[]').filter(item => item && typeof item.id === 'string' && walletAssets.some(asset => asset.key === item.key)); } catch { walletState.items = []; }
+const walletCurrencyButtons = document.querySelectorAll('[data-wallet-currency]');
+const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+const formatWalletMoney = (value, currency = walletState.currency) => {
+  if (!Number.isFinite(value)) return '—';
+  try { return new Intl.NumberFormat(state.language === 'en' ? 'en-US' : state.language === 'ar' ? 'ar-IQ' : 'ku-IQ', { maximumFractionDigits: currency === 'IQD' ? 0 : 2, minimumFractionDigits: currency === 'IQD' ? 0 : 2 }).format(value) + ` ${currency}`; } catch { return `${value.toFixed(2)} ${currency}`; }
+};
+function walletText() { return walletCopy[state.language] || walletCopy.en; }
+function walletAssetName(key) {
+  const asset = walletAssets.find(option => option.key === key);
+  if (!asset) return key;
+  if (asset.type === 'currency') return getTranslations().currencies[key] || key;
+  return getTranslations().metalNames[key] || key;
+}
+function walletAssetUnit(key) {
+  if (['gold18k','gold21k','gold22k','gold24k'].includes(key)) return 'g';
+  if (key === 'dubaiLira') return 'lira';
+  if (key.endsWith('Ounce')) return 'oz';
+  if (key === 'silverKg') return 'kg';
+  return walletText().unit;
+}
+function walletUnitPriceIqd(key) {
+  const asset = walletAssets.find(option => option.key === key);
+  const usdIqd = getEffectiveUsdRate() / 100;
+  if (!asset) return null;
+  if (asset.type === 'currency') {
+    if (!(usdIqd > 0)) return null;
+    if (key === 'USD') return usdIqd;
+    if (key === 'IQD') return 1;
+    if (key === 'GBP' || key === 'EUR') return Number(state.otherRates[key]) / 100;
+    if (key === 'TRY') return Number(state.otherRates.TRY) / 1000;
+    if (key === 'IRR') return usdIqd * 100 / Number(state.otherRates.IRR);
+    return null;
+  }
+  const item = getMetalItem(key);
+  const ounce = key.startsWith('silver') ? metalState.silverOunce : metalState.goldOunce;
+  if (!item || !(ounce > 0)) return null;
+  const raw = item.calculate(ounce);
+  let iqd = item.currency === 'IQD' ? raw : raw * usdIqd;
+  if (['gold18k','gold21k','gold22k','gold24k'].includes(key)) iqd /= 5; // metal card quote is for five grams
+  if (key === 'silverKg') iqd /= 1000;
+  return Number.isFinite(iqd) && iqd > 0 ? iqd : null;
+}
+function walletMarketValue(item, currency = walletState.currency) {
+  const unitIqd = walletUnitPriceIqd(item.key);
+  const usdIqd = getEffectiveUsdRate() / 100;
+  if (!(unitIqd > 0) || !(usdIqd > 0)) return null;
+  return unitIqd * Number(item.amount) / (currency === 'USD' ? usdIqd : 1);
+}
+function renderWalletLabels() {
+  const text = walletText();
+  document.getElementById('navRatesLabel').textContent = text.rates;
+  document.getElementById('navMetalsLabel').textContent = text.metals;
+  document.getElementById('navCalculatorLabel').textContent = text.calculator;
+  document.getElementById('navWalletLabel').textContent = text.wallet;
+  walletEls.walletTitle.textContent = text.title;
+  walletEls.walletEstimatedLabel.textContent = text.estimate;
+  walletEls.walletEmptyTitle.textContent = text.empty;
+  walletEls.walletEmptySubtitle.textContent = text.emptyHint;
+  walletEls.walletEmptyAdd.textContent = text.add;
+  walletEls.walletFormTitle.textContent = text.addTitle;
+  walletEls.walletAssetLabel.textContent = text.asset;
+  walletEls.walletAmountLabel.textContent = text.amount;
+  walletEls.walletPurchaseLabel.textContent = text.purchase;
+  walletEls.walletDateLabel.textContent = text.date;
+  walletEls.walletNotesLabel.textContent = text.notes;
+  walletEls.walletSaveButton.textContent = text.save;
+  walletEls.walletPickerTitle.textContent = text.picker;
+  document.querySelector('[data-picker-category="currencies"]').textContent = text.currencies;
+  document.querySelector('[data-picker-category="metals"]').textContent = text.metalsTab;
+  walletCurrencyButtons.forEach(button => button.classList.toggle('active', button.dataset.walletCurrency === walletState.currency));
+  renderWallet();
+}
+function renderWallet() {
+  const list = walletEls.walletAssetList;
+  list.replaceChildren();
+  const text = walletText();
+  let total = 0, cost = 0, known = true;
+  walletState.items.forEach(item => {
+    const value = walletMarketValue(item);
+    const rate = walletUnitPriceIqd(item.key);
+    const usdIqd = getEffectiveUsdRate() / 100;
+    const currentUnit = rate == null ? null : rate / (walletState.currency === 'USD' ? usdIqd : 1);
+    const purchaseUnit = Number(item.purchasePrice) * (item.purchaseCurrency === walletState.currency ? 1 : item.purchaseCurrency === 'USD' ? usdIqd : 1 / usdIqd);
+    const paid = purchaseUnit * Number(item.amount);
+    const profit = value == null ? null : value - paid;
+    if (value == null || !Number.isFinite(paid)) known = false; else { total += value; cost += paid; }
+    const card = document.createElement('article'); card.className = 'wallet-asset-card card-surface';
+    const info = document.createElement('div'); info.className = 'wallet-asset-info';
+    const icon = document.createElement('span'); icon.className = 'wallet-asset-icon'; icon.textContent = item.type === 'metal' ? '✦' : (item.key.slice(0, 2));
+    const details = document.createElement('div'); details.className = 'wallet-asset-details';
+    const name = document.createElement('strong'); name.textContent = walletAssetName(item.key);
+    const displayDate = item.date ? new Intl.DateTimeFormat(state.language === 'en' ? 'en-US' : state.language === 'ar' ? 'ar-IQ' : 'ku-IQ', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${item.date}T12:00:00`)) : '';
+    const meta = document.createElement('small'); meta.textContent = `${item.amount} ${item.type === 'metal' ? walletAssetUnit(item.key) : text.unit} · ${displayDate}`;
+    const purchase = document.createElement('small'); purchase.textContent = `${text.purchase}: ${formatWalletMoney(Number(item.purchasePrice), item.purchaseCurrency)}`;
+    details.append(name, meta, purchase); info.append(icon, details);
+    const stats = document.createElement('div'); stats.className = 'wallet-asset-stats';
+    const profitEl = document.createElement('strong'); profitEl.className = 'wallet-loss'; profitEl.textContent = profit == null ? '—' : `${profit >= 0 ? '+' : ''}${formatWalletMoney(profit)}`;
+    const pctEl = document.createElement('small'); const pct = paid > 0 && profit != null ? profit / paid * 100 : null; pctEl.className = 'wallet-loss'; pctEl.textContent = pct == null ? '—' : `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+    const currentEl = document.createElement('small'); currentEl.textContent = currentUnit == null ? '—' : formatWalletMoney(value);
+    const actions = document.createElement('div'); actions.className = 'wallet-card-actions';
+    const edit = document.createElement('button'); edit.type = 'button'; edit.textContent = text.edit; edit.addEventListener('click', () => openWalletForm(item));
+    const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = text.delete; remove.addEventListener('click', () => { walletState.items = walletState.items.filter(entry => entry.id !== item.id); persistWallet(); renderWallet(); });
+    stats.append(profitEl, pctEl, currentEl, actions); actions.append(edit, remove); card.append(info, stats); list.append(card);
+  });
+  walletEls.walletEmptyState.hidden = walletState.items.length > 0;
+  walletEls.walletAssetList.hidden = walletState.items.length === 0;
+  walletEls.walletTotal.textContent = known && walletState.items.length ? formatWalletMoney(total) : walletState.items.length ? '—' : formatWalletMoney(0);
+  const net = known ? total - cost : null;
+  walletEls.walletProfit.textContent = net == null ? '—' : `${net >= 0 ? '+' : ''}${formatWalletMoney(net)}`;
+  const pct = known && cost > 0 ? net / cost * 100 : null;
+  walletEls.walletProfitPercent.textContent = pct == null ? '—' : `${pct >= 0 ? '⌃ +' : '⌄ '}${Math.abs(pct).toFixed(2)}%`;
+  walletEls.walletProfit.classList.toggle('wallet-loss', net == null || net <= 0);
+  walletEls.walletProfitPercent.classList.toggle('wallet-loss', pct == null || pct <= 0);
+  walletEls.walletFab.hidden = walletEls.walletFormView.hidden === false;
+  walletCurrencyButtons.forEach(button => button.classList.toggle('active', button.dataset.walletCurrency === walletState.currency));
+}
+function persistWallet() { try { localStorage.setItem('exchangeWallet', JSON.stringify(walletState.items)); } catch (error) { console.warn('Unable to save wallet entries.', error); } }
+function setBottomNavActive(view) { document.querySelectorAll('.bottom-nav-item').forEach(button => button.classList.toggle('active', button.dataset.view === view)); }
+function openWalletForm(item = null) {
+  walletState.editingId = item?.id || null;
+  walletState.selectedKey = item?.key || null;
+  walletEls.walletDashboard.hidden = true; walletEls.walletFormView.hidden = false;
+  walletEls.walletFormTitle.textContent = item ? walletText().edit : walletText().addTitle;
+  walletEls.walletAmountInput.value = item?.amount ?? '';
+  walletEls.walletPurchaseInput.value = item?.purchasePrice ?? '';
+  walletEls.walletDateInput.value = item?.date || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  walletEls.walletNotesInput.value = item?.notes || '';
+  walletEls.walletSelectedAsset.textContent = item ? walletAssetName(item.key) : walletText().asset;
+  renderWallet();
+}
+function closeWalletForm() { walletEls.walletFormView.hidden = true; walletEls.walletDashboard.hidden = false; walletState.editingId = null; renderWallet(); }
+function renderWalletPicker() {
+  const category = walletState.pickerCategory;
+  document.querySelectorAll('[data-picker-category]').forEach(button => button.classList.toggle('active', button.dataset.pickerCategory === category));
+  walletEls.walletPickerOptions.replaceChildren();
+  walletAssets.filter(item => item.type === (category === 'currencies' ? 'currency' : 'metal')).forEach(item => {
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'wallet-option'; button.textContent = walletAssetName(item.key);
+    button.addEventListener('click', () => { walletState.selectedKey = item.key; walletEls.walletSelectedAsset.textContent = walletAssetName(item.key); walletEls.walletPickerBackdrop.hidden = true; });
+    walletEls.walletPickerOptions.append(button);
+  });
+}
+function activateMainView(view) {
+  walletEls.walletView.hidden = view !== 'wallet';
+  document.body.classList.toggle('wallet-open', view === 'wallet');
+  document.documentElement.classList.toggle('wallet-open', view === 'wallet');
+  if (view === 'wallet') {
+    setMetalsViewOpen(false); metalInvestmentView.hidden = true; currencyRatesView.hidden = true; calculatorView.hidden = true;
+    walletEls.walletDashboard.hidden = false; walletEls.walletFormView.hidden = true; renderWallet();
+  } else if (view === 'rates') { setMetalsViewOpen(false); metalInvestmentView.hidden = true; showCurrencyRates(); }
+  else if (view === 'metals') { heroMorph.sourceRect = null; showCurrencyRates(); setMetalsViewOpen(true); }
+  else if (view === 'calculator') { setMetalsViewOpen(false); metalInvestmentView.hidden = true; openCalculatorForCurrency(state.selectedCurrency); }
+  bottomNavItems.forEach(button => button.classList.toggle('active', button.dataset.view === view));
+}
+bottomNavItems.forEach(button => button.addEventListener('click', () => activateMainView(button.dataset.view)));
+walletEls.walletEmptyAdd.addEventListener('click', () => openWalletForm());
+walletEls.walletFab.addEventListener('click', () => openWalletForm());
+walletEls.walletFormBack.addEventListener('click', closeWalletForm);
+walletEls.walletAssetPicker.addEventListener('click', () => { walletState.pickerCategory = 'currencies'; renderWalletPicker(); walletEls.walletPickerBackdrop.hidden = false; });
+walletEls.walletPickerClose.addEventListener('click', () => walletEls.walletPickerBackdrop.hidden = true);
+walletEls.walletPickerBackdrop.addEventListener('click', event => { if (event.target === walletEls.walletPickerBackdrop) walletEls.walletPickerBackdrop.hidden = true; });
+document.querySelectorAll('[data-picker-category]').forEach(button => button.addEventListener('click', () => { walletState.pickerCategory = button.dataset.pickerCategory; renderWalletPicker(); }));
+walletCurrencyButtons.forEach(button => button.addEventListener('click', () => { walletState.currency = button.dataset.walletCurrency; localStorage.setItem('walletCurrency', walletState.currency); renderWallet(); }));
+walletEls.walletSaveButton.addEventListener('click', () => {
+  const amount = Number(walletEls.walletAmountInput.value), purchasePrice = Number(walletEls.walletPurchaseInput.value);
+  if (!walletState.selectedKey) { walletEls.walletAssetPicker.focus(); return; }
+  if (!(amount > 0)) { walletEls.walletAmountInput.setCustomValidity('Enter an amount greater than zero.'); walletEls.walletAmountInput.reportValidity(); walletEls.walletAmountInput.addEventListener('input', () => walletEls.walletAmountInput.setCustomValidity(''), { once: true }); return; }
+  if (walletEls.walletPurchaseInput.value === '' || !(purchasePrice >= 0)) { walletEls.walletPurchaseInput.setCustomValidity('Enter a valid purchase price.'); walletEls.walletPurchaseInput.reportValidity(); walletEls.walletPurchaseInput.addEventListener('input', () => walletEls.walletPurchaseInput.setCustomValidity(''), { once: true }); return; }
+  if (!walletEls.walletDateInput.value) { walletEls.walletDateInput.setCustomValidity('Choose the purchase date.'); walletEls.walletDateInput.reportValidity(); walletEls.walletDateInput.addEventListener('input', () => walletEls.walletDateInput.setCustomValidity(''), { once: true }); return; }
+  const entry = { id: walletState.editingId || crypto.randomUUID(), key: walletState.selectedKey, type: walletAssets.find(asset => asset.key === walletState.selectedKey).type, amount, purchasePrice, purchaseCurrency: walletState.currency, date: walletEls.walletDateInput.value, notes: walletEls.walletNotesInput.value.trim() };
+  const index = walletState.items.findIndex(item => item.id === entry.id); if (index >= 0) walletState.items[index] = entry; else walletState.items.unshift(entry);
+  persistWallet(); closeWalletForm();
+});
+walletEls.walletAmountInput.addEventListener('input', renderWallet);
+walletEls.walletPurchaseInput.addEventListener('input', renderWallet);
+window.addEventListener('storage', event => { if (event.key === 'exchangeWallet') { try { walletState.items = JSON.parse(event.newValue || '[]'); renderWallet(); } catch {} } });
+window.addEventListener('wallet-rates-updated', renderWallet);
+window.walletInitialized = true;
+renderWalletLabels();
