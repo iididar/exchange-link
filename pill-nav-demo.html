@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Floating Expandable Pill Navigation Bar</title>
+  <link rel="stylesheet" href="pill-nav.css">
+  <style>
+    /* Demo Page Styles (Dark Fintech / Crypto Theme) */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #050605;
+      color: #E6E8EA;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 120px;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient background glow */
+    body::before {
+      content: "";
+      position: fixed;
+      top: -150px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(124, 232, 86, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      transition: background 0.5s ease;
+    }
+
+    .demo-wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Header */
+    .demo-header {
+      text-align: center;
+      padding: 16px 8px 6px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(124, 232, 86, 0.12);
+      border: 1px solid rgba(124, 232, 86, 0.25);
+      color: var(--accent-color, #7CE856);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+      transition: all 0.35s ease;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background-color: currentColor;
+      border-radius: 50%;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .demo-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #FFFFFF;
+      margin-bottom: 6px;
+    }
+
+    .demo-desc {
+      font-size: 14px;
+      color: #8E9297;
+      line-height: 1.45;
+    }
+
+    /* Live Color Theme Switcher */
+    .theme-card {
+      background: #0E100E;
+      border: 1px solid #1C1E1C;
+      border-radius: 18px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .theme-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #A0A5AA;
+    }
+
+    .color-swatches {
+      display: flex;
+      gap: 10px;
+    }
+
+    .color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      padding: 0;
+      outline: none;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.15);
+    }
+
+    .color-swatch.active {
+      border-color: #FFFFFF;
+      transform: scale(1.18);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+    }
+
+    /* Content Panels */
+    .tab-panel {
+      background: #0E100E;
+      border: 1px solid #1C1E1C;
+      border-radius: 24px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: panelFadeIn 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .tab-panel[hidden] {
+      display: none !important;
+    }
+
+    @keyframes panelFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1A1D1A;
+      padding-bottom: 14px;
+    }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .panel-tag {
+      font-size: 12px;
+      color: var(--accent-color, #7CE856);
+      font-weight: 600;
+      background: rgba(124, 232, 86, 0.1);
+      padding: 3px 10px;
+      border-radius: 9999px;
+      transition: all 0.35s ease;
+    }
+
+    /* Card widgets inside panels */
+    .stat-card {
+      background: #141615;
+      border: 1px solid #202220;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-name {
+      font-size: 12px;
+      color: #8E9297;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .stat-pill {
+      font-size: 12px;
+      font-weight: 700;
+      color: #7CE856;
+      background: rgba(124, 232, 86, 0.12);
+      padding: 4px 10px;
+      border-radius: 9999px;
+    }
+
+    .row-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: #141615;
+      border-radius: 14px;
+      border: 1px solid #1C1E1C;
+    }
+
+    .row-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .row-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #1C1E1C;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    .row-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .row-sub {
+      font-size: 12px;
+      color: #8E9297;
+    }
+
+    .row-right {
+      text-align: right;
+    }
+
+    .row-price {
+      font-size: 14px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .row-change {
+      font-size: 12px;
+      font-weight: 600;
+      color: #7CE856;
+    }
+
+    /* Live Event Log Console */
+    .log-box {
+      background: #0A0B0A;
+      border: 1px solid #1C1E1C;
+      border-radius: 16px;
+      padding: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: #7CE856;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: color 0.35s ease;
+    }
+
+    .log-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #8E9297;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="demo-wrapper">
+    <!-- Header -->
+    <header class="demo-header">
+      <div class="badge-pill">
+        <span class="badge-dot"></span>
+        Mobile-First Navigation
+      </div>
+      <h1 class="demo-title">Expandable Pill Bar</h1>
+      <p class="demo-desc">Tap any tab to see the fluid width expansion, icon morph, and smooth label reveal with zero layout shift.</p>
+    </header>
+
+    <!-- Theme Customization Switcher -->
+    <div class="theme-card">
+      <span class="theme-label">Accent Theme:</span>
+      <div class="color-swatches" role="group" aria-label="Accent Color Switcher">
+        <button class="color-swatch active" style="background-color: #7CE856;" data-color="#7CE856" aria-label="Lime Green"></button>
+        <button class="color-swatch" style="background-color: #38BDF8;" data-color="#38BDF8" aria-label="Electric Cyan"></button>
+        <button class="color-swatch" style="background-color: #A855F7;" data-color="#A855F7" aria-label="Neon Violet"></button>
+        <button class="color-swatch" style="background-color: #FB923C;" data-color="#FB923C" aria-label="Sunset Orange"></button>
+        <button class="color-swatch" style="background-color: #F43F5E;" data-color="#F43F5E" aria-label="Hot Pink"></button>
+      </div>
+    </div>
+
+    <!-- Content Panels controlled by the tabs -->
+    <main>
+      <!-- Panel 1: Home -->
+      <section id="panel-home" class="tab-panel active" role="tabpanel" aria-labelledby="tab-home">
+        <div class="panel-header">
+          <h2 class="panel-title">Home Dashboard</h2>
+          <span class="panel-tag">Live Feed</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-meta">
+            <span class="stat-name">Total Net Worth</span>
+            <span class="stat-value">$124,580.40</span>
+          </div>
+          <span class="stat-pill">+8.4%</span>
+        </div>
+        <div class="row-item">
+          <div class="row-left">
+            <div class="row-icon">⚡</div>
+            <div>
+              <div class="row-name">Quick Swap</div>
+              <div class="row-sub">USD to BTC at zero fees</div>
+            </div>
+          </div>
+          <span class="panel-tag">Ready</span>
+        </div>
+      </section>
+
+      <!-- Panel 2: Portfolio -->
+      <section id="panel-portfolio" class="tab-panel" role="tabpanel" aria-labelledby="tab-portfolio" hidden>
+        <div class="panel-header">
+          <h2 class="panel-title">Your Portfolio</h2>
+          <span class="panel-tag">4 Assets</span>
+        </div>
+        <div class="row-item">
+          <div class="row-left">
+            <div class="row-icon" style="background: #F7931A; color: #000;">₿</div>
+            <div>
+              <div class="row-name">Bitcoin</div>
+              <div class="row-sub">1.42 BTC</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <div class="row-price">$136,890</div>
+            <div class="row-change">+4.2%</div>
+          </div>
+        </div>
+        <div class="row-item">
+          <div class="row-left">
+            <div class="row-icon" style="background: #627EEA; color: #FFF;">Ξ</div>
+            <div>
+              <div class="row-name">Ethereum</div>
+              <div class="row-sub">12.50 ETH</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <div class="row-price">$41,250</div>
+            <div class="row-change">+6.8%</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 3: Watchlist -->
+      <section id="panel-watchlist" class="tab-panel" role="tabpanel" aria-labelledby="tab-watchlist" hidden>
+        <div class="panel-header">
+          <h2 class="panel-title">Watchlist</h2>
+          <span class="panel-tag">Realtime</span>
+        </div>
+        <div class="row-item">
+          <div class="row-left">
+            <div class="row-icon" style="background: #14F195; color: #000;">◎</div>
+            <div>
+              <div class="row-name">Solana</div>
+              <div class="row-sub">SOL/USDT</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <div class="row-price">$214.50</div>
+            <div class="row-change">+12.4%</div>
+          </div>
+        </div>
+        <div class="row-item">
+          <div class="row-left">
+            <div class="row-icon" style="background: #2775CA; color: #FFF;">$</div>
+            <div>
+              <div class="row-name">USDC Coin</div>
+              <div class="row-sub">USDC/USD</div>
+            </div>
+          </div>
+          <div class="row-right">
+            <div class="row-price">$1.00</div>
+            <div class="row-change" style="color: #8E9297;">0.0%</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel 4: Markets -->
+      <section id="panel-markets" class="tab-panel" role="tabpanel" aria-labelledby="tab-markets" hidden>
+        <div class="panel-header">
+          <h2 class="panel-title">Global Markets</h2>
+          <span class="panel-tag">Open</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-meta">
+            <span class="stat-name">24h Global Volume</span>
+            <span class="stat-value">$84.2 Billion</span>
+          </div>
+          <span class="stat-pill">+3.1%</span>
+        </div>
+        <div class="row-item">
+          <div class="row-left">
+            <div class="row-icon">🌐</div>
+            <div>
+              <div class="row-name">Crypto Fear & Greed</div>
+              <div class="row-sub">Index: 78 (Extreme Greed)</div>
+            </div>
+          </div>
+          <span class="panel-tag">Bullish</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- Live Event Callback Output -->
+    <div class="log-box">
+      <span class="log-title">JavaScript Event Callback</span>
+      <div id="eventConsole">Active: [home] &bull; Index: 0 &bull; Label: Home</div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       Floating Expandable Pill Navigation Bar Component
+       ===================================================================== -->
+  <nav class="floating-pill-nav" role="tablist" aria-label="Main Navigation">
+    
+    <!-- 1. Home -->
+    <button
+      class="nav-tab active"
+      role="tab"
+      id="tab-home"
+      aria-selected="true"
+      aria-controls="panel-home"
+      aria-label="Home"
+      data-target="home"
+      tabindex="0"
+    >
+      <span class="nav-icon-badge">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9.5z" />
+        </svg>
+      </span>
+      <span class="nav-label">Home</span>
+    </button>
+
+    <!-- 2. Portfolio -->
+    <button
+      class="nav-tab"
+      role="tab"
+      id="tab-portfolio"
+      aria-selected="false"
+      aria-controls="panel-portfolio"
+      aria-label="Portfolio"
+      data-target="portfolio"
+      tabindex="-1"
+    >
+      <span class="nav-icon-badge">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+          <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+          <path d="M2 13h20" />
+          <circle cx="12" cy="13" r="1" fill="currentColor" />
+        </svg>
+      </span>
+      <span class="nav-label">Portfolio</span>
+    </button>
+
+    <!-- 3. Watchlist -->
+    <button
+      class="nav-tab"
+      role="tab"
+      id="tab-watchlist"
+      aria-selected="false"
+      aria-controls="panel-watchlist"
+      aria-label="Watchlist"
+      data-target="watchlist"
+      tabindex="-1"
+    >
+      <span class="nav-icon-badge">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M7 16V4M7 4 3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4" />
+        </svg>
+      </span>
+      <span class="nav-label">Watchlist</span>
+    </button>
+
+    <!-- 4. Markets -->
+    <button
+      class="nav-tab"
+      role="tab"
+      id="tab-markets"
+      aria-selected="false"
+      aria-controls="panel-markets"
+      aria-label="Markets"
+      data-target="markets"
+      tabindex="-1"
+    >
+      <span class="nav-icon-badge">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+        </svg>
+      </span>
+      <span class="nav-label">Markets</span>
+    </button>
+
+  </nav>
+
+  <!-- Component Script -->
+  <script src="pill-nav.js"></script>
+
+  <script>
+    // Initialize the Floating Pill Navigation Component with options and event listener
+    const pillNav = new FloatingPillNav('.floating-pill-nav', {
+      autoSwitchPanels: true,
+      onTabChange: ({ id, index, label }) => {
+        const consoleEl = document.getElementById('eventConsole');
+        if (consoleEl) {
+          consoleEl.innerHTML = `Active: [<strong>${id}</strong>] &bull; Index: <strong>${index}</strong> &bull; Label: <strong>${label}</strong>`;
+        }
+      }
+    });
+
+    // Color Swatch Switcher for Demo
+    const swatches = document.querySelectorAll('.color-swatch');
+    swatches.forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        swatches.forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        const color = swatch.dataset.color;
+        document.documentElement.style.setProperty('--accent-color', color);
+        document.documentElement.style.setProperty('--badge-glow', `${color}55`);
+      });
+    });
+  </script>
+</body>
+</html>
