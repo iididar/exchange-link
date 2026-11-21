@@ -388,6 +388,15 @@ const backToRatesLabel = document.getElementById('backToRatesLabel');
 const heroMorphOverlay = document.getElementById('heroMorphOverlay');
 let calculatorTransitionTimer = null;
 
+function setBottomNavActive(view) {
+  const items = document.querySelectorAll('.bottom-nav-item');
+  items.forEach(button => {
+    const isActive = button.dataset.view === view;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+}
+
 // ─── Hero Morph State ──────────────────────────────────────────────
 const heroMorph = {
   sourceRect: null,       // DOMRect of the clicked card
@@ -757,7 +766,7 @@ function renderCurrencyRateList(animateChanges = false, animateRows = false) {
 
 function openCalculatorForCurrency(currency, sourceCardEl) {
   if (!Object.prototype.hasOwnProperty.call(CURRENCY_SYMBOLS, currency)) return;
-  if (heroMorph.isAnimating) return;
+  heroMorph.isAnimating = false;
 
   clearCalculatorTransitionTimer();
 
@@ -774,6 +783,10 @@ function openCalculatorForCurrency(currency, sourceCardEl) {
   setBottomNavActive('calculator');
   metalState.isOpen = false;
   document.body.classList.remove('metals-open');
+  document.body.classList.remove('wallet-open');
+  document.documentElement.classList.remove('wallet-open');
+  const walletViewEl = document.getElementById('walletView');
+  if (walletViewEl) walletViewEl.hidden = true;
   // Reset digit animation state so all digits animate in fresh for the new currency
   amtDisplayState.topPrev = '';
   amtDisplayState.bottomPrev = '';
@@ -917,7 +930,12 @@ function showCurrencyRates() {
   setBottomNavActive('rates');
   metalState.isOpen = false;
   metalsView.hidden = true;
+  metalInvestmentView.hidden = true;
   document.body.classList.remove('metals-open');
+  document.body.classList.remove('wallet-open');
+  document.documentElement.classList.remove('wallet-open');
+  const walletViewEl = document.getElementById('walletView');
+  if (walletViewEl) walletViewEl.hidden = true;
 
   if (!useHero) {
     // ── Fallback: existing slide-out animation ────────────────────
@@ -1314,20 +1332,16 @@ async function fetchLiveMetals() {
 }
 
 function setMetalsViewOpen(isOpen) {
-  metalState.isOpen = isOpen;
-  if (isOpen) metalState.isSilver = false;
-  metalsView.hidden = !isOpen;
-  metalInvestmentView.hidden = true;
-  currencyRatesView.hidden = isOpen || state.currentView !== 'rates';
-  calculatorView.hidden = isOpen || state.currentView !== 'calculator';
-  document.body.classList.toggle('metals-open', isOpen);
   if (isOpen) {
-    metalState.investmentItemKey = null;
-    renderMetalLabels();
-    renderMetalPrices();
-    fetchLiveMetals();
-  } else if (state.currentView === 'rates') {
-    animateCurrencyRateCards();
+    activateMainView('metals');
+  } else {
+    metalState.isOpen = false;
+    metalsView.hidden = true;
+    metalInvestmentView.hidden = true;
+    document.body.classList.remove('metals-open');
+    if (state.currentView === 'metals') {
+      activateMainView('rates');
+    }
   }
 }
 
@@ -2548,33 +2562,75 @@ function renderWalletPicker() {
 }
 
 function activateMainView(view) {
-  walletEls.walletView.hidden = view !== 'wallet';
-  document.body.classList.toggle('wallet-open', view === 'wallet');
-  document.documentElement.classList.toggle('wallet-open', view === 'wallet');
+  if (!view) return;
 
-  if (view === 'wallet') {
-    setMetalsViewOpen(false);
-    metalInvestmentView.hidden = true;
-    currencyRatesView.hidden = true;
-    calculatorView.hidden = true;
-    walletEls.walletDashboard.hidden = false;
-    walletEls.walletFormView.hidden = true;
-    renderWallet();
-  } else if (view === 'rates') {
-    setMetalsViewOpen(false);
-    metalInvestmentView.hidden = true;
-    showCurrencyRates();
-  } else if (view === 'metals') {
-    heroMorph.sourceRect = null;
-    showCurrencyRates();
-    setMetalsViewOpen(true);
-  } else if (view === 'calculator') {
-    setMetalsViewOpen(false);
-    metalInvestmentView.hidden = true;
-    openCalculatorForCurrency(state.selectedCurrency);
+  // Clear transition timers & hero morph states
+  clearCalculatorTransitionTimer();
+  if (heroMorph.animTimer !== null) {
+    clearTimeout(heroMorph.animTimer);
+    heroMorph.animTimer = null;
+  }
+  heroMorph.isAnimating = false;
+  heroMorph.sourceRect = null;
+
+  if (heroMorphOverlay) {
+    heroMorphOverlay.style.cssText = '';
+    heroMorphOverlay.className = '';
+    heroMorphOverlay.style.opacity = '0';
+    heroMorphOverlay.style.pointerEvents = 'none';
   }
 
-  bottomNavItems.forEach(button => button.classList.toggle('active', button.dataset.view === view));
+  if (currencyRateList) {
+    currencyRateList.classList.remove('hero-fading-out');
+    currencyRateList.querySelectorAll('.currency-rate-card.hero-source').forEach(c => c.classList.remove('hero-source'));
+  }
+
+  calculatorView.classList.remove(
+    'hero-active',
+    'hero-content-hidden',
+    'hero-content-visible',
+    'is-entering',
+    'is-exiting'
+  );
+
+  state.currentView = view;
+  setBottomNavActive(view);
+
+  // Toggle body & document classes
+  document.body.classList.toggle('wallet-open', view === 'wallet');
+  document.documentElement.classList.toggle('wallet-open', view === 'wallet');
+  document.body.classList.toggle('metals-open', view === 'metals');
+
+  // Toggle views visibility
+  if (walletEls && walletEls.walletView) walletEls.walletView.hidden = view !== 'wallet';
+  currencyRatesView.hidden = view !== 'rates';
+  metalsView.hidden = view !== 'metals';
+  metalInvestmentView.hidden = true;
+  calculatorView.hidden = view !== 'calculator';
+  metalState.isOpen = (view === 'metals');
+
+  if (view === 'wallet') {
+    if (walletEls && walletEls.walletDashboard) walletEls.walletDashboard.hidden = false;
+    if (walletEls && walletEls.walletFormView) walletEls.walletFormView.hidden = true;
+    renderWallet();
+  } else if (view === 'rates') {
+    renderCurrencyRateList();
+  } else if (view === 'metals') {
+    metalState.investmentItemKey = null;
+    renderMetalLabels();
+    renderMetalPrices();
+    fetchLiveMetals();
+  } else if (view === 'calculator') {
+    if (!state.selectedCurrency || !Object.prototype.hasOwnProperty.call(CURRENCY_SYMBOLS, state.selectedCurrency)) {
+      state.selectedCurrency = 'USD';
+    }
+    state.secondaryCurrency = state.selectedCurrency === 'USD' ? 'IQD' : state.currencyRateBase;
+    currSelectBtns.forEach(button => button.classList.toggle('active', button.dataset.curr === state.selectedCurrency));
+    renderConverterLabels();
+    renderRateBanner();
+    calculateAndRender();
+    adjustRateBannerFontSize();
+  }
 }
 
 bottomNavItems.forEach(button => button.addEventListener('click', () => activateMainView(button.dataset.view)));
