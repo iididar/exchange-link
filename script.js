@@ -1991,8 +1991,8 @@ const walletCopy = {
     metals: 'کانزاکان',
     calculator: 'ژمێرەر',
     wallet: 'جزدان',
-    title: 'پۆرتفۆلیۆ',
-    estimate: 'خەمڵێنراو',
+    title: 'دارایی',
+    estimate: 'کۆی گشتی سامان',
     empty: 'هێشتا هیچ سامانێکت نییە',
     emptyHint: 'یەکەم کڕینەکەت زیاد بکە بۆ بەدواداچوونی وەبەرهێنانەکانت',
     add: '+ زیادکردنی سامان',
@@ -2010,10 +2010,17 @@ const walletCopy = {
     picker: 'کانزا هەڵبژێرە',
     edit: 'دەستکاری',
     delete: 'سڕینەوە',
+    deleteAsset: 'سڕینەوەی ئەم سامانە',
+    confirmDeleteTitle: 'دڵنیایت لە سڕینەوە؟',
+    confirmDeleteDesc: 'ئایا دڵنیایت لە سڕینەوەی ئەم سامانە؟',
+    cancel: 'گەڕانەوە',
+    confirmDelete: 'بەڵێ، بسڕەوە',
     unit: 'دانە',
     saved: 'پاشەکەوت کرا',
+    purchase: 'نرخی کڕین',
     perUnit: 'بۆ هەر',
     gram: 'گرام',
+    misqal: 'مسقاڵ',
     ounce: 'ئۆنسە',
     kg: 'کیلۆگرام',
     lira: 'لیرە'
@@ -2023,8 +2030,8 @@ const walletCopy = {
     metals: 'المعادن',
     calculator: 'الحاسبة',
     wallet: 'المحفظة',
-    title: 'المحفظة',
-    estimate: 'القيمة التقديرية',
+    title: 'الأصول والمالية',
+    estimate: 'إجمالي الأصول',
     empty: 'لا توجد أصول بعد',
     emptyHint: 'أضف أول أصل لمتابعة استثماراتك',
     add: '+ إضافة أصل',
@@ -2042,10 +2049,17 @@ const walletCopy = {
     picker: 'اختر المعدن',
     edit: 'تعديل',
     delete: 'حذف',
+    deleteAsset: 'حذف هذا الأصل',
+    confirmDeleteTitle: 'هل أنت متأكد من الحذف؟',
+    confirmDeleteDesc: 'هل أنت متأكد من حذف هذا الأصل؟',
+    cancel: 'رجوع',
+    confirmDelete: 'نعم، احذف',
     unit: 'وحدة',
     saved: 'تم الحفظ',
+    purchase: 'سعر الشراء',
     perUnit: 'لكل',
     gram: 'غرام',
+    misqal: 'مثقال',
     ounce: 'أونصة',
     kg: 'كيلوغرام',
     lira: 'ليرة'
@@ -2055,8 +2069,8 @@ const walletCopy = {
     metals: 'Metals',
     calculator: 'Calculator',
     wallet: 'Wallet',
-    title: 'Portfolio',
-    estimate: 'Estimated value',
+    title: 'Finance',
+    estimate: 'Total Assets',
     empty: 'Your wallet is empty',
     emptyHint: 'Add your first asset to track your investments',
     add: '+ Add asset',
@@ -2074,10 +2088,17 @@ const walletCopy = {
     picker: 'Select metal',
     edit: 'Edit',
     delete: 'Delete',
+    deleteAsset: 'Delete this asset',
+    confirmDeleteTitle: 'Confirm Delete',
+    confirmDeleteDesc: 'Are you sure you want to delete this asset?',
+    cancel: 'Cancel',
+    confirmDelete: 'Yes, Delete',
     unit: 'units',
     saved: 'Saved',
+    purchase: 'Purchase price',
     perUnit: 'per',
     gram: 'g',
+    misqal: 'Mithqal',
     ounce: 'oz',
     kg: 'kg',
     lira: 'coin'
@@ -2105,8 +2126,9 @@ const walletElementIds = [
   'walletTotalPriceLabel', 'walletTotalPriceInput', 'walletTotalPriceCurrency',
   'walletLivePriceBanner', 'walletLivePriceTitle', 'walletLivePriceAmount', 'walletLivePriceUnit',
   'walletFormCurrencyToggle', 'walletDateLabel', 'walletDateInput', 'walletNotesLabel', 'walletNotesInput',
-  'walletSaveButton', 'walletPickerBackdrop', 'walletPickerTitle', 'walletPickerOptions', 'walletPickerClose',
-  'walletFab', 'walletFormBack'
+  'walletSaveButton', 'walletFormDeleteBtn', 'walletPickerBackdrop', 'walletPickerTitle', 'walletPickerOptions', 'walletPickerClose',
+  'walletConfirmBackdrop', 'walletConfirmTitle', 'walletConfirmDesc', 'walletConfirmItemPreview',
+  'walletConfirmCancelBtn', 'walletConfirmDeleteBtn', 'walletFab', 'walletFormBack'
 ];
 const walletEls = Object.fromEntries(walletElementIds.map(id => [id, document.getElementById(id)]));
 
@@ -2164,7 +2186,7 @@ function walletAssetName(key) {
 
 function walletAssetUnit(key) {
   const text = walletText();
-  if (['gold18k', 'gold21k', 'gold22k', 'gold24k'].includes(key)) return text.gram;
+  if (['gold18k', 'gold21k', 'gold22k', 'gold24k'].includes(key)) return text.misqal || 'مسقاڵ';
   if (key === 'dubaiLira') return text.lira;
   if (key.endsWith('Ounce')) return text.ounce;
   if (key === 'silverKg') return text.kg;
@@ -2185,9 +2207,9 @@ function getMetalLivePrice(key, currency = 'IQD') {
   if (['gold18k', 'gold21k', 'gold22k', 'gold24k'].includes(key)) {
     const item = GOLD_PRICE_ITEMS.find(i => i.key === key);
     if (!item) return null;
-    const misqalIqd = item.calculate(ounce); // 5 grams (1 misqal) in IQD
-    unitPriceIqd = misqalIqd / 5;            // 1 gram in IQD
-    unitPriceUsd = unitPriceIqd / usdIqd;    // 1 gram in USD
+    const misqalUsd = item.calculate(ounce); // 1 misqal in USD
+    unitPriceUsd = misqalUsd;
+    unitPriceIqd = misqalUsd * usdIqd;
   } else if (key === 'dubaiLira') {
     unitPriceUsd = ounce * 0.2035;
     unitPriceIqd = unitPriceUsd * usdIqd;
@@ -2345,6 +2367,7 @@ function renderWalletLabels() {
   walletEls.walletDateLabel.textContent = text.date;
   walletEls.walletNotesLabel.textContent = text.notes;
   walletEls.walletSaveButton.textContent = text.save;
+  if (walletEls.walletFormDeleteBtn) walletEls.walletFormDeleteBtn.textContent = text.deleteAsset || text.delete;
   walletEls.walletPickerTitle.textContent = text.picker;
 
   const goldTabBtn = document.querySelector('[data-picker-category="gold"]');
@@ -2355,6 +2378,34 @@ function renderWalletLabels() {
   walletCurrencyButtons.forEach(button => button.classList.toggle('active', button.dataset.walletCurrency === walletState.currency));
   updateFormLivePriceBanner();
   renderWallet();
+}
+
+let pendingDeleteId = null;
+let pendingDeleteFromForm = false;
+
+function showDeleteConfirmation(itemId, fromForm = false) {
+  const item = walletState.items.find(i => i.id === itemId);
+  if (!item) return;
+
+  pendingDeleteId = itemId;
+  pendingDeleteFromForm = fromForm;
+  const text = walletText();
+  const unit = walletAssetUnit(item.key);
+  const name = walletAssetName(item.key);
+
+  if (walletEls.walletConfirmTitle) walletEls.walletConfirmTitle.textContent = text.confirmDeleteTitle || 'دڵنیایت لە سڕینەوە؟';
+  if (walletEls.walletConfirmDesc) walletEls.walletConfirmDesc.textContent = text.confirmDeleteDesc || 'ئایا دڵنیایت لە سڕینەوەی ئەم سامانە؟';
+  if (walletEls.walletConfirmItemPreview) walletEls.walletConfirmItemPreview.textContent = `${name} · ${item.amount} ${unit}`;
+  if (walletEls.walletConfirmCancelBtn) walletEls.walletConfirmCancelBtn.textContent = text.cancel || 'گەڕانەوە';
+  if (walletEls.walletConfirmDeleteBtn) walletEls.walletConfirmDeleteBtn.textContent = text.confirmDelete || 'بەڵێ، بسڕەوە';
+
+  if (walletEls.walletConfirmBackdrop) walletEls.walletConfirmBackdrop.hidden = false;
+}
+
+function hideDeleteConfirmation() {
+  pendingDeleteId = null;
+  pendingDeleteFromForm = false;
+  if (walletEls.walletConfirmBackdrop) walletEls.walletConfirmBackdrop.hidden = true;
 }
 
 function renderWallet() {
@@ -2453,9 +2504,7 @@ function renderWallet() {
     remove.type = 'button';
     remove.textContent = text.delete;
     remove.addEventListener('click', () => {
-      walletState.items = walletState.items.filter(entry => entry.id !== item.id);
-      persistWallet();
-      renderWallet();
+      showDeleteConfirmation(item.id, false);
     });
 
     stats.append(profitEl, pctEl, currentEl, actions);
@@ -2522,6 +2571,10 @@ function openWalletForm(item = null) {
   walletEls.walletDateInput.value = item?.date || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   walletEls.walletNotesInput.value = item?.notes || '';
   walletEls.walletSelectedAsset.textContent = walletAssetName(walletState.selectedKey);
+  if (walletEls.walletFormDeleteBtn) {
+    walletEls.walletFormDeleteBtn.hidden = !item;
+    walletEls.walletFormDeleteBtn.textContent = walletText().deleteAsset || walletText().delete;
+  }
 
   updateFormLivePriceBanner();
   renderWallet();
@@ -2531,6 +2584,7 @@ function closeWalletForm() {
   walletEls.walletFormView.hidden = true;
   walletEls.walletDashboard.hidden = false;
   walletState.editingId = null;
+  if (walletEls.walletFormDeleteBtn) walletEls.walletFormDeleteBtn.hidden = true;
   renderWallet();
 }
 
@@ -2637,6 +2691,39 @@ bottomNavItems.forEach(button => button.addEventListener('click', () => activate
 walletEls.walletEmptyAdd.addEventListener('click', () => openWalletForm());
 walletEls.walletFab.addEventListener('click', () => openWalletForm());
 walletEls.walletFormBack.addEventListener('click', closeWalletForm);
+if (walletEls.walletFormDeleteBtn) {
+  walletEls.walletFormDeleteBtn.addEventListener('click', () => {
+    if (walletState.editingId) {
+      showDeleteConfirmation(walletState.editingId, true);
+    }
+  });
+}
+
+if (walletEls.walletConfirmCancelBtn) {
+  walletEls.walletConfirmCancelBtn.addEventListener('click', hideDeleteConfirmation);
+}
+
+if (walletEls.walletConfirmBackdrop) {
+  walletEls.walletConfirmBackdrop.addEventListener('click', event => {
+    if (event.target === walletEls.walletConfirmBackdrop) hideDeleteConfirmation();
+  });
+}
+
+if (walletEls.walletConfirmDeleteBtn) {
+  walletEls.walletConfirmDeleteBtn.addEventListener('click', () => {
+    if (pendingDeleteId) {
+      walletState.items = walletState.items.filter(entry => entry.id !== pendingDeleteId);
+      persistWallet();
+      const shouldCloseForm = pendingDeleteFromForm;
+      hideDeleteConfirmation();
+      if (shouldCloseForm) {
+        closeWalletForm();
+      } else {
+        renderWallet();
+      }
+    }
+  });
+}
 
 walletEls.walletAssetPicker.addEventListener('click', () => {
   const currentAsset = walletAssets.find(a => a.key === walletState.selectedKey);
