@@ -1031,6 +1031,84 @@ body.light-mode .tab-glider {
 .metal-price-number {
   display: inline-flex;
   align-items: center;
+  transition: color 0.35s ease, text-shadow 0.35s ease;
+}
+
+/* ─── Price Trend Styles (سەوز بۆ زیادبوون / سوور بۆ کەمبوون) ─────────── */
+.metal-price-card.price-up {
+  border-color: rgba(52, 211, 153, 0.28);
+}
+
+.metal-price-card.price-up .metal-price-number {
+  color: #34d399 !important;
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.28);
+}
+
+.metal-price-card.price-down {
+  border-color: rgba(248, 113, 113, 0.28);
+}
+
+.metal-price-card.price-down .metal-price-number {
+  color: #f87171 !important;
+  text-shadow: 0 0 10px rgba(248, 113, 113, 0.28);
+}
+
+/* Light mode support */
+body.light-mode .metal-price-card.price-up {
+  border-color: rgba(22, 163, 74, 0.3);
+}
+
+body.light-mode .metal-price-card.price-up .metal-price-number {
+  color: #16a34a !important;
+  text-shadow: none;
+}
+
+body.light-mode .metal-price-card.price-down {
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+body.light-mode .metal-price-card.price-down .metal-price-number {
+  color: #dc2626 !important;
+  text-shadow: none;
+}
+
+/* Flash Animations when price actively changes */
+@keyframes priceFlashUp {
+  0% {
+    background-color: rgba(52, 211, 153, 0.2);
+    border-color: rgba(52, 211, 153, 0.6);
+    box-shadow: 0 0 18px rgba(52, 211, 153, 0.3);
+    transform: scale(1.015);
+  }
+  100% {
+    background-color: var(--card-bg);
+    border-color: rgba(52, 211, 153, 0.28);
+    box-shadow: var(--card-shadow);
+    transform: scale(1);
+  }
+}
+
+@keyframes priceFlashDown {
+  0% {
+    background-color: rgba(248, 113, 113, 0.2);
+    border-color: rgba(248, 113, 113, 0.6);
+    box-shadow: 0 0 18px rgba(248, 113, 113, 0.3);
+    transform: scale(1.015);
+  }
+  100% {
+    background-color: var(--card-bg);
+    border-color: rgba(248, 113, 113, 0.28);
+    box-shadow: var(--card-shadow);
+    transform: scale(1);
+  }
+}
+
+.metal-price-card.price-flash-up {
+  animation: priceFlashUp 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.metal-price-card.price-flash-down {
+  animation: priceFlashDown 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .metal-price-unit {
@@ -1075,7 +1153,9 @@ body.light-mode .tab-glider {
     transition-duration: 0.01ms;
   }
 
-  .currency-rate-value-changing {
+  .currency-rate-value-changing,
+  .metal-price-card.price-flash-up,
+  .metal-price-card.price-flash-down {
     animation-duration: 0.01ms;
   }
 

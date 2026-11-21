@@ -526,6 +526,33 @@ const SILVER_PRICE_ITEMS = [
   { key: 'silverKg', currency: 'USD', calculate: silver => silver * 32.1507 }
 ];
 
+// چاودێری ئاڕاستەی گۆڕانی نرخەکان (سەوز بۆ بەرزبوونەوە / سوور بۆ دابەزین)
+const PRICE_TREND_STORAGE_KEY = 'exchange_price_trends_v1';
+
+function loadPriceTrendState() {
+  try {
+    const raw = localStorage.getItem(PRICE_TREND_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          currencies: parsed.currencies && typeof parsed.currencies === 'object' ? parsed.currencies : {},
+          metals: parsed.metals && typeof parsed.metals === 'object' ? parsed.metals : {}
+        };
+      }
+    }
+  } catch (_) {}
+  return { currencies: {}, metals: {} };
+}
+
+const priceTrends = loadPriceTrendState();
+
+function savePriceTrendState() {
+  try {
+    localStorage.setItem(PRICE_TREND_STORAGE_KEY, JSON.stringify(priceTrends));
+  } catch (_) {}
+}
+
 // جێگیرکردنی دۆخی سەرەتایی دوگمەکان
 discountToggle.checked = state.minus1000Active;
 darkModeToggle.checked = state.isDarkMode;
@@ -726,6 +753,37 @@ function renderCurrencyRateList(animateChanges = false, animateRows = false) {
     card.className = 'metal-price-card currency-rate-card';
     card.dataset.currency = currency;
 
+    const rateKey = `${state.currencyRateBase}_${currency}`;
+    const prevData = priceTrends.currencies[rateKey];
+    let trend = prevData?.trend || 'neutral';
+    let justChanged = false;
+
+    if (Number.isFinite(rate) && rate > 0) {
+      if (prevData && Number.isFinite(prevData.price)) {
+        const diff = rate - prevData.price;
+        if (Math.abs(diff) > 0.0001) {
+          trend = diff > 0 ? 'up' : 'down';
+          justChanged = true;
+        }
+      }
+      priceTrends.currencies[rateKey] = { price: rate, trend };
+    }
+
+    card.dataset.trend = trend;
+    if (trend === 'up') {
+      card.classList.add('price-up');
+      if (justChanged) {
+        card.classList.add('price-flash-up');
+        card.addEventListener('animationend', () => card.classList.remove('price-flash-up'), { once: true });
+      }
+    } else if (trend === 'down') {
+      card.classList.add('price-down');
+      if (justChanged) {
+        card.classList.add('price-flash-down');
+        card.addEventListener('animationend', () => card.classList.remove('price-flash-down'), { once: true });
+      }
+    }
+
     const name = document.createElement('span');
     name.className = 'metal-price-name';
     name.textContent = `${text.currencies[currency]} (${currency})`;
@@ -761,6 +819,7 @@ function renderCurrencyRateList(animateChanges = false, animateRows = false) {
   });
 
   currencyRateList.replaceChildren(fragment);
+  savePriceTrendState();
   if (animateRows) animateCurrencyRateCards();
 }
 
@@ -1076,8 +1135,42 @@ function renderMetalPrices() {
     unit.textContent = item.currency === 'IQD' ? 'دینار' : '';
     amount.setAttribute('aria-label', `${formattedValue} ${item.currency === 'USD' ? 'USD' : 'دینار'}`);
 
+    const prevData = priceTrends.metals[item.key];
+    let trend = prevData?.trend || 'neutral';
+    let justChanged = false;
+
+    if (prevData && Number.isFinite(prevData.price)) {
+      const diff = price - prevData.price;
+      if (Math.abs(diff) > 0.0001) {
+        trend = diff > 0 ? 'up' : 'down';
+        justChanged = true;
+      }
+    }
+    priceTrends.metals[item.key] = { price, trend };
+
+    card.dataset.trend = trend;
+    card.classList.remove('price-up', 'price-down');
+    if (trend === 'up') {
+      card.classList.add('price-up');
+      if (justChanged) {
+        card.classList.remove('price-flash-up', 'price-flash-down');
+        void card.offsetWidth;
+        card.classList.add('price-flash-up');
+        card.addEventListener('animationend', () => card.classList.remove('price-flash-up'), { once: true });
+      }
+    } else if (trend === 'down') {
+      card.classList.add('price-down');
+      if (justChanged) {
+        card.classList.remove('price-flash-up', 'price-flash-down');
+        void card.offsetWidth;
+        card.classList.add('price-flash-down');
+        card.addEventListener('animationend', () => card.classList.remove('price-flash-down'), { once: true });
+      }
+    }
+
     card.dataset.price = String(price);
   });
+  savePriceTrendState();
   updateMetalInvestmentResults();
 }
 
