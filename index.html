@@ -15,7 +15,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- فایلی دیزاین -->
-  <link rel="stylesheet" href="style.css?v=20261117-1">
+  <link rel="stylesheet" href="style.css?v=20261121-1">
 </head>
 <body>
 
@@ -248,8 +248,8 @@
           </div>
         </div>
         <strong id="walletTotal" class="wallet-total">—</strong>
-        <div class="wallet-summary-bottom">
-          <span id="walletProfit">—</span>
+        <div class="wallet-summary-bottom" dir="ltr">
+          <span id="walletProfit" class="wallet-summary-profit">—</span>
           <span id="walletProfitPercent" class="wallet-profit-badge">—</span>
         </div>
       </article>
@@ -267,22 +267,58 @@
       <button id="walletFormBack" class="back-to-rates-btn" type="button">
         <span aria-hidden="true">←</span><span id="walletFormTitle"></span>
       </button>
+
+      <!-- Live Market Price Banner with IQD / USD Toggle -->
+      <div id="walletLivePriceBanner" class="wallet-live-price-card">
+        <div class="wallet-live-price-header">
+          <div class="wallet-live-price-badge">
+            <span class="live-pulse-dot" aria-hidden="true"></span>
+            <span id="walletLivePriceTitle">نرخی بازاڕی ڕاستەوخۆ</span>
+          </div>
+          <div id="walletFormCurrencyToggle" class="wallet-currency-toggle" role="group" aria-label="Purchase currency">
+            <button type="button" class="active" data-form-currency="IQD">IQD</button>
+            <button type="button" data-form-currency="USD">USD</button>
+          </div>
+        </div>
+        <div class="wallet-live-price-body">
+          <div class="wallet-live-price-digits" dir="ltr">
+            <span id="walletLivePriceAmount">—</span>
+          </div>
+          <span id="walletLivePriceUnit" class="wallet-live-price-unit"></span>
+        </div>
+      </div>
+
       <label class="wallet-field">
         <span id="walletAssetLabel"></span>
         <button id="walletAssetPicker" class="wallet-picker-button" type="button">
           <span id="walletSelectedAsset"></span><span>⌄</span>
         </button>
       </label>
+
+      <!-- 1. Quantity -->
+      <label class="wallet-field">
+        <span id="walletAmountLabel"></span>
+        <input id="walletAmountInput" type="number" min="0" step="any" placeholder="0.00" inputmode="decimal">
+      </label>
+
+      <!-- 2. Two-Way Synchronized: Unit Purchase Price & Total Purchase Price -->
       <div class="wallet-input-row">
         <label class="wallet-field">
-          <span id="walletAmountLabel"></span>
-          <input id="walletAmountInput" type="number" min="0" step="any" placeholder="0.00" inputmode="decimal">
+          <span id="walletUnitPriceLabel">نرخی کڕینی تاک</span>
+          <div class="wallet-input-affix">
+            <input id="walletUnitPriceInput" type="number" min="0" step="any" placeholder="0.00" inputmode="decimal">
+            <span id="walletUnitPriceCurrency" class="wallet-currency-affix">IQD</span>
+          </div>
         </label>
         <label class="wallet-field">
-          <span id="walletPurchaseLabel"></span>
-          <input id="walletPurchaseInput" type="number" min="0" step="any" placeholder="0.00" inputmode="decimal">
+          <span id="walletTotalPriceLabel">نرخی کڕینی گشتی</span>
+          <div class="wallet-input-affix">
+            <input id="walletTotalPriceInput" type="number" min="0" step="any" placeholder="0.00" inputmode="decimal">
+            <span id="walletTotalPriceCurrency" class="wallet-currency-affix">IQD</span>
+          </div>
         </label>
       </div>
+
       <label class="wallet-field">
         <span id="walletDateLabel"></span>
         <input id="walletDateInput" type="date">
@@ -300,8 +336,8 @@
           <button id="walletPickerClose" type="button" aria-label="Close">×</button>
         </div>
         <div class="wallet-picker-tabs">
-          <button class="active" type="button" data-picker-category="currencies"></button>
-          <button type="button" data-picker-category="metals"></button>
+          <button class="active" type="button" data-picker-category="gold"></button>
+          <button type="button" data-picker-category="silver"></button>
         </div>
         <div id="walletPickerOptions" class="wallet-picker-options"></div>
       </div>
@@ -329,6 +365,6 @@
   <div id="heroMorphOverlay" aria-hidden="true"></div>
 
   <!-- فایلی جاڤاسکریپت -->
-  <script src="script.js?v=20261117-1" defer></script>
+  <script src="script.js?v=20261121-1" defer></script>
 </body>
 </html>
