@@ -129,7 +129,7 @@ html[dir="ltr"] .toggle-slider::before { right: auto; left: 3px; }
 html[dir="ltr"] .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
 .menu-footer { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--card-border); text-align: center; font-family: 'NRT', 'Inter', sans-serif; font-size: 0.76rem; font-weight: 600; color: var(--text-muted); direction: ltr; }
 
-.rate-header { text-align: center; margin: 0 0 6px; }
+.rate-header { text-align: center; margin: 0 0 6px; flex-shrink: 0; }
 .rate-title { font-size: 1.8rem; font-weight: 800; color: var(--title-color); text-shadow: 0 0 18px var(--gold-glow); margin-bottom: 4px; }
 .rate-banner { direction: ltr; font-family: 'NRT', 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--rate-color); filter: drop-shadow(0 0 10px rgba(255, 183, 17, 0.45)); letter-spacing: 0.5px; }
 .exchange-rate-line {
@@ -140,16 +140,17 @@ html[dir="ltr"] .toggle-switch input:checked + .toggle-slider::before { transfor
 .rate-number { font-size: var(--rate-number-font-size); }
 .rate-currency-symbol { font-size: var(--rate-symbol-font-size); }
 
-.converter-section { position: relative; display: flex; flex-direction: column; gap: 14px; margin-bottom: 8px; }
-.currency-card { width: 100%; height: 96px; min-width: 0; flex: 0 0 96px; background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: 20px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; direction: ltr; box-shadow: var(--card-shadow); }
+.converter-section { position: relative; display: flex; flex-direction: column; gap: 10px; margin-bottom: 6px; flex-shrink: 0; }
+.currency-card { width: 100%; height: clamp(74px, 10vh, 90px); min-width: 0; flex: 0 0 clamp(74px, 10vh, 90px); background: var(--card-bg); border: 1.5px solid var(--card-border); border-radius: 18px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; direction: ltr; box-shadow: var(--card-shadow); }
 .currency-card.active-input { border-color: var(--card-active-border); }
-.amount-display { flex: 1 1 0; min-width: 0; max-width: none; font-family: 'NRT', 'Inter', sans-serif; font-size: 2.1rem; font-weight: 600; line-height: 1.15; color: var(--text-white); overflow: hidden; white-space: nowrap; scrollbar-width: none; }
+.amount-display { flex: 1 1 0; min-width: 0; max-width: none; font-family: 'NRT', 'Inter', sans-serif; font-size: clamp(1.6rem, 5.8vw, 2.1rem); font-weight: 600; line-height: 1.35; padding: 2px 2px; color: var(--text-white); overflow-x: auto; overflow-y: hidden; white-space: nowrap; scrollbar-width: none; direction: ltr; text-align: left; }
 .amount-display::-webkit-scrollbar { display: none; }
 
 /* ─── Per-digit slot-machine animations ────────────────────── */
 .amt-digit {
   display: inline-block;
-  vertical-align: bottom;
+  vertical-align: baseline;
+  line-height: inherit;
 }
 
 /* New digit slides in from BELOW (typing) */
@@ -199,7 +200,7 @@ html[dir="ltr"] .toggle-switch input:checked + .toggle-slider::before { transfor
 @media (prefers-reduced-motion: reduce) {
   .amt-digit[data-anim] { animation-duration: 0.01ms !important; animation-delay: 0ms !important; }
 }
-.currency-info { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+.currency-info { text-align: right; display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
 .currency-label-button { appearance: none; border: 0; padding: 6px 8px; margin: -6px -8px; background: transparent; color: inherit; font: inherit; cursor: default; border-radius: 10px; text-align: right; }
 .secondary-currency-toggle { cursor: pointer; touch-action: manipulation; }
 .secondary-currency-toggle:active:not(:disabled) { background: var(--hamburger-bg); transform: scale(0.96); }
@@ -212,8 +213,8 @@ html[dir="ltr"] .toggle-switch input:checked + .toggle-slider::before { transfor
 .swap-btn.pressed { transform: translate(-50%, -50%) scale(0.9) rotate(180deg); }
 .swap-btn svg { width: 24px; height: 24px; stroke: var(--swap-icon); stroke-width: 2.2; }
 
-.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 24px; direction: ltr; padding: 4px 12px; }
-.key-btn { background: var(--btn-bg); border: 1px solid var(--btn-border); border-radius: 16px; height: 58px; display: flex; justify-content: center; align-items: center; font-family: 'NRT', 'Inter', sans-serif; font-size: 1.65rem; font-weight: 500; color: var(--btn-text); box-shadow: var(--btn-shadow); cursor: pointer; transition: transform 0.06s ease; }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(6px, 1.4vh, 12px) clamp(10px, 3.8vw, 22px); direction: ltr; padding: 2px 6px; flex-shrink: 0; }
+.key-btn { background: var(--btn-bg); border: 1px solid var(--btn-border); border-radius: 14px; height: clamp(44px, 6.2vh, 54px); display: flex; justify-content: center; align-items: center; font-family: 'NRT', 'Inter', sans-serif; font-size: clamp(1.4rem, 5vw, 1.65rem); font-weight: 500; color: var(--btn-text); box-shadow: var(--btn-shadow); cursor: pointer; transition: transform 0.06s ease; }
 .key-btn.pressed { background: var(--btn-active); transform: scale(0.94); }
 .key-btn.transparent { background: transparent; border: none; box-shadow: none; font-size: 2rem; }
 .key-btn.transparent.pressed { background: rgba(128, 128, 128, 0.12); }
@@ -249,7 +250,7 @@ body { padding-bottom: 0; }
 @media (max-height: 740px) {
   .app-container {
     padding-top: calc(10px + env(safe-area-inset-top));
-    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
   }
   .signature-link { height: 64px; }
   .rate-title { font-size: 1.55rem; margin-bottom: 2px; }
@@ -788,8 +789,18 @@ html[dir="ltr"] .currency-base-toggle.is-usd .currency-base-indicator {
 }
 
 .calculator-view {
-  justify-content: space-between;
-  gap: 12px;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 0;
+  width: 100%;
+  gap: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
   opacity: 1;
   transform: translateY(0) scale(1);
   transform-origin: center;
@@ -814,6 +825,7 @@ html[dir="ltr"] .currency-base-toggle.is-usd .currency-base-indicator {
   align-self: center;
   justify-content: center;
   direction: rtl;
+  flex-shrink: 0;
   gap: 8px;
   padding: 10px 20px;
   border: 1px solid rgba(255, 209, 0, 0.35);

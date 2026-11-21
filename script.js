@@ -806,6 +806,9 @@ function openCalculatorForCurrency(currency, sourceCardEl) {
     calculatorView.hidden = false;
     void calculatorView.offsetWidth;
     requestAnimationFrame(() => {
+      adjustAmountFontSize(topAmountEl);
+      adjustAmountFontSize(bottomAmountEl);
+      adjustRateBannerFontSize();
       if (state.currentView === 'calculator') {
         calculatorView.classList.remove('is-entering');
       }
@@ -877,6 +880,9 @@ function openCalculatorForCurrency(currency, sourceCardEl) {
 
     // ── 5. Dissolve overlay into calc content (liquid melt) ────────
     requestAnimationFrame(() => {
+      adjustAmountFontSize(topAmountEl);
+      adjustAmountFontSize(bottomAmountEl);
+      adjustRateBannerFontSize();
       // Blur dissolve: glass fades out while content fades in
       heroMorphOverlay.animate([
         {
@@ -1377,9 +1383,13 @@ function formatRoundedInteger(val) {
 
 // گونجاندنی قەبارەی فۆنت بۆ ئەوەی ژمارەی درێژ لە ناو سندوقەکەدا بمێنێتەوە
 function adjustAmountFontSize(el) {
+  if (!el || el.clientWidth === 0) return;
   el.style.fontSize = '';
-  let low = 6;
-  let high = Math.floor(parseFloat(getComputedStyle(el).fontSize));
+  const initialSize = parseFloat(getComputedStyle(el).fontSize);
+  if (!Number.isFinite(initialSize) || initialSize <= 16) return;
+
+  let low = 16;
+  let high = Math.floor(initialSize);
 
   while (low < high) {
     const fontSize = Math.ceil((low + high) / 2);
@@ -1392,6 +1402,7 @@ function adjustAmountFontSize(el) {
   }
 
   el.style.fontSize = `${low}px`;
+  el.scrollLeft = 0;
 }
 
 function renderDateOrDay() {
@@ -1509,9 +1520,13 @@ function renderConverterLabels() {
 }
 
 function adjustRateBannerFontSize() {
+  if (!liveRateBannerEl || liveRateBannerEl.clientWidth === 0) return;
   liveRateBannerEl.style.fontSize = '';
+  const initialSize = parseFloat(getComputedStyle(liveRateBannerEl).fontSize);
+  if (!Number.isFinite(initialSize) || initialSize <= 10) return;
+
   let low = 10;
-  let high = parseFloat(getComputedStyle(liveRateBannerEl).fontSize);
+  let high = Math.floor(initialSize);
 
   while (low < high) {
     const fontSize = Math.ceil((low + high) / 2);
@@ -1551,7 +1566,7 @@ function calculateAndRender() {
   amtDisplayState.topPrev = formattedTop;
   topAmountEl.setAttribute('aria-label', formattedTop);
   adjustAmountFontSize(topAmountEl);
-  topAmountEl.scrollLeft = topAmountEl.scrollWidth;
+  topAmountEl.scrollLeft = 0;
 
   const inputValue = parseFloat(state.rawInput);
   if (isNaN(inputValue) || inputValue === 0) {
@@ -1618,7 +1633,7 @@ function calculateAndRender() {
   amtDisplayState.bottomPrev = bottomText;
   bottomAmountEl.setAttribute('aria-label', bottomText);
   adjustAmountFontSize(bottomAmountEl);
-  bottomAmountEl.scrollLeft = bottomAmountEl.scrollWidth;
+  bottomAmountEl.scrollLeft = 0;
 }
 
 function updateTelegramRate(newBaseRate, timestampMs) {
@@ -1808,6 +1823,18 @@ keypad.addEventListener('touchcancel', (e) => {
 keypad.addEventListener('mousedown', (e) => {
   const btn = e.target.closest('.key-btn');
   if (btn) handleKeyPress(btn.dataset.key);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (state.currentView !== 'calculator' || calculatorView.hidden) return;
+  if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+  if ((e.key >= '0' && e.key <= '9') || e.key === '.') {
+    e.preventDefault();
+    handleKeyPress(e.key);
+  } else if (e.key === 'Backspace') {
+    e.preventDefault();
+    handleKeyPress('BACKSPACE');
+  }
 });
 
 function toggleSwap() {
@@ -2684,6 +2711,11 @@ function activateMainView(view) {
     renderRateBanner();
     calculateAndRender();
     adjustRateBannerFontSize();
+    requestAnimationFrame(() => {
+      adjustAmountFontSize(topAmountEl);
+      adjustAmountFontSize(bottomAmountEl);
+      adjustRateBannerFontSize();
+    });
   }
 }
 
