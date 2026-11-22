@@ -116,7 +116,6 @@ const TRANSLATIONS = {
     close: 'داخستن',
     discount: 'کاراکردنی ١٠٠٠دینار کەمتر بۆ وەرگرتنی دۆلار',
     darkMode: 'دۆخی تاریک',
-    priceTrendHighlight: 'ڕەنگی سەوز و سوور بۆ گۆڕانی نرخەکان',
     language: 'زمان',
     currenciesLabel: 'هەڵبژاردنی دراو',
     refresh: 'نوێکردنەوەی نرخەکان',
@@ -179,7 +178,6 @@ const TRANSLATIONS = {
     close: 'إغلاق',
     discount: 'تفعيل خصم ١٠٠٠ دينار عند شراء الدولار',
     darkMode: 'الوضع الداكن',
-    priceTrendHighlight: 'تأثير الألوان عند تغير الأسعار (أخضر وأحمر)',
     language: 'اللغة',
     currenciesLabel: 'اختيار العملة',
     refresh: 'تحديث الأسعار',
@@ -244,7 +242,6 @@ const TRANSLATIONS = {
     close: 'Close',
     discount: 'Apply 1,000 IQD discount when buying dollars',
     darkMode: 'Dark mode',
-    priceTrendHighlight: 'Green & Red rate change highlights',
     language: 'Language',
     currenciesLabel: 'Select currency',
     refresh: 'Refresh rates',
@@ -341,7 +338,6 @@ const state = {
   isTopForeign: true,
   rawInput: '0',
   minus1000Active: localStorage.getItem('minus1000Active') === 'true',
-  priceTrendHighlight: localStorage.getItem('priceTrendHighlight') !== 'false',
   secondaryCurrency: 'IQD',
   language: initialLanguage,
   isDarkMode: initialDarkMode,
@@ -479,14 +475,12 @@ const menuCloseBtn = document.getElementById('menuCloseBtn');
 const menuTitleEl = document.getElementById('menuTitle');
 const discountTextEl = document.getElementById('discountText');
 const darkModeTextEl = document.getElementById('darkModeText');
-const priceTrendHighlightTextEl = document.getElementById('priceTrendHighlightText');
 const languageSelectorLabelEl = document.getElementById('languageSelectorLabel');
 const currencySelectorLabelEl = document.getElementById('currencySelectorLabel');
 const signatureLinkEl = document.getElementById('signatureLink');
 const menuFooterEl = document.getElementById('menuFooter');
 const discountToggle = document.getElementById('discountToggle');
 const darkModeToggle = document.getElementById('darkModeToggle');
-const priceTrendHighlightToggle = document.getElementById('priceTrendHighlightToggle');
 const currSelectBtns = document.querySelectorAll('.curr-select-btn');
 const languageSelectBtns = document.querySelectorAll('.language-select-btn');
 
@@ -553,18 +547,14 @@ function loadPriceTrendState() {
           }
           return res;
         };
-        const dirs = (parsed.directions && typeof parsed.directions === 'object') ? parsed.directions : {};
-        if (!dirs['rateBanner']) dirs['rateBanner'] = 'up';
-        if (!dirs['IQD_USD']) dirs['IQD_USD'] = 'up';
         return {
           currencies: unwrap(parsed.currencies),
-          metals: unwrap(parsed.metals),
-          directions: dirs
+          metals: unwrap(parsed.metals)
         };
       }
     }
   } catch (_) {}
-  return { currencies: {}, metals: {}, directions: { rateBanner: 'up', IQD_USD: 'up' } };
+  return { currencies: {}, metals: {} };
 }
 
 const priceTrends = loadPriceTrendState();
@@ -575,48 +565,9 @@ function savePriceTrendState() {
   } catch (_) {}
 }
 
-function triggerPriceFlash(element, direction) {
-  if (!state.priceTrendHighlight || !direction || !element) return;
-  element.classList.remove('price-flash-up', 'price-flash-down');
-  void element.offsetWidth; // Force CSS reflow to re-trigger animation
-  const cls = direction === 'up' ? 'price-flash-up' : 'price-flash-down';
-  element.classList.add(cls);
-  const cleanup = () => element.classList.remove(cls);
-  element.addEventListener('animationend', cleanup, { once: true });
-  setTimeout(cleanup, 1100);
-}
-
-function triggerEntryPriceFlash() {
-  if (!state.priceTrendHighlight) return;
-  if (state.currentView === 'rates') {
-    renderCurrencyRateList(false, false, true);
-  } else if (state.currentView === 'metals') {
-    renderMetalPrices(true);
-  } else if (state.currentView === 'calculator') {
-    renderRateBanner(true);
-    if (bottomAmountEl) {
-      triggerPriceFlash(bottomAmountEl, priceTrends.directions['rateBanner'] || 'up');
-    }
-  }
-}
-
 // جێگیرکردنی دۆخی سەرەتایی دوگمەکان
 discountToggle.checked = state.minus1000Active;
 darkModeToggle.checked = state.isDarkMode;
-if (priceTrendHighlightToggle) {
-  priceTrendHighlightToggle.checked = state.priceTrendHighlight;
-  priceTrendHighlightToggle.addEventListener('change', (e) => {
-    state.priceTrendHighlight = e.target.checked;
-    localStorage.setItem('priceTrendHighlight', String(state.priceTrendHighlight));
-    if (!state.priceTrendHighlight) {
-      document.querySelectorAll('.price-flash-up, .price-flash-down').forEach((el) => {
-        el.classList.remove('price-flash-up', 'price-flash-down');
-      });
-    } else {
-      triggerEntryPriceFlash();
-    }
-  });
-}
 if (!state.isDarkMode) {
   document.body.classList.add('light-mode');
 }
@@ -645,7 +596,6 @@ function applyLanguage(language, animateCurrencyRates = false, animateCurrencyRo
   menuCloseBtn.setAttribute('aria-label', text.close);
   discountTextEl.textContent = text.discount;
   darkModeTextEl.textContent = text.darkMode;
-  if (priceTrendHighlightTextEl) priceTrendHighlightTextEl.textContent = text.priceTrendHighlight;
   languageSelectorLabelEl.textContent = text.language;
   currencySelectorLabelEl.textContent = text.currenciesLabel;
   menuFooterEl.textContent = text.footer;
@@ -801,7 +751,7 @@ function animateCurrencyRateCards() {
   }, 650);
 }
 
-function renderCurrencyRateList(animateChanges = false, animateRows = false, isInitialEntry = false) {
+function renderCurrencyRateList(animateChanges = false, animateRows = false) {
   const text = getTranslations();
   const currencies = state.currencyRateBase === 'IQD'
     ? ['USD', 'GBP', 'EUR', 'IRR', 'TRY']
@@ -824,16 +774,21 @@ function renderCurrencyRateList(animateChanges = false, animateRows = false, isI
         const diff = rate - prevRate;
         if (Math.abs(diff) > 0.0001) {
           changeDirection = diff > 0 ? 'up' : 'down';
-          priceTrends.directions[rateKey] = changeDirection;
         }
       }
       priceTrends.currencies[rateKey] = rate;
     }
 
-    if (changeDirection) {
-      triggerPriceFlash(card, changeDirection);
-    } else if (isInitialEntry && priceTrends.directions[rateKey]) {
-      triggerPriceFlash(card, priceTrends.directions[rateKey]);
+    if (changeDirection === 'up') {
+      card.classList.add('price-flash-up');
+      const cleanup = () => card.classList.remove('price-flash-up');
+      card.addEventListener('animationend', cleanup, { once: true });
+      setTimeout(cleanup, 1100);
+    } else if (changeDirection === 'down') {
+      card.classList.add('price-flash-down');
+      const cleanup = () => card.classList.remove('price-flash-down');
+      card.addEventListener('animationend', cleanup, { once: true });
+      setTimeout(cleanup, 1100);
     }
 
     const name = document.createElement('span');
@@ -1155,7 +1110,7 @@ function clearCalculatorTransitionTimer() {
   }
 }
 
-function renderMetalPrices(isInitialEntry = false) {
+function renderMetalPrices() {
   const items = metalState.isSilver ? SILVER_PRICE_ITEMS : GOLD_PRICE_ITEMS;
   const ouncePrice = metalState.isSilver ? metalState.silverOunce : metalState.goldOunce;
 
@@ -1194,16 +1149,25 @@ function renderMetalPrices(isInitialEntry = false) {
       const diff = price - prevPrice;
       if (Math.abs(diff) > 0.0001) {
         changeDirection = diff > 0 ? 'up' : 'down';
-        priceTrends.directions[item.key] = changeDirection;
       }
     }
     priceTrends.metals[item.key] = price;
 
     card.classList.remove('price-up', 'price-down');
-    if (changeDirection) {
-      triggerPriceFlash(card, changeDirection);
-    } else if (isInitialEntry && priceTrends.directions[item.key]) {
-      triggerPriceFlash(card, priceTrends.directions[item.key]);
+    if (changeDirection === 'up') {
+      card.classList.remove('price-flash-up', 'price-flash-down');
+      void card.offsetWidth;
+      card.classList.add('price-flash-up');
+      const cleanup = () => card.classList.remove('price-flash-up');
+      card.addEventListener('animationend', cleanup, { once: true });
+      setTimeout(cleanup, 1100);
+    } else if (changeDirection === 'down') {
+      card.classList.remove('price-flash-up', 'price-flash-down');
+      void card.offsetWidth;
+      card.classList.add('price-flash-down');
+      const cleanup = () => card.classList.remove('price-flash-down');
+      card.addEventListener('animationend', cleanup, { once: true });
+      setTimeout(cleanup, 1100);
     }
 
     card.dataset.price = String(price);
@@ -1557,7 +1521,7 @@ function renderDateOrDay() {
 }
 
 // نوێکردنەوەی ناونیشان و بانەری نرخ بەپێی دراوی هەڵبژێردراو
-function renderRateBanner(isInitialEntry = false) {
+function renderRateBanner() {
   const curr = state.selectedCurrency;
   const text = getTranslations();
   rateTitleEl.textContent = text.currencyTitles[curr];
@@ -1597,11 +1561,6 @@ function renderRateBanner(isInitialEntry = false) {
   renderRateBannerText(displayText || '...');
   liveRateBannerEl.setAttribute('aria-label', displayText || '...');
   adjustRateBannerFontSize();
-
-  if (state.priceTrendHighlight && isInitialEntry) {
-    const bannerDir = priceTrends.directions['rateBanner'] || 'up';
-    triggerPriceFlash(liveRateBannerEl, bannerDir);
-  }
 }
 
 function renderRateBannerText(value) {
@@ -1773,30 +1732,16 @@ function calculateAndRender() {
 }
 
 function updateTelegramRate(newBaseRate, timestampMs) {
-  const oldRate = state.baseRatePer100USD;
   state.baseRatePer100USD = newBaseRate;
   state.telegramTimestamp = timestampMs;
   localStorage.setItem('telegramRate_USD', String(newBaseRate));
   localStorage.setItem('telegramRateTime', String(timestampMs));
-
-  let dir = null;
-  if (oldRate > 0 && newBaseRate > 0 && Math.abs(newBaseRate - oldRate) > 0.0001) {
-    dir = newBaseRate > oldRate ? 'up' : 'down';
-    priceTrends.directions['rateBanner'] = dir;
-    priceTrends.directions['IQD_USD'] = dir;
-    priceTrends.directions['USD_IQD'] = newBaseRate > oldRate ? 'down' : 'up';
-    savePriceTrendState();
-  }
-
   recalculateUsdFxQuotes();
   renderRateBanner();
   renderDateOrDay();
   calculateAndRender();
   renderCurrencyRateList();
   renderMetalPrices();
-  if (dir && state.priceTrendHighlight) {
-    triggerPriceFlash(liveRateBannerEl, dir);
-  }
   window.dispatchEvent(new Event('wallet-rates-updated'));
 }
 
@@ -2249,7 +2194,7 @@ async function fetchLiveMetals() {
 // دەستپێکردنی سەرەتایی بەرنامەکە
 initializeMetalPriceCards();
 applyLanguage(state.language, false, true);
-renderRateBanner(true);
+renderRateBanner();
 renderDateOrDay();
 calculateAndRender();
 window.addEventListener('resize', calculateAndRender);
@@ -2267,9 +2212,6 @@ try {
   console.warn('Could not read cached rates from localStorage', e);
 }
 
-// دەرکەوتنی فلاش و ڕەنگی سەوز یان سوور لەگەڵ چوونە سەر ئەپەکە
-triggerEntryPriceFlash();
-
 // پەیوەندی بە سێرڤەر بۆ هێنانی نوێترین نرخەکان
 fetchUnifiedRates();
 
@@ -2281,7 +2223,6 @@ setInterval(() => {
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
     fetchUnifiedRates();
-    triggerEntryPriceFlash();
   }
 });
 
@@ -2786,10 +2727,6 @@ function renderWallet() {
     profitEl.className = `wallet-profit-text is-${pnlInfo.status}`;
     profitEl.textContent = pnlInfo.amountStr;
 
-    const pctEl = document.createElement('small');
-    pctEl.className = `wallet-profit-badge is-${pnlInfo.status}`;
-    pctEl.textContent = pnlInfo.percentStr || '—';
-
     const currentEl = document.createElement('small');
     currentEl.textContent = currentValue != null ? formatWalletMoney(currentValue, targetCurr) : '—';
 
@@ -2808,7 +2745,7 @@ function renderWallet() {
       showDeleteConfirmation(item.id, false);
     });
 
-    stats.append(profitEl, pctEl, currentEl, actions);
+    stats.append(profitEl, currentEl, actions);
     actions.append(edit, remove);
     card.append(info, stats);
     list.append(card);
@@ -2969,11 +2906,11 @@ function activateMainView(view) {
     if (walletEls && walletEls.walletFormView) walletEls.walletFormView.hidden = true;
     renderWallet();
   } else if (view === 'rates') {
-    renderCurrencyRateList(false, false, true);
+    renderCurrencyRateList();
   } else if (view === 'metals') {
     metalState.investmentItemKey = null;
     renderMetalLabels();
-    renderMetalPrices(true);
+    renderMetalPrices();
     fetchLiveMetals();
   } else if (view === 'calculator') {
     if (!state.selectedCurrency || !Object.prototype.hasOwnProperty.call(CURRENCY_SYMBOLS, state.selectedCurrency)) {
@@ -2982,12 +2919,9 @@ function activateMainView(view) {
     state.secondaryCurrency = state.selectedCurrency === 'USD' ? 'IQD' : state.currencyRateBase;
     currSelectBtns.forEach(button => button.classList.toggle('active', button.dataset.curr === state.selectedCurrency));
     renderConverterLabels();
-    renderRateBanner(true);
+    renderRateBanner();
     calculateAndRender();
     adjustRateBannerFontSize();
-    if (bottomAmountEl && state.priceTrendHighlight) {
-      triggerPriceFlash(bottomAmountEl, priceTrends.directions['rateBanner'] || 'up');
-    }
     requestAnimationFrame(() => {
       adjustAmountFontSize(topAmountEl);
       adjustAmountFontSize(bottomAmountEl);
