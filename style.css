@@ -1233,8 +1233,8 @@ body {
 .bottom-nav-item { flex: 1 1 0; min-width: 0; height: 48px; padding: 0; overflow: hidden; border: 0; border-radius: 24px; background: transparent; color: var(--text-muted); display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 0; font: 700 .68rem 'NRT','Inter',sans-serif; cursor: pointer; white-space: nowrap; transition: flex .28s ease, padding .28s ease, color .2s ease, background-color .25s ease, transform .2s ease; }
 .bottom-nav-item svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 /* قیاس و بەرزی ئایکۆنی زێڕ (کانزاکان) - دەتوانیت لێرە قیاس و بەرزیەکەی بە translateY دەستکاری بکەیت */
-.bottom-nav-item svg.metals-nav-icon { width: 26px; height: 26px; fill: currentColor; stroke: none; transform: translateY(-2.5px); }
-.bottom-nav-item:not(.active) svg.metals-nav-icon { flex: 0 0 26px; }
+.bottom-nav-item svg.metals-nav-icon { width: 30px; height: 30px; fill: currentColor; stroke: none; transform: translateY(-2px); }
+.bottom-nav-item:not(.active) svg.metals-nav-icon { flex: 0 0 30px; }
 .bottom-nav-item.active { flex-grow: 1.9; padding: 0 12px; gap: 8px; color: var(--gold-primary); background: color-mix(in srgb, var(--gold-primary) 12%, transparent); }
 .bottom-nav-item > span:not(.wallet-nav-orb) { max-width: 0; overflow: hidden; opacity: 0; transition: max-width .28s ease, opacity .2s ease; white-space: nowrap; }
 .bottom-nav-item.active > span:not(.wallet-nav-orb) { max-width: 11em; opacity: 1; }
