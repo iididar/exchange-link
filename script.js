@@ -100,7 +100,9 @@ resolveImageFile(
 // =====================================================
 // ٣. سیستمی حاسیبە، دراوەکان و ڕێکخستنەکان
 // =====================================================
+const WORKER_RATES_URL = 'https://exchange-rates-worker.iididar.workers.dev';
 const RATES_URL = 'rates.json';
+const CACHED_RATES_STORAGE_KEY = 'exchange_unified_rates_cache_v1';
 
 const TRANSLATIONS = {
   ku: {
@@ -1367,7 +1369,7 @@ function cacheMetalPrice(key, price) {
   }
 }
 
-async function fetchLiveMetals() {
+async function fetchLiveMetalsFallback() {
   if (metalState.isFetching) return;
   metalState.isFetching = true;
   if (!metalState.goldOunce && !metalState.silverOunce) {
@@ -1863,15 +1865,10 @@ darkModeToggle.addEventListener('change', (e) => {
   }
 });
 
-// Refreshes only the data pipeline for the currently visible screen.
+// Refreshes only the data pipeline for the currently visible screen (using Cloudflare Worker).
 refreshBtn.addEventListener('click', async () => {
   refreshBtn.classList.add('spinning');
-  if (metalState.isOpen) {
-    await fetchLiveMetals();
-  } else {
-    await fetchExchangeRates();
-    renderRateBanner();
-  }
+  await fetchUnifiedRates(true);
   setTimeout(() => {
     refreshBtn.classList.remove('spinning');
   }, 600);
@@ -2049,30 +2046,149 @@ async function fetchLiveForeignRates() {
   }
 }
 
-let isFetchingExchangeRates = false;
-async function fetchExchangeRates() {
-  if (isFetchingExchangeRates) return;
-  isFetchingExchangeRates = true;
+function applyUnifiedRates(data) {
+  if (!data || typeof data !== 'object') return;
+
+  // 1. USD / IQD rate
+  const telegramRate = Number(data?.rates?.usd?.iqdPer100Usd ?? data?.telegram?.iqdPer100Usd);
+  const telegramTimeRaw = data?.rates?.usd?.latestPostAt ?? data?.telegram?.latestPostAt ?? data?.updatedAt;
+  const telegramTimestamp = telegramTimeRaw ? Date.parse(telegramTimeRaw) : NaN;
+
+  if (Number.isFinite(telegramRate) && telegramRate > 0) {
+    const validTs = Number.isFinite(telegramTimestamp) ? telegramTimestamp : Date.now();
+    updateTelegramRate(telegramRate, validTs);
+  }
+
+  // 2. Rudaw Toman rate
+  const tomanRate = Number(data?.rates?.toman?.tomanPer100000Iqd ?? data?.rudaw?.tomanPer100000Iqd);
+  if (Number.isFinite(tomanRate) && tomanRate > 0) {
+    state.otherRates.IRR = Math.round(tomanRate);
+    state.rudawTomanBuy = state.otherRates.IRR;
+    try {
+      localStorage.setItem('rudawRate_IRR', String(state.otherRates.IRR));
+      localStorage.setItem('rudawTomanBuy', String(state.otherRates.IRR));
+    } catch (_) {}
+  }
+
+  // 3. FX Quotes (EUR, GBP, USDTRY)
+  let fxUpdated = false;
+  const fxObj = data?.rates?.fx;
+  if (fxObj) {
+    const eurQuote = Number(fxObj.EURUSD);
+    if (Number.isFinite(eurQuote) && eurQuote > 0) {
+      state.usdFxQuotes.EUR = eurQuote;
+      try { localStorage.setItem('liveFxQuote_EUR', String(eurQuote)); } catch (_) {}
+      fxUpdated = true;
+    }
+    const gbpQuote = Number(fxObj.GBPUSD);
+    if (Number.isFinite(gbpQuote) && gbpQuote > 0) {
+      state.usdFxQuotes.GBP = gbpQuote;
+      try { localStorage.setItem('liveFxQuote_GBP', String(gbpQuote)); } catch (_) {}
+      fxUpdated = true;
+    }
+    const usdTryQuote = Number(fxObj.USDTRY);
+    if (Number.isFinite(usdTryQuote) && usdTryQuote > 0) {
+      state.usdFxQuotes.USDTRY = usdTryQuote;
+      try { localStorage.setItem('liveFxQuote_USDTRY', String(usdTryQuote)); } catch (_) {}
+      fxUpdated = true;
+    }
+  } else if (data?.rudaw) {
+    applyRudawFxQuotes(data.rudaw);
+  }
+
+  if (fxUpdated) {
+    recalculateUsdFxQuotes();
+  }
+
+  // 4. Metals Quotes (Gold & Silver)
+  const goldPrice = Number(data?.rates?.metals?.goldOunceUsd);
+  if (Number.isFinite(goldPrice) && goldPrice > 0) {
+    metalState.goldOunce = goldPrice;
+    cacheMetalPrice(METAL_CACHE_KEYS.gold, goldPrice);
+  }
+
+  const silverPrice = Number(data?.rates?.metals?.silverOunceUsd);
+  if (Number.isFinite(silverPrice) && silverPrice > 0) {
+    metalState.silverOunce = silverPrice;
+    cacheMetalPrice(METAL_CACHE_KEYS.silver, silverPrice);
+  }
+
+  if (typeof renderMetalPrices === 'function') {
+    renderMetalPrices();
+  }
+  if (metalsStatus) {
+    metalsStatus.textContent = (metalState.goldOunce || metalState.silverOunce)
+      ? ''
+      : getTranslations().metalsUnavailable;
+  }
+
+  // 5. Render UI
+  renderRateBanner();
+  calculateAndRender();
+  renderCurrencyRateList();
+  window.dispatchEvent(new Event('wallet-rates-updated'));
+}
+
+async function fetchExchangeRatesFallback() {
   try {
     const response = await fetch(`${RATES_URL}?t=${Date.now()}`, { cache: 'no-store' });
     if (!response.ok) throw new Error(`Rate snapshot returned HTTP ${response.status}`);
     const data = await response.json();
     const telegramRate = Number(data?.telegram?.iqdPer100Usd);
     const telegramTimestamp = Date.parse(data?.telegram?.latestPostAt);
-    if (!Number.isFinite(telegramRate) || telegramRate <= 0 || !Number.isFinite(telegramTimestamp)) {
-      throw new Error('Rate snapshot is missing a valid Telegram USD rate or post time');
+    if (Number.isFinite(telegramRate) && telegramRate > 0 && Number.isFinite(telegramTimestamp)) {
+      updateTelegramRate(telegramRate, telegramTimestamp);
     }
-
-    updateTelegramRate(telegramRate, telegramTimestamp);
-    applyRudawFxQuotes(data.rudaw);
-    applyRudawTomanRate(data.rudaw);
+    if (data.rudaw) {
+      applyRudawFxQuotes(data.rudaw);
+      applyRudawTomanRate(data.rudaw);
+    }
   } catch (error) {
-    console.warn('Unable to load the latest USD/IQD and Toman rates.', error);
-  } finally {
-    isFetchingExchangeRates = false;
+    console.warn('Fallback rates snapshot error:', error);
   }
   await fetchLiveForeignRates();
   renderCurrencyRateList();
+}
+
+let isFetchingUnifiedRates = false;
+async function fetchUnifiedRates(forceFresh = false) {
+  if (isFetchingUnifiedRates) return;
+  isFetchingUnifiedRates = true;
+  try {
+    const url = forceFresh ? `${WORKER_RATES_URL}?t=${Date.now()}` : WORKER_RATES_URL;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    const response = await fetch(url, {
+      signal: controller.signal,
+      cache: forceFresh ? 'no-store' : 'default'
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) throw new Error(`Worker returned HTTP ${response.status}`);
+    const data = await response.json();
+    if (!data || (!data.rates && !data.telegram)) throw new Error('Invalid worker payload');
+
+    applyUnifiedRates(data);
+    try {
+      localStorage.setItem(CACHED_RATES_STORAGE_KEY, JSON.stringify(data));
+    } catch (_) {}
+  } catch (error) {
+    console.warn('Unified rates worker fetch failed, running fallbacks...', error);
+    await Promise.allSettled([
+      fetchExchangeRatesFallback(),
+      fetchLiveMetalsFallback()
+    ]);
+  } finally {
+    isFetchingUnifiedRates = false;
+  }
+}
+
+async function fetchExchangeRates() {
+  await fetchUnifiedRates();
+}
+
+async function fetchLiveMetals() {
+  await fetchUnifiedRates();
 }
 
 // دەستپێکردنی سەرەتایی بەرنامەکە
@@ -2084,23 +2200,29 @@ calculateAndRender();
 window.addEventListener('resize', calculateAndRender);
 window.addEventListener('resize', adjustRateBannerFontSize);
 document.fonts.ready.then(calculateAndRender);
-fetchExchangeRates();
 
-setInterval(fetchExchangeRates, 60000);
-const startLiveMetalUpdates = () => {
-  fetchLiveMetals();
-  setInterval(fetchLiveMetals, 3000);
-};
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', startLiveMetalUpdates, { once: true });
-} else {
-  startLiveMetalUpdates();
+// بارکردنی دەستبەجێ لە کاشی ناوخۆیی (Instant 0ms Cache Load)
+try {
+  const cachedRatesRaw = localStorage.getItem(CACHED_RATES_STORAGE_KEY);
+  if (cachedRatesRaw) {
+    const cachedData = JSON.parse(cachedRatesRaw);
+    applyUnifiedRates(cachedData);
+  }
+} catch (e) {
+  console.warn('Could not read cached rates from localStorage', e);
 }
+
+// پەیوەندی بە سێرڤەر بۆ هێنانی نوێترین نرخەکان
+fetchUnifiedRates();
+
+// نوێکردنەوەی خۆکارانەی هەموو نرخەکان هەموو ١٥ چرکە جارێک
+setInterval(() => {
+  fetchUnifiedRates();
+}, 15000);
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {
-    fetchExchangeRates();
-    fetchLiveMetals();
+    fetchUnifiedRates();
   }
 });
 
