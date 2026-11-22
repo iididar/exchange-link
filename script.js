@@ -356,6 +356,9 @@ const rateTitleEl = document.getElementById('rateTitle');
 const liveRateBannerEl = document.getElementById('liveRateBanner');
 const dateDisplayEl = document.getElementById('dateDisplay');
 const timeDisplayEl = document.getElementById('timeDisplay');
+const datetimeBoxEl = document.getElementById('datetimeBox');
+const timeWrapperEl = document.getElementById('timeWrapper');
+const rateNoticeTooltipEl = document.getElementById('rateNoticeTooltip');
 const swapBtn = document.getElementById('swapBtn');
 const keypad = document.getElementById('keypad');
 
@@ -1503,7 +1506,7 @@ function adjustAmountFontSize(el) {
 function renderDateOrDay() {
   if (!state.telegramTimestamp) {
     dateDisplayEl.textContent = '--/--/----';
-    timeDisplayEl.textContent = '--:--';
+    timeDisplayEl.textContent = '--:-- --';
     return;
   }
 
@@ -1517,7 +1520,12 @@ function renderDateOrDay() {
     dateDisplayEl.textContent = `${year}/${month}/${day}`;
   }
 
-  timeDisplayEl.textContent = `${String(postDate.getHours()).padStart(2, '0')}:${String(postDate.getMinutes()).padStart(2, '0')}`;
+  let hours = postDate.getHours();
+  const minutes = String(postDate.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  timeDisplayEl.textContent = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
 }
 
 // نوێکردنەوەی ناونیشان و بانەری نرخ بەپێی دراوی هەڵبژێردراو
@@ -1775,10 +1783,52 @@ function toggleSecondaryCurrency() {
 topCurrencyToggle.addEventListener('click', toggleSecondaryCurrency);
 bottomCurrencyToggle.addEventListener('click', toggleSecondaryCurrency);
 
-dateDisplayEl.addEventListener('click', () => {
-  state.showDayName = !state.showDayName;
-  renderDateOrDay();
-});
+let rateNoticeTimer = null;
+function showRateNoticeAnimation() {
+  if (!rateNoticeTooltipEl) return;
+  if (rateNoticeTimer) {
+    clearTimeout(rateNoticeTimer);
+    rateNoticeTimer = null;
+  }
+  rateNoticeTooltipEl.classList.remove('is-visible');
+  if (timeWrapperEl) timeWrapperEl.classList.remove('is-open');
+  void rateNoticeTooltipEl.offsetWidth;
+  rateNoticeTooltipEl.classList.add('is-visible');
+  if (timeWrapperEl) timeWrapperEl.classList.add('is-open');
+
+  rateNoticeTimer = setTimeout(() => {
+    rateNoticeTooltipEl.classList.remove('is-visible');
+    if (timeWrapperEl) timeWrapperEl.classList.remove('is-open');
+    rateNoticeTimer = null;
+  }, 2800);
+}
+
+if (dateDisplayEl) {
+  dateDisplayEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.showDayName = !state.showDayName;
+    renderDateOrDay();
+    showRateNoticeAnimation();
+  });
+}
+
+if (timeWrapperEl) {
+  timeWrapperEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showRateNoticeAnimation();
+  });
+} else if (timeDisplayEl) {
+  timeDisplayEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showRateNoticeAnimation();
+  });
+}
+
+if (datetimeBoxEl) {
+  datetimeBoxEl.addEventListener('click', () => {
+    showRateNoticeAnimation();
+  });
+}
 
 hamburgerBtn.addEventListener('click', () => {
   menuBackdrop.classList.add('open');
