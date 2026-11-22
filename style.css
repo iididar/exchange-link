@@ -1136,6 +1136,79 @@ body.light-mode .metal-price-card.price-flash-down .metal-price-number {
   animation-name: priceFlashDownTextLight;
 }
 
+/* ─── Rate Banner & Amount Flash Animations ────────────────────── */
+.rate-banner.price-flash-up,
+.amount-display.price-flash-up {
+  animation: bannerFlashUp 1s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+}
+
+.rate-banner.price-flash-down,
+.amount-display.price-flash-down {
+  animation: bannerFlashDown 1s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+}
+
+.rate-banner.price-flash-up .rate-number,
+.rate-banner.price-flash-up .rate-currency-symbol {
+  color: inherit !important;
+}
+
+.rate-banner.price-flash-down .rate-number,
+.rate-banner.price-flash-down .rate-currency-symbol {
+  color: inherit !important;
+}
+
+@keyframes bannerFlashUp {
+  0% {
+    color: #22c55e !important;
+    text-shadow: 0 0 16px rgba(34, 197, 94, 0.8);
+  }
+  35% {
+    color: #34d399 !important;
+    text-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+  }
+  100% {
+    color: var(--rate-color);
+    text-shadow: none;
+  }
+}
+
+@keyframes bannerFlashDown {
+  0% {
+    color: #ef4444 !important;
+    text-shadow: 0 0 16px rgba(239, 68, 68, 0.8);
+  }
+  35% {
+    color: #f87171 !important;
+    text-shadow: 0 0 10px rgba(248, 113, 113, 0.5);
+  }
+  100% {
+    color: var(--rate-color);
+    text-shadow: none;
+  }
+}
+
+body.light-mode .rate-banner.price-flash-up,
+body.light-mode .amount-display.price-flash-up {
+  animation-name: bannerFlashUpLight;
+}
+
+body.light-mode .rate-banner.price-flash-down,
+body.light-mode .amount-display.price-flash-down {
+  animation-name: bannerFlashDownLight;
+}
+
+@keyframes bannerFlashUpLight {
+  0% { color: #16a34a !important; text-shadow: 0 0 12px rgba(22, 163, 74, 0.4); }
+  35% { color: #16a34a !important; }
+  100% { color: var(--rate-color); text-shadow: none; }
+}
+
+@keyframes bannerFlashDownLight {
+  0% { color: #dc2626 !important; text-shadow: 0 0 12px rgba(220, 38, 38, 0.4); }
+  35% { color: #dc2626 !important; }
+  100% { color: var(--rate-color); text-shadow: none; }
+}
+
 .metal-price-unit {
   color: var(--text-muted);
   font-family: 'NRT', 'Inter', sans-serif;
