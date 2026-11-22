@@ -2,10 +2,13 @@
  * Cloudflare Worker: Unified Live Exchange Rates Aggregator
  * Project: Exchange Link
  *
- * Aggregates USD/IQD, Iranian Toman, Precious Metals (Gold/Silver), and Forex (EUR/GBP/TRY)
- * into a single high-speed JSON response with Cloudflare Edge Caching (15s) and CORS headers.
+ * Aggregates USD/IQD (direct from Telegram public channel PMCgroup),
+ * Iranian Toman (from Rudaw Index buying rate), Precious Metals (Gold/Silver from Swissquote / Gold-API / GoldPrice.org),
+ * and Forex (EUR/GBP/TRY from Swissquote / Rudaw) into a single high-speed JSON response.
+ * Features 15-second Cloudflare Edge Caching and CORS headers.
  */
 
+const TELEGRAM_URL = "https://t.me/s/PMCgroup";
 const GITHUB_RATES_URL = "https://raw.githubusercontent.com/iididar/exchange-link/main/rates.json";
 const RUDAW_API_URL = "https://rudawindex.net/api/prices";
 
@@ -33,10 +36,49 @@ const CORS_HEADERS = {
   "Access-Control-Max-Age": "86400"
 };
 
+const DIGIT_MAP = {
+  '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+  '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
+  '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+  '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+};
+
+function normalizeNumerals(str) {
+  return str.replace(/[۰-۹٠-٩]/g, d => DIGIT_MAP[d] || d);
+}
+
 /**
- * Fetch JSON with strict AbortController timeout
+ * Parse public Telegram web channel HTML for latest USD/IQD rate
  */
-async function fetchWithTimeout(url, headers = {}, timeoutMs = 2500) {
+function parseTelegramHtml(html) {
+  if (!html || typeof html !== "string") return null;
+
+  const postRegex = /class="[^"]*tgme_widget_message\b[^"]*"[^>]*data-post="([^"]+)"[\s\S]*?<time\b[^>]*datetime="([^"]+)"[\s\S]*?<div\b[^>]*class="[^"]*tgme_widget_message_text\b[^"]*"[^>]*>([\s\S]*?)<\/div>/gi;
+
+  const ratePosts = [];
+  let m;
+  while ((m = postRegex.exec(html)) !== null) {
+    const [, post, time, rawText] = m;
+    const cleanText = normalizeNumerals(rawText.replace(/&#036;/g, "$").replace(/<[^>]+>/g, " ").trim());
+    const rateMatch = cleanText.match(/(?<![\d.])100\s*\$\s*[=::]\s*([\d,]+(?:\.\d+)?)/i);
+    if (rateMatch) {
+      const rate = parseInt(rateMatch[1].replace(/,/g, ""), 10);
+      if (Number.isFinite(rate) && rate > 0) {
+        ratePosts.push({ post, time, rate });
+      }
+    }
+  }
+
+  if (ratePosts.length > 0) {
+    return ratePosts[ratePosts.length - 1];
+  }
+  return null;
+}
+
+/**
+ * Fetch with strict AbortController timeout
+ */
+async function fetchWithTimeout(url, headers = {}, timeoutMs = 2500, isText = false) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -45,7 +87,7 @@ async function fetchWithTimeout(url, headers = {}, timeoutMs = 2500) {
       signal: controller.signal
     });
     if (!response.ok) throw new Error(`HTTP ${response.status} from ${url}`);
-    return await response.json();
+    return isText ? await response.text() : await response.json();
   } finally {
     clearTimeout(timer);
   }
@@ -123,6 +165,7 @@ export default {
 
     // 2. Fetch all sources in parallel
     const [
+      telegramResult,
       githubResult,
       rudawResult,
       swissGoldResult,
@@ -131,6 +174,7 @@ export default {
       swissEurResult,
       swissTryResult
     ] = await Promise.allSettled([
+      fetchWithTimeout(TELEGRAM_URL, {}, 2500, true),
       fetchWithTimeout(`${GITHUB_RATES_URL}?_=${Date.now()}`),
       fetchWithTimeout(RUDAW_API_URL, {
         Accept: "application/json",
@@ -144,7 +188,7 @@ export default {
       fetchWithTimeout(SWISSQUOTE_URLS.usdtry)
     ]);
 
-    // Parse GitHub rates.json
+    // Parse GitHub rates.json (emergency fallback)
     const githubData = githubResult.status === "fulfilled" ? githubResult.value : null;
     const fallbackTelegram = githubData?.telegram || {};
     const fallbackRudaw = githubData?.rudaw || {};
@@ -152,30 +196,53 @@ export default {
     // Parse Rudaw API
     const liveRudaw = rudawResult.status === "fulfilled" ? parseRudawCurrencies(rudawResult.value) : {};
 
-    // USD Rate
-    const iqdPer100Usd = fallbackTelegram?.iqdPer100Usd || 170000;
-    const telegramTimestamp = fallbackTelegram?.latestPostAt || new Date().toISOString();
+    // 3. Resolve USD/IQD from live Telegram directly (with GitHub fallback)
+    let iqdPer100Usd = null;
+    let telegramTimestamp = null;
+    let usdSource = "telegram-live";
 
-    // Toman Rate
+    if (telegramResult.status === "fulfilled") {
+      const parsedTg = parseTelegramHtml(telegramResult.value);
+      if (parsedTg && parsedTg.rate > 0) {
+        iqdPer100Usd = parsedTg.rate;
+        telegramTimestamp = parsedTg.time;
+      }
+    }
+
+    // Fallback to GitHub snapshot if Telegram fetch momentarily fails
+    if (!iqdPer100Usd && fallbackTelegram?.iqdPer100Usd) {
+      iqdPer100Usd = fallbackTelegram.iqdPer100Usd;
+      telegramTimestamp = fallbackTelegram.latestPostAt;
+      usdSource = "github-fallback";
+    }
+
+    // Last-resort fallback
+    if (!iqdPer100Usd) {
+      iqdPer100Usd = 170000;
+      telegramTimestamp = new Date().toISOString();
+      usdSource = "static-baseline";
+    }
+
+    // 4. Resolve Toman Rate
     const tomanRate = liveRudaw.tomanPer100000Iqd || fallbackRudaw?.tomanPer100000Iqd || 26450000;
 
-    // Forex Quotes
+    // 5. Resolve Forex Quotes (EUR, GBP, TRY)
     let gbpQuote = swissGbpResult.status === "fulfilled" ? extractSwissquotePrice(swissGbpResult.value) : null;
     if (!gbpQuote && liveRudaw.gbpUsdPer100) gbpQuote = liveRudaw.gbpUsdPer100 / 100;
     if (!gbpQuote && fallbackRudaw?.gbpUsdPer100) gbpQuote = fallbackRudaw.gbpUsdPer100 / 100;
-    if (!gbpQuote) gbpQuote = 1.295;
+    if (!gbpQuote) gbpQuote = 1.308;
 
     let eurQuote = swissEurResult.status === "fulfilled" ? extractSwissquotePrice(swissEurResult.value) : null;
     if (!eurQuote && liveRudaw.eurUsdPer100) eurQuote = liveRudaw.eurUsdPer100 / 100;
     if (!eurQuote && fallbackRudaw?.eurUsdPer100) eurQuote = fallbackRudaw.eurUsdPer100 / 100;
-    if (!eurQuote) eurQuote = 1.09;
+    if (!eurQuote) eurQuote = 1.096;
 
     let tryQuote = swissTryResult.status === "fulfilled" ? extractSwissquotePrice(swissTryResult.value) : null;
     if (!tryQuote && liveRudaw.tryPer100) tryQuote = liveRudaw.tryPer100 / 100;
     if (!tryQuote && fallbackRudaw?.tryPer100) tryQuote = fallbackRudaw.tryPer100 / 100;
-    if (!tryQuote) tryQuote = 34.5;
+    if (!tryQuote) tryQuote = 50.5;
 
-    // Precious Metals (Gold & Silver)
+    // 6. Resolve Precious Metals (Gold & Silver)
     let goldPrice = swissGoldResult.status === "fulfilled" ? extractSwissquotePrice(swissGoldResult.value) : null;
     let silverPrice = swissSilverResult.status === "fulfilled" ? extractSwissquotePrice(swissSilverResult.value) : null;
 
@@ -204,8 +271,8 @@ export default {
     }
 
     // Baseline fallback if all external feeds are unreachable
-    if (!goldPrice) goldPrice = 2715.0;
-    if (!silverPrice) silverPrice = 31.8;
+    if (!goldPrice) goldPrice = 3534.0;
+    if (!silverPrice) silverPrice = 41.2;
 
     // Calculated IQD rates
     const usdFactor = iqdPer100Usd / 100;
@@ -221,19 +288,25 @@ export default {
       rates: {
         usd: {
           iqdPer100Usd: Math.round(iqdPer100Usd),
-          latestPostAt: telegramTimestamp
+          latestPostAt: telegramTimestamp,
+          source: usdSource
         },
         toman: {
-          tomanPer100000Iqd: Math.round(tomanRate)
+          tomanPer100000Iqd: Math.round(tomanRate),
+          source: liveRudaw.tomanPer100000Iqd ? "rudaw-live" : "fallback"
         },
         fx: {
           GBP: Number(gbpQuote.toFixed(4)),
+          GBPUSD: Number(gbpQuote.toFixed(4)),
           EUR: Number(eurQuote.toFixed(4)),
+          EURUSD: Number(eurQuote.toFixed(4)),
           USDTRY: Number(tryQuote.toFixed(4))
         },
         metals: {
           goldOunce: Number(goldPrice.toFixed(2)),
-          silverOunce: Number(silverPrice.toFixed(2))
+          goldOunceUsd: Number(goldPrice.toFixed(2)),
+          silverOunce: Number(silverPrice.toFixed(2)),
+          silverOunceUsd: Number(silverPrice.toFixed(2))
         }
       },
       calculated: {

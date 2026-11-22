@@ -1,0 +1,13 @@
+{
+  "name": "exchange-link",
+  "version": "1.0.0",
+  "description": "Kurdish currency exchange converter hosted on Cloudflare Pages and Workers",
+  "scripts": {
+    "build": "node build-dist.js",
+    "deploy": "node build-dist.js && npx wrangler pages deploy dist --project-name=exchange-link --branch=main",
+    "deploy:worker": "cd cloudflare-worker && npx wrangler deploy"
+  },
+  "keywords": [],
+  "author": "Didar Ahmad",
+  "license": "ISC"
+}

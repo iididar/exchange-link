@@ -2074,19 +2074,19 @@ function applyUnifiedRates(data) {
   let fxUpdated = false;
   const fxObj = data?.rates?.fx;
   if (fxObj) {
-    const eurQuote = Number(fxObj.EURUSD);
+    const eurQuote = Number(fxObj.EUR ?? fxObj.EURUSD);
     if (Number.isFinite(eurQuote) && eurQuote > 0) {
       state.usdFxQuotes.EUR = eurQuote;
       try { localStorage.setItem('liveFxQuote_EUR', String(eurQuote)); } catch (_) {}
       fxUpdated = true;
     }
-    const gbpQuote = Number(fxObj.GBPUSD);
+    const gbpQuote = Number(fxObj.GBP ?? fxObj.GBPUSD);
     if (Number.isFinite(gbpQuote) && gbpQuote > 0) {
       state.usdFxQuotes.GBP = gbpQuote;
       try { localStorage.setItem('liveFxQuote_GBP', String(gbpQuote)); } catch (_) {}
       fxUpdated = true;
     }
-    const usdTryQuote = Number(fxObj.USDTRY);
+    const usdTryQuote = Number(fxObj.USDTRY ?? fxObj.TRY);
     if (Number.isFinite(usdTryQuote) && usdTryQuote > 0) {
       state.usdFxQuotes.USDTRY = usdTryQuote;
       try { localStorage.setItem('liveFxQuote_USDTRY', String(usdTryQuote)); } catch (_) {}
@@ -2101,13 +2101,13 @@ function applyUnifiedRates(data) {
   }
 
   // 4. Metals Quotes (Gold & Silver)
-  const goldPrice = Number(data?.rates?.metals?.goldOunceUsd);
+  const goldPrice = Number(data?.rates?.metals?.goldOunce ?? data?.rates?.metals?.goldOunceUsd);
   if (Number.isFinite(goldPrice) && goldPrice > 0) {
     metalState.goldOunce = goldPrice;
     cacheMetalPrice(METAL_CACHE_KEYS.gold, goldPrice);
   }
 
-  const silverPrice = Number(data?.rates?.metals?.silverOunceUsd);
+  const silverPrice = Number(data?.rates?.metals?.silverOunce ?? data?.rates?.metals?.silverOunceUsd);
   if (Number.isFinite(silverPrice) && silverPrice > 0) {
     metalState.silverOunce = silverPrice;
     cacheMetalPrice(METAL_CACHE_KEYS.silver, silverPrice);
