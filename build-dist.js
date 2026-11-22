@@ -14,6 +14,7 @@ const PUBLIC_FILES = [
   'IMG_6140.jpg',
   'IMG_6165.JPG',
   'rates.json',
+  'gold-bars.svg',
   '_headers'
 ];
 
