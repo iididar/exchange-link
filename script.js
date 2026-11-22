@@ -599,8 +599,8 @@ function applyLanguage(language, animateCurrencyRates = false, animateCurrencyRo
   menuCloseBtn.setAttribute('aria-label', text.close);
   discountTextEl.textContent = text.discount;
   darkModeTextEl.textContent = text.darkMode;
-  languageSelectorLabelEl.textContent = text.language;
-  currencySelectorLabelEl.textContent = text.currenciesLabel;
+  if (languageSelectorLabelEl) languageSelectorLabelEl.textContent = text.language;
+  if (currencySelectorLabelEl) currencySelectorLabelEl.textContent = text.currenciesLabel;
   menuFooterEl.textContent = text.footer;
   currencyRatesTitle.textContent = text.currencyRatesTitle;
   baseCurrencyToggle.setAttribute('aria-label', text.comparisonBase);
