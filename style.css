@@ -1232,8 +1232,8 @@ body {
 .bottom-nav { position: fixed; z-index: 850; left: 50%; bottom: 0; transform: translateX(-50%); width: min(100%, 410px); min-height: calc(70px + env(safe-area-inset-bottom)); padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 5px; border: 1px solid var(--card-border); border-bottom: 0; border-radius: 20px 20px 0 0; background: var(--menu-bg); box-shadow: 0 -8px 28px rgba(0,0,0,.2); backdrop-filter: blur(16px); }
 .bottom-nav-item { flex: 1 1 0; min-width: 0; height: 48px; padding: 0; overflow: hidden; border: 0; border-radius: 24px; background: transparent; color: var(--text-muted); display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 0; font: 700 .68rem 'NRT','Inter',sans-serif; cursor: pointer; white-space: nowrap; transition: flex .28s ease, padding .28s ease, color .2s ease, background-color .25s ease, transform .2s ease; }
 .bottom-nav-item svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-/* قیاسی ئایکۆنی زێڕ (کانزاکان) - دەتوانیت لێرە width و height زیاد یان کەم بکەیت */
-.bottom-nav-item svg.metals-nav-icon { width: 26px; height: 26px; fill: currentColor; stroke: none; }
+/* قیاس و بەرزی ئایکۆنی زێڕ (کانزاکان) - دەتوانیت لێرە قیاس و بەرزیەکەی بە translateY دەستکاری بکەیت */
+.bottom-nav-item svg.metals-nav-icon { width: 26px; height: 26px; fill: currentColor; stroke: none; transform: translateY(-2.5px); }
 .bottom-nav-item:not(.active) svg.metals-nav-icon { flex: 0 0 26px; }
 .bottom-nav-item.active { flex-grow: 1.9; padding: 0 12px; gap: 8px; color: var(--gold-primary); background: color-mix(in srgb, var(--gold-primary) 12%, transparent); }
 .bottom-nav-item > span:not(.wallet-nav-orb) { max-width: 0; overflow: hidden; opacity: 0; transition: max-width .28s ease, opacity .2s ease; white-space: nowrap; }
