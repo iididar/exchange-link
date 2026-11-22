@@ -526,7 +526,7 @@ const SILVER_PRICE_ITEMS = [
   { key: 'silverKg', currency: 'USD', calculate: silver => silver * 32.1507 }
 ];
 
-// چاودێری ئاڕاستەی گۆڕانی نرخەکان (سەوز بۆ بەرزبوونەوە / سوور بۆ دابەزین)
+// چاودێری ئاڕاستەی گۆڕانی نرخەکان (سەوز بۆ بەرزبوونەوە / سوور بۆ دابەزین بۆ ماوەی یەک چرکە)
 const PRICE_TREND_STORAGE_KEY = 'exchange_price_trends_v1';
 
 function loadPriceTrendState() {
@@ -535,9 +535,19 @@ function loadPriceTrendState() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
+        const unwrap = (obj) => {
+          const res = {};
+          if (obj && typeof obj === 'object') {
+            for (const k in obj) {
+              const val = obj[k];
+              res[k] = typeof val === 'number' ? val : (val && typeof val.price === 'number' ? val.price : null);
+            }
+          }
+          return res;
+        };
         return {
-          currencies: parsed.currencies && typeof parsed.currencies === 'object' ? parsed.currencies : {},
-          metals: parsed.metals && typeof parsed.metals === 'object' ? parsed.metals : {}
+          currencies: unwrap(parsed.currencies),
+          metals: unwrap(parsed.metals)
         };
       }
     }
@@ -754,34 +764,29 @@ function renderCurrencyRateList(animateChanges = false, animateRows = false) {
     card.dataset.currency = currency;
 
     const rateKey = `${state.currencyRateBase}_${currency}`;
-    const prevData = priceTrends.currencies[rateKey];
-    let trend = prevData?.trend || 'neutral';
-    let justChanged = false;
+    const prevRate = priceTrends.currencies[rateKey];
+    let changeDirection = null;
 
     if (Number.isFinite(rate) && rate > 0) {
-      if (prevData && Number.isFinite(prevData.price)) {
-        const diff = rate - prevData.price;
+      if (Number.isFinite(prevRate)) {
+        const diff = rate - prevRate;
         if (Math.abs(diff) > 0.0001) {
-          trend = diff > 0 ? 'up' : 'down';
-          justChanged = true;
+          changeDirection = diff > 0 ? 'up' : 'down';
         }
       }
-      priceTrends.currencies[rateKey] = { price: rate, trend };
+      priceTrends.currencies[rateKey] = rate;
     }
 
-    card.dataset.trend = trend;
-    if (trend === 'up') {
-      card.classList.add('price-up');
-      if (justChanged) {
-        card.classList.add('price-flash-up');
-        card.addEventListener('animationend', () => card.classList.remove('price-flash-up'), { once: true });
-      }
-    } else if (trend === 'down') {
-      card.classList.add('price-down');
-      if (justChanged) {
-        card.classList.add('price-flash-down');
-        card.addEventListener('animationend', () => card.classList.remove('price-flash-down'), { once: true });
-      }
+    if (changeDirection === 'up') {
+      card.classList.add('price-flash-up');
+      const cleanup = () => card.classList.remove('price-flash-up');
+      card.addEventListener('animationend', cleanup, { once: true });
+      setTimeout(cleanup, 1100);
+    } else if (changeDirection === 'down') {
+      card.classList.add('price-flash-down');
+      const cleanup = () => card.classList.remove('price-flash-down');
+      card.addEventListener('animationend', cleanup, { once: true });
+      setTimeout(cleanup, 1100);
     }
 
     const name = document.createElement('span');
@@ -1135,37 +1140,32 @@ function renderMetalPrices() {
     unit.textContent = item.currency === 'IQD' ? 'دینار' : '';
     amount.setAttribute('aria-label', `${formattedValue} ${item.currency === 'USD' ? 'USD' : 'دینار'}`);
 
-    const prevData = priceTrends.metals[item.key];
-    let trend = prevData?.trend || 'neutral';
-    let justChanged = false;
+    const prevPrice = priceTrends.metals[item.key];
+    let changeDirection = null;
 
-    if (prevData && Number.isFinite(prevData.price)) {
-      const diff = price - prevData.price;
+    if (Number.isFinite(prevPrice)) {
+      const diff = price - prevPrice;
       if (Math.abs(diff) > 0.0001) {
-        trend = diff > 0 ? 'up' : 'down';
-        justChanged = true;
+        changeDirection = diff > 0 ? 'up' : 'down';
       }
     }
-    priceTrends.metals[item.key] = { price, trend };
+    priceTrends.metals[item.key] = price;
 
-    card.dataset.trend = trend;
     card.classList.remove('price-up', 'price-down');
-    if (trend === 'up') {
-      card.classList.add('price-up');
-      if (justChanged) {
-        card.classList.remove('price-flash-up', 'price-flash-down');
-        void card.offsetWidth;
-        card.classList.add('price-flash-up');
-        card.addEventListener('animationend', () => card.classList.remove('price-flash-up'), { once: true });
-      }
-    } else if (trend === 'down') {
-      card.classList.add('price-down');
-      if (justChanged) {
-        card.classList.remove('price-flash-up', 'price-flash-down');
-        void card.offsetWidth;
-        card.classList.add('price-flash-down');
-        card.addEventListener('animationend', () => card.classList.remove('price-flash-down'), { once: true });
-      }
+    if (changeDirection === 'up') {
+      card.classList.remove('price-flash-up', 'price-flash-down');
+      void card.offsetWidth;
+      card.classList.add('price-flash-up');
+      const cleanup = () => card.classList.remove('price-flash-up');
+      card.addEventListener('animationend', cleanup, { once: true });
+      setTimeout(cleanup, 1100);
+    } else if (changeDirection === 'down') {
+      card.classList.remove('price-flash-up', 'price-flash-down');
+      void card.offsetWidth;
+      card.classList.add('price-flash-down');
+      const cleanup = () => card.classList.remove('price-flash-down');
+      card.addEventListener('animationend', cleanup, { once: true });
+      setTimeout(cleanup, 1100);
     }
 
     card.dataset.price = String(price);
