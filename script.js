@@ -1784,23 +1784,44 @@ topCurrencyToggle.addEventListener('click', toggleSecondaryCurrency);
 bottomCurrencyToggle.addEventListener('click', toggleSecondaryCurrency);
 
 let rateNoticeTimer = null;
-function showRateNoticeAnimation() {
-  if (!rateNoticeTooltipEl) return;
+
+function hideRateNoticeAnimation() {
   if (rateNoticeTimer) {
     clearTimeout(rateNoticeTimer);
     rateNoticeTimer = null;
   }
+  if (rateNoticeTooltipEl) {
+    rateNoticeTooltipEl.classList.remove('is-visible');
+  }
+  if (timeWrapperEl) {
+    timeWrapperEl.classList.remove('is-open');
+  }
+}
+
+function toggleRateNoticeAnimation() {
+  if (!rateNoticeTooltipEl) return;
+
+  // گەر دەستت پێدانا بچێتەوە ناوەوە
+  if (rateNoticeTooltipEl.classList.contains('is-visible')) {
+    hideRateNoticeAnimation();
+    return;
+  }
+
+  if (rateNoticeTimer) {
+    clearTimeout(rateNoticeTimer);
+    rateNoticeTimer = null;
+  }
+
   rateNoticeTooltipEl.classList.remove('is-visible');
   if (timeWrapperEl) timeWrapperEl.classList.remove('is-open');
   void rateNoticeTooltipEl.offsetWidth;
   rateNoticeTooltipEl.classList.add('is-visible');
   if (timeWrapperEl) timeWrapperEl.classList.add('is-open');
 
+  // گەر دەستیش پێدانەنا دوای چرکەیەک خۆی بچێتەوە ناوەوە (1 second)
   rateNoticeTimer = setTimeout(() => {
-    rateNoticeTooltipEl.classList.remove('is-visible');
-    if (timeWrapperEl) timeWrapperEl.classList.remove('is-open');
-    rateNoticeTimer = null;
-  }, 2800);
+    hideRateNoticeAnimation();
+  }, 1000);
 }
 
 if (dateDisplayEl) {
@@ -1808,19 +1829,19 @@ if (dateDisplayEl) {
     e.stopPropagation();
     state.showDayName = !state.showDayName;
     renderDateOrDay();
-    showRateNoticeAnimation();
+    toggleRateNoticeAnimation();
   });
 }
 
 if (timeWrapperEl) {
   timeWrapperEl.addEventListener('click', (e) => {
     e.stopPropagation();
-    showRateNoticeAnimation();
+    toggleRateNoticeAnimation();
   });
 } else if (timeDisplayEl) {
   timeDisplayEl.addEventListener('click', (e) => {
     e.stopPropagation();
-    showRateNoticeAnimation();
+    toggleRateNoticeAnimation();
   });
 }
 
