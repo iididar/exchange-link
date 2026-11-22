@@ -662,13 +662,13 @@ body.light-mode #heroMorphOverlay {
   right: 4px;
   bottom: 4px;
   width: calc((100% - 8px) / 2);
-  border: 1.5px solid #f5a623;
+  border: 1px solid var(--card-active-border);
   border-radius: 11px;
   overflow: hidden;
-  background: #1d1d1d;
-  box-shadow: 0 0 12px rgba(255, 209, 0, 0.35);
+  background: var(--card-bg);
+  box-shadow: 0 0 15px rgba(255, 183, 17, 0.35);
   pointer-events: none;
-  transition: all 0.3s ease;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease;
 }
 
 .currency-base-indicator::after {

@@ -120,9 +120,9 @@ const TRANSLATIONS = {
     currenciesLabel: 'هەڵبژاردنی دراو',
     refresh: 'نوێکردنەوەی نرخەکان',
     metals: 'زێـڕ و زیـو',
-    metalsTitle: 'کانزاکان',
-    goldTitle: 'نرخی زێـڕ',
-    silverTitle: 'نرخی زیـو',
+    metalsTitle: 'نرخی کانزاکان',
+    goldTitle: 'زێـڕ',
+    silverTitle: 'زیـو',
     currencyRatesTitle: 'نرخی دراوەکان',
     comparisonBase: 'نرخی بەرامبەر',
     currencyRateSubtitles: {
