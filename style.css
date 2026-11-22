@@ -1235,6 +1235,9 @@ body {
 /* قیاس و بەرزی ئایکۆنی زێڕ (کانزاکان) - دەتوانیت لێرە قیاس و بەرزیەکەی بە translateY دەستکاری بکەیت */
 .bottom-nav-item svg.metals-nav-icon { width: 30px; height: 30px; fill: currentColor; stroke: none; transform: translateY(-2px); }
 .bottom-nav-item:not(.active) svg.metals-nav-icon { flex: 0 0 30px; }
+/* قیاسی ئایکۆنی جزدان - دەتوانیت لێرە width و height دەستکاری بکەیت */
+.bottom-nav-item svg.wallet-nav-icon { width: 23px; height: 23px; }
+.bottom-nav-item:not(.active) svg.wallet-nav-icon { flex: 0 0 23px; }
 .bottom-nav-item.active { flex-grow: 1.9; padding: 0 12px; gap: 8px; color: var(--gold-primary); background: color-mix(in srgb, var(--gold-primary) 12%, transparent); }
 .bottom-nav-item > span:not(.wallet-nav-orb) { max-width: 0; overflow: hidden; opacity: 0; transition: max-width .28s ease, opacity .2s ease; white-space: nowrap; }
 .bottom-nav-item.active > span:not(.wallet-nav-orb) { max-width: 11em; opacity: 1; }
