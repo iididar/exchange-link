@@ -1412,29 +1412,25 @@ body.light-mode .wallet-field input { color-scheme: light; }
 .wallet-picker-heading { display: flex; justify-content: space-between; align-items: center; color: var(--text-white); }
 .wallet-picker-heading h2 { font-size: 1.15rem; font-weight: 800; margin: 0; }
 .wallet-picker-heading button { width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--menu-item-bg); color: var(--text-white); font-size: 1.3rem; cursor: pointer; display: grid; place-items: center; }
-.wallet-picker-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-.wallet-picker-tabs button { min-height: 40px; border: 1px solid var(--card-border); border-radius: 12px; background: var(--btn-bg); color: var(--text-muted); font: 700 .9rem 'NRT','Inter',sans-serif; cursor: pointer; transition: all .2s ease; }
-.wallet-picker-tabs button.active { color: var(--swap-icon); border-color: var(--gold-primary); background: var(--gold-primary); box-shadow: 0 4px 12px var(--gold-glow); }
-
-/* UNIT TOGGLE (MITHQAL / GRAM) */
-.wallet-picker-unit-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; background: rgba(0, 0, 0, 0.25); border-radius: 12px; border: 1px solid var(--card-border); }
-.wallet-picker-unit-toggle[hidden] { display: none !important; }
-.wallet-picker-unit-toggle button { min-height: 34px; border: none; border-radius: 9px; background: transparent; color: var(--text-muted); font: 700 .84rem 'NRT', 'Inter', sans-serif; cursor: pointer; transition: all .2s ease; }
-.wallet-picker-unit-toggle button.active { background: rgba(255, 255, 255, 0.12); color: var(--text-white); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); }
+.wallet-picker-tabs { display: flex; justify-content: center; gap: 8px; width: 100%; margin-bottom: 4px; }
+.wallet-picker-tabs button { flex: 0 1 110px; min-height: 32px; padding: 4px 10px; border: 1px solid var(--card-border); border-radius: 9px; background: var(--btn-bg); color: var(--text-muted); font: 700 .8rem 'NRT', 'Inter', sans-serif !important; cursor: pointer; transition: all .2s ease; }
+.wallet-picker-tabs button.active { color: var(--swap-icon); border-color: var(--gold-primary); background: var(--gold-primary); box-shadow: 0 2px 10px var(--gold-glow); }
 
 /* OPTION CARDS */
-.wallet-picker-options { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; max-height: 330px; padding-right: 2px; }
-.wallet-option-card { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border: 1px solid var(--card-border); border-radius: 14px; background: var(--card-bg); color: var(--text-white); cursor: pointer; text-align: right; width: 100%; transition: all .2s ease; }
+.wallet-picker-sheet,
+.wallet-picker-sheet * { font-family: 'NRT', 'Inter', sans-serif; }
+.wallet-picker-options { overflow-y: auto; display: flex; flex-direction: column; gap: 8px; max-height: 350px; padding-right: 2px; }
+.wallet-option-card { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border: 1px solid var(--card-border); border-radius: 14px; background: var(--card-bg); color: var(--text-white); cursor: pointer; text-align: right; width: 100%; font-family: 'NRT', 'Inter', sans-serif !important; transition: all .2s ease; }
 .wallet-option-card:hover { background: var(--menu-item-bg); border-color: rgba(234, 179, 8, 0.4); }
 .wallet-option-card.is-selected { border-color: var(--gold-primary); background: rgba(234, 179, 8, 0.09); box-shadow: 0 0 14px rgba(234, 179, 8, 0.18); }
 .wallet-option-card-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(234, 179, 8, 0.12); display: grid; place-items: center; flex-shrink: 0; }
 .wallet-option-card-icon.is-silver { background: rgba(148, 163, 184, 0.14); }
 .wallet-option-card-icon svg { width: 20px; height: 20px; }
 .wallet-option-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; text-align: right; gap: 2px; }
-.wallet-option-card-name { font-size: .92rem; font-weight: 700; color: var(--text-white); }
-.wallet-option-card-meta { display: flex; align-items: center; gap: 8px; font-size: .78rem; }
-.wallet-option-unit-tag { color: var(--gold-primary); font-weight: 700; background: rgba(234, 179, 8, 0.12); padding: 1px 6px; border-radius: 4px; }
-.wallet-option-live-price { color: var(--text-muted); direction: ltr; font-family: 'NRT', 'Inter', sans-serif; font-weight: 600; }
+.wallet-option-card-name { font-family: 'NRT', 'Inter', sans-serif !important; font-size: .94rem; font-weight: 700; color: var(--text-white); }
+.wallet-option-card-meta { display: flex; align-items: center; gap: 8px; font-size: .78rem; font-family: 'NRT', 'Inter', sans-serif !important; }
+.wallet-option-unit-tag { color: var(--gold-primary); font-weight: 700; background: rgba(234, 179, 8, 0.12); padding: 1px 6px; border-radius: 4px; font-family: 'NRT', 'Inter', sans-serif !important; }
+.wallet-option-live-price { color: var(--text-muted); direction: ltr; font-family: 'NRT', 'Inter', sans-serif !important; font-weight: 600; }
 .wallet-option-card-check { color: var(--gold-primary); font-size: 1.15rem; font-weight: 800; flex-shrink: 0; margin-left: auto; }
 
 /* FORM INLINE UNIT TOGGLE */

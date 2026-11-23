@@ -132,14 +132,14 @@ const TRANSLATIONS = {
     backToRates: 'گەڕانەوە بۆ نرخی دراوەکان',
     metalNames: {
       goldOunce: 'ئۆنسەی زێـڕ',
-      gold18k: 'زێـڕی عەیارە 18 (مسقاڵ)',
-      gold21k: 'زێـڕی عەیارە 21 (مسقاڵ)',
-      gold22k: 'زێـڕی عەیارە 22 (مسقاڵ)',
-      gold24k: 'زێـڕی عەیارە 24 (مسقاڵ)',
-      gold18k_gram: 'زێـڕی عەیارە 18 (گرام)',
-      gold21k_gram: 'زێـڕی عەیارە 21 (گرام)',
-      gold22k_gram: 'زێـڕی عەیارە 22 (گرام)',
-      gold24k_gram: 'زێـڕی عەیارە 24 (گرام)',
+      gold18k: 'زێـڕی عەیارە 18',
+      gold21k: 'زێـڕی عەیارە 21',
+      gold22k: 'زێـڕی عەیارە 22',
+      gold24k: 'زێـڕی عەیارە 24',
+      gold18k_gram: 'زێـڕی عەیارە 18',
+      gold21k_gram: 'زێـڕی عەیارە 21',
+      gold22k_gram: 'زێـڕی عەیارە 22',
+      gold24k_gram: 'زێـڕی عەیارە 24',
       dubaiLira: 'لیرەی دوبەی',
       silverOunce: 'ئۆنسەی زیـو',
       silverKg: 'زیـو بە کیلۆ'
@@ -200,14 +200,14 @@ const TRANSLATIONS = {
     switchToGold: 'الذهب',
     metalNames: {
       goldOunce: 'أونصة الذهب',
-      gold18k: 'ذهب عيار 18 (مثقال)',
-      gold21k: 'ذهب عيار 21 (مثقال)',
-      gold22k: 'ذهب عيار 22 (مثقال)',
-      gold24k: 'ذهب عيار 24 (مثقال)',
-      gold18k_gram: 'ذهب عيار 18 (غرام)',
-      gold21k_gram: 'ذهب عيار 21 (غرام)',
-      gold22k_gram: 'ذهب عيار 22 (غرام)',
-      gold24k_gram: 'ذهب عيار 24 (غرام)',
+      gold18k: 'ذهب عيار 18',
+      gold21k: 'ذهب عيار 21',
+      gold22k: 'ذهب عيار 22',
+      gold24k: 'ذهب عيار 24',
+      gold18k_gram: 'ذهب عيار 18',
+      gold21k_gram: 'ذهب عيار 21',
+      gold22k_gram: 'ذهب عيار 22',
+      gold24k_gram: 'ذهب عيار 24',
       dubaiLira: 'ليرة دبي',
       silverOunce: 'أونصة الفضة',
       silverKg: 'الفضة لكل كيلوغرام'
@@ -268,14 +268,14 @@ const TRANSLATIONS = {
     switchToGold: 'Gold',
     metalNames: {
       goldOunce: 'Gold Ounce',
-      gold18k: '18K Gold (Mithqal)',
-      gold21k: '21K Gold (Mithqal)',
-      gold22k: '22K Gold (Mithqal)',
-      gold24k: '24K Gold (Mithqal)',
-      gold18k_gram: '18K Gold (Gram)',
-      gold21k_gram: '21K Gold (Gram)',
-      gold22k_gram: '22K Gold (Gram)',
-      gold24k_gram: '24K Gold (Gram)',
+      gold18k: '18K Gold',
+      gold21k: '21K Gold',
+      gold22k: '22K Gold',
+      gold24k: '24K Gold',
+      gold18k_gram: '18K Gold',
+      gold21k_gram: '21K Gold',
+      gold22k_gram: '22K Gold',
+      gold24k_gram: '24K Gold',
       dubaiLira: 'Dubai Lira',
       silverOunce: 'Silver Ounce',
       silverKg: 'Silver per Kilogram'
@@ -2523,7 +2523,6 @@ const walletElementIds = [
   'walletLivePriceBanner', 'walletLivePriceTitle', 'walletLivePriceAmount', 'walletLivePriceUnit',
   'walletFormCurrencyToggle', 'walletDateLabel', 'walletDateInput', 'walletNotesLabel', 'walletNotesInput',
   'walletSaveButton', 'walletFormDeleteBtn', 'walletPickerBackdrop', 'walletPickerTitle', 'walletPickerOptions', 'walletPickerClose',
-  'walletPickerUnitToggle',
   'walletConfirmBackdrop', 'walletConfirmTitle', 'walletConfirmDesc', 'walletConfirmItemPreview',
   'walletConfirmCancelBtn', 'walletConfirmDeleteBtn', 'walletFab', 'walletFormBack',
   'walletDetailBackdrop', 'walletDetailEditBtn', 'walletDetailCloseBtn', 'walletDetailIcon', 'walletDetailName', 'walletDetailMeta',
@@ -2544,8 +2543,7 @@ let walletState = {
   lastEditedPriceField: 'unit',
   editingId: null,
   selectedKey: 'gold21k',
-  pickerCategory: 'gold',
-  pickerGoldUnit: 'misqal'
+  pickerCategory: 'gold'
 };
 
 try {
@@ -2945,8 +2943,7 @@ function showWalletDetail(item) {
   closeAllCardMenus();
 
   const text = walletText();
-  const targetCurr = walletState.currency;
-  const usdIqd = getEffectiveUsdRate() / 100;
+  const detailCurr = item.purchaseCurrency || 'IQD';
   const qty = Number(item.amount) || 0;
   const unit = walletAssetUnit(item.key);
   const isSilver = item.key.startsWith('silver');
@@ -2972,42 +2969,33 @@ function showWalletDetail(item) {
   // 1. نرخی کڕینی تاک
   const unitPurchase = Number(item.unitPrice || item.purchasePrice) || 0;
   if (walletEls.walletDetailBuyUnitLabel) walletEls.walletDetailBuyUnitLabel.textContent = text.buyUnitPrice || 'نرخی کڕینی تاک';
-  if (walletEls.walletDetailBuyUnitVal) walletEls.walletDetailBuyUnitVal.textContent = `${formatWalletMoney(unitPurchase, item.purchaseCurrency)} / ${unit}`;
+  if (walletEls.walletDetailBuyUnitVal) walletEls.walletDetailBuyUnitVal.textContent = `${formatWalletMoney(unitPurchase, detailCurr)} / ${unit}`;
 
   // 2. نرخی کڕینی گشتی
   const itemTotalPaid = Number(item.totalPrice) || (unitPurchase * qty);
   if (walletEls.walletDetailBuyTotalLabel) walletEls.walletDetailBuyTotalLabel.textContent = text.buyTotalPrice || 'کۆی تێچووی کڕین';
-  if (walletEls.walletDetailBuyTotalVal) walletEls.walletDetailBuyTotalVal.textContent = formatWalletMoney(itemTotalPaid, item.purchaseCurrency);
+  if (walletEls.walletDetailBuyTotalVal) walletEls.walletDetailBuyTotalVal.textContent = formatWalletMoney(itemTotalPaid, detailCurr);
 
-  // Live Unit & Current Value
-  const liveUnit = getMetalLivePrice(item.key, targetCurr);
+  // Live Unit & Current Value in detailCurr
+  const liveUnit = getMetalLivePrice(item.key, detailCurr);
   const currentValue = (liveUnit != null && qty > 0) ? liveUnit * qty : null;
 
   // 3. نرخی ئێستای تاک
   if (walletEls.walletDetailLiveUnitLabel) walletEls.walletDetailLiveUnitLabel.textContent = text.liveUnitPrice || 'نرخی ئێستای تاک';
-  if (walletEls.walletDetailLiveUnitVal) walletEls.walletDetailLiveUnitVal.textContent = liveUnit != null ? `${formatWalletMoney(liveUnit, targetCurr)} / ${unit}` : '—';
+  if (walletEls.walletDetailLiveUnitVal) walletEls.walletDetailLiveUnitVal.textContent = liveUnit != null ? `${formatWalletMoney(liveUnit, detailCurr)} / ${unit}` : '—';
 
   // 4. نرخی گشتی ئێستا
   if (walletEls.walletDetailLiveTotalLabel) walletEls.walletDetailLiveTotalLabel.textContent = text.liveTotalPrice || 'کۆی بەهای ئێستا';
-  if (walletEls.walletDetailLiveTotalVal) walletEls.walletDetailLiveTotalVal.textContent = currentValue != null ? formatWalletMoney(currentValue, targetCurr) : '—';
+  if (walletEls.walletDetailLiveTotalVal) walletEls.walletDetailLiveTotalVal.textContent = currentValue != null ? formatWalletMoney(currentValue, detailCurr) : '—';
 
   // 5. قازانج و زیان
-  let costInTarget = itemTotalPaid;
-  if (item.purchaseCurrency !== targetCurr && usdIqd > 0) {
-    if (item.purchaseCurrency === 'USD' && targetCurr === 'IQD') {
-      costInTarget = itemTotalPaid * usdIqd;
-    } else if (item.purchaseCurrency === 'IQD' && targetCurr === 'USD') {
-      costInTarget = itemTotalPaid / usdIqd;
-    }
-  }
-
-  const itemPnl = (currentValue != null && Number.isFinite(costInTarget)) ? currentValue - costInTarget : null;
-  const itemPnlPct = (costInTarget > 0 && itemPnl != null) ? (itemPnl / costInTarget) * 100 : null;
-  const pnlInfo = formatPnlValues(itemPnl, itemPnlPct, targetCurr);
+  const itemPnl = (currentValue != null && Number.isFinite(itemTotalPaid)) ? currentValue - itemTotalPaid : null;
+  const itemPnlPct = (itemTotalPaid > 0 && itemPnl != null) ? (itemPnl / itemTotalPaid) * 100 : null;
+  const pnlInfo = formatPnlValues(itemPnl, itemPnlPct, detailCurr);
 
   // HERO HIGHLIGHT AT THE TOP (وە ڕێژەی قازانجیش بهێنەرە بەشی سەرەوە)
   if (walletEls.walletDetailHeroValue) {
-    walletEls.walletDetailHeroValue.textContent = currentValue != null ? formatWalletMoney(currentValue, targetCurr) : '—';
+    walletEls.walletDetailHeroValue.textContent = currentValue != null ? formatWalletMoney(currentValue, detailCurr) : '—';
   }
 
   if (walletEls.walletDetailProfitVal) {
@@ -3231,11 +3219,6 @@ function openWalletForm(item = null) {
   walletState.selectedKey = item?.key || (walletAssets[0]?.key || 'gold21k');
   walletState.formCurrency = item?.purchaseCurrency || walletState.currency;
   walletState.lastEditedPriceField = 'unit';
-  if (walletState.selectedKey.endsWith('_gram')) {
-    walletState.pickerGoldUnit = 'gram';
-  } else {
-    walletState.pickerGoldUnit = 'misqal';
-  }
 
   walletEls.walletDashboard.hidden = true;
   walletEls.walletFormView.hidden = false;
@@ -3283,32 +3266,20 @@ function renderWalletPicker() {
     button.classList.toggle('active', button.dataset.pickerCategory === category);
   });
 
-  const isGold = category === 'gold';
-  if (walletEls.walletPickerUnitToggle) {
-    walletEls.walletPickerUnitToggle.hidden = !isGold;
-    walletEls.walletPickerUnitToggle.querySelectorAll('[data-picker-unit]').forEach(b => {
-      b.classList.toggle('active', b.dataset.pickerUnit === walletState.pickerGoldUnit);
-    });
-  }
-
   walletEls.walletPickerOptions.replaceChildren();
 
+  // Show only base assets for the category (filter out _gram duplicates from picker list)
   const filteredAssets = walletAssets.filter(item => {
-    if (item.category !== category) return false;
-    if (category === 'gold') {
-      const isKarat = ['gold18k', 'gold21k', 'gold22k', 'gold24k', 'gold18k_gram', 'gold21k_gram', 'gold22k_gram', 'gold24k_gram'].includes(item.key);
-      if (isKarat) {
-        return item.unitType === walletState.pickerGoldUnit;
-      }
-      return true;
-    }
-    return true;
+    if (item.key.endsWith('_gram')) return false;
+    return item.category === category;
   });
 
   const curr = walletState.formCurrency || 'IQD';
 
   filteredAssets.forEach(item => {
-    const isSelected = walletState.selectedKey === item.key;
+    const baseSelected = walletState.selectedKey?.replace('_gram', '');
+    const isSelected = baseSelected === item.key;
+
     const card = document.createElement('button');
     card.type = 'button';
     card.className = `wallet-option-card ${isSelected ? 'is-selected' : ''}`;
@@ -3350,8 +3321,10 @@ function renderWalletPicker() {
     }
 
     card.addEventListener('click', () => {
-      walletState.selectedKey = item.key;
-      walletEls.walletSelectedAsset.textContent = walletAssetName(item.key);
+      const isKarat = ['gold18k', 'gold21k', 'gold22k', 'gold24k'].includes(item.key);
+      const isGram = walletState.selectedKey?.endsWith('_gram');
+      walletState.selectedKey = (isKarat && isGram) ? `${item.key}_gram` : item.key;
+      walletEls.walletSelectedAsset.textContent = walletAssetName(walletState.selectedKey);
       walletEls.walletPickerBackdrop.hidden = true;
       updateFormLivePriceBanner();
       syncPriceCalculations(walletState.lastEditedPriceField);
@@ -3521,11 +3494,6 @@ document.addEventListener('keydown', event => {
 walletEls.walletAssetPicker.addEventListener('click', () => {
   const currentAsset = walletAssets.find(a => a.key === walletState.selectedKey);
   walletState.pickerCategory = currentAsset?.category || 'gold';
-  if (currentAsset && currentAsset.unitType === 'gram') {
-    walletState.pickerGoldUnit = 'gram';
-  } else if (currentAsset && currentAsset.unitType === 'misqal') {
-    walletState.pickerGoldUnit = 'misqal';
-  }
   renderWalletPicker();
   walletEls.walletPickerBackdrop.hidden = false;
 });
@@ -3541,13 +3509,6 @@ walletEls.walletPickerBackdrop.addEventListener('click', event => {
 document.querySelectorAll('[data-picker-category]').forEach(button => {
   button.addEventListener('click', () => {
     walletState.pickerCategory = button.dataset.pickerCategory;
-    renderWalletPicker();
-  });
-});
-
-document.querySelectorAll('[data-picker-unit]').forEach(button => {
-  button.addEventListener('click', () => {
-    walletState.pickerGoldUnit = button.dataset.pickerUnit;
     renderWalletPicker();
   });
 });
