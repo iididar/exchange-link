@@ -11,6 +11,7 @@ echo  2) بڵاوکردنەوە بۆ GitHub
 echo ------------------------------------------
 git add .
 git commit -m "Update site"
+git pull --rebase origin main
 git push origin main
 
 echo ------------------------------------------
