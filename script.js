@@ -114,7 +114,7 @@ const TRANSLATIONS = {
     footer: 'Developed by (Didar Ahmad)',
     menuTitle: 'ڕێکخستنەکان',
     close: 'داخستن',
-    discount: 'کاراکردنی ١٠٠٠دینار کەمتر بۆ وەرگرتنی دۆلار',
+    discount: 'کاراکردنی (١٠٠٠) دینار کەمتر بۆ وەرگرتنی دۆلار',
     darkMode: 'دۆخی تاریک',
     language: 'زمان',
     currenciesLabel: 'هەڵبژاردنی دراو',
