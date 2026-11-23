@@ -2324,10 +2324,10 @@ const walletCopy = {
     edit: 'دەستکاری',
     delete: 'سڕینەوە',
     deleteAsset: 'سڕینەوەی ئەم سامانە',
-    confirmDeleteTitle: 'دڵنیایت لە سڕینەوە؟',
+    confirmDeleteTitle: '',
     confirmDeleteDesc: 'ئایا دڵنیایت لە سڕینەوەی ئەم سامانە؟',
     cancel: 'گەڕانەوە',
-    confirmDelete: 'بەڵێ، بسڕەوە',
+    confirmDelete: 'سڕینەوە',
     unit: 'دانە',
     saved: 'پاشەکەوت کرا',
     purchase: 'نرخی کڕین',
@@ -2363,10 +2363,10 @@ const walletCopy = {
     edit: 'تعديل',
     delete: 'حذف',
     deleteAsset: 'حذف هذا الأصل',
-    confirmDeleteTitle: 'هل أنت متأكد من الحذف؟',
+    confirmDeleteTitle: '',
     confirmDeleteDesc: 'هل أنت متأكد من حذف هذا الأصل؟',
     cancel: 'رجوع',
-    confirmDelete: 'نعم، احذف',
+    confirmDelete: 'حذف',
     unit: 'وحدة',
     saved: 'تم الحفظ',
     purchase: 'سعر الشراء',
@@ -2402,10 +2402,10 @@ const walletCopy = {
     edit: 'Edit',
     delete: 'Delete',
     deleteAsset: 'Delete this asset',
-    confirmDeleteTitle: 'Confirm Delete',
+    confirmDeleteTitle: '',
     confirmDeleteDesc: 'Are you sure you want to delete this asset?',
     cancel: 'Cancel',
-    confirmDelete: 'Yes, Delete',
+    confirmDelete: 'Delete',
     unit: 'units',
     saved: 'Saved',
     purchase: 'Purchase price',
@@ -2468,14 +2468,25 @@ const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
 
 function formatWalletMoney(value, currency = walletState.currency) {
   if (!Number.isFinite(value) || isNaN(value)) return '—';
-  try {
-    const isIqd = currency === 'IQD';
-    return new Intl.NumberFormat(
-      state.language === 'en' ? 'en-US' : state.language === 'ar' ? 'ar-IQ' : 'ku-IQ',
-      { maximumFractionDigits: isIqd ? 0 : 2, minimumFractionDigits: isIqd ? 0 : 2 }
-    ).format(value) + ` ${currency}`;
-  } catch {
-    return `${value.toFixed(2)} ${currency}`;
+  const isIqd = currency === 'IQD';
+  const sign = value < 0 ? '-' : '';
+  const abs = Math.abs(value);
+
+  if (isIqd) {
+    // دینار: هەزارەکان بە خاڵ (.) جیا دەکرێنەوە، ئەگەر سەنت هەبێت بە فاریزە (،)
+    const hasDecimal = Math.abs(abs - Math.round(abs)) >= 0.01;
+    if (hasDecimal) {
+      const parts = abs.toFixed(2).split('.');
+      const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      return `${sign}${intPart},${parts[1]} IQD`;
+    }
+    const intPart = Math.round(abs).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${sign}${intPart} IQD`;
+  } else {
+    // دۆلار: هەزارەکان بە فاریزە (,) و سەنت دوای خاڵ (.)
+    const parts = abs.toFixed(2).split('.');
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return `${sign}${intPart}.${parts[1]} ${currency}`;
   }
 }
 
@@ -2706,13 +2717,21 @@ function showDeleteConfirmation(itemId, fromForm = false) {
   const unit = walletAssetUnit(item.key);
   const name = walletAssetName(item.key);
 
-  if (walletEls.walletConfirmTitle) walletEls.walletConfirmTitle.textContent = text.confirmDeleteTitle || 'دڵنیایت لە سڕینەوە؟';
+  if (walletEls.walletConfirmTitle) walletEls.walletConfirmTitle.textContent = text.confirmDeleteTitle || '';
   if (walletEls.walletConfirmDesc) walletEls.walletConfirmDesc.textContent = text.confirmDeleteDesc || 'ئایا دڵنیایت لە سڕینەوەی ئەم سامانە؟';
   if (walletEls.walletConfirmItemPreview) walletEls.walletConfirmItemPreview.textContent = `${name} · ${item.amount} ${unit}`;
   if (walletEls.walletConfirmCancelBtn) walletEls.walletConfirmCancelBtn.textContent = text.cancel || 'گەڕانەوە';
-  if (walletEls.walletConfirmDeleteBtn) walletEls.walletConfirmDeleteBtn.textContent = text.confirmDelete || 'بەڵێ، بسڕەوە';
+  if (walletEls.walletConfirmDeleteBtn) walletEls.walletConfirmDeleteBtn.textContent = text.confirmDelete || 'سڕینەوە';
 
-  if (walletEls.walletConfirmBackdrop) walletEls.walletConfirmBackdrop.hidden = false;
+  if (walletEls.walletConfirmBackdrop) {
+    walletEls.walletConfirmBackdrop.hidden = false;
+    const trashSvg = walletEls.walletConfirmBackdrop.querySelector('.wallet-confirm-icon-wrap svg');
+    if (trashSvg) {
+      trashSvg.style.animation = 'none';
+      void trashSvg.offsetHeight;
+      trashSvg.style.animation = '';
+    }
+  }
 }
 
 function hideDeleteConfirmation() {
