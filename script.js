@@ -1511,21 +1511,50 @@ function renderDateOrDay() {
   }
 
   const postDate = new Date(state.telegramTimestamp);
-  if (state.showDayName) {
-    dateDisplayEl.textContent = getTranslations().days[postDate.getDay()];
-  } else {
-    const year = postDate.getFullYear();
-    const month = String(postDate.getMonth() + 1).padStart(2, '0');
-    const day = String(postDate.getDate()).padStart(2, '0');
-    dateDisplayEl.textContent = `${year}/${month}/${day}`;
+  if (isNaN(postDate.getTime())) {
+    dateDisplayEl.textContent = '--/--/----';
+    timeDisplayEl.textContent = '--:-- --';
+    return;
   }
 
-  let hours = postDate.getHours();
-  const minutes = String(postDate.getMinutes()).padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12;
-  timeDisplayEl.textContent = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Baghdad',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+    const parts = Object.fromEntries(formatter.formatToParts(postDate).map(p => [p.type, p.value]));
+
+    if (state.showDayName) {
+      const baghdadDate = new Date(postDate.toLocaleString('en-US', { timeZone: 'Asia/Baghdad' }));
+      dateDisplayEl.textContent = getTranslations().days[baghdadDate.getDay()];
+    } else {
+      dateDisplayEl.textContent = `${parts.year}/${parts.month}/${parts.day}`;
+    }
+
+    const period = parts.dayPeriod || (Number(parts.hour) >= 12 ? 'PM' : 'AM');
+    timeDisplayEl.textContent = `${parts.hour}:${parts.minute} ${period}`;
+  } catch (_) {
+    if (state.showDayName) {
+      dateDisplayEl.textContent = getTranslations().days[postDate.getDay()];
+    } else {
+      const year = postDate.getFullYear();
+      const month = String(postDate.getMonth() + 1).padStart(2, '0');
+      const day = String(postDate.getDate()).padStart(2, '0');
+      dateDisplayEl.textContent = `${year}/${month}/${day}`;
+    }
+
+    let hours = postDate.getHours();
+    const minutes = String(postDate.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    timeDisplayEl.textContent = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+  }
 }
 
 // نوێکردنەوەی ناونیشان و بانەری نرخ بەپێی دراوی هەڵبژێردراو
@@ -1938,11 +1967,18 @@ darkModeToggle.addEventListener('change', (e) => {
 
 // Refreshes only the data pipeline for the currently visible screen (using Cloudflare Worker).
 refreshBtn.addEventListener('click', async () => {
+  if (refreshBtn.classList.contains('spinning')) return;
   refreshBtn.classList.add('spinning');
-  await fetchUnifiedRates(true);
-  setTimeout(() => {
-    refreshBtn.classList.remove('spinning');
-  }, 600);
+  const startTime = Date.now();
+  try {
+    await fetchUnifiedRates(true);
+  } finally {
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, 400 - elapsed);
+    setTimeout(() => {
+      refreshBtn.classList.remove('spinning');
+    }, remaining);
+  }
 });
 
 function handleKeyPress(key) {
@@ -2222,15 +2258,28 @@ async function fetchExchangeRatesFallback() {
 }
 
 let isFetchingUnifiedRates = false;
+let activeFetchController = null;
+
 async function fetchUnifiedRates(forceFresh = false) {
-  if (isFetchingUnifiedRates) return;
+  if (isFetchingUnifiedRates) {
+    if (forceFresh && activeFetchController) {
+      // Abort background poll to prioritize user's instant refresh
+      activeFetchController.abort();
+    } else {
+      return;
+    }
+  }
   isFetchingUnifiedRates = true;
+  activeFetchController = new AbortController();
+  const timeoutMs = forceFresh ? 4500 : 5000;
+  const timeout = setTimeout(() => {
+    if (activeFetchController) activeFetchController.abort();
+  }, timeoutMs);
+
   try {
-    const url = forceFresh ? `${WORKER_RATES_URL}?t=${Date.now()}` : WORKER_RATES_URL;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
+    const url = forceFresh ? `${WORKER_RATES_URL}?refresh=1&t=${Date.now()}` : WORKER_RATES_URL;
     const response = await fetch(url, {
-      signal: controller.signal,
+      signal: activeFetchController.signal,
       cache: forceFresh ? 'no-store' : 'default'
     });
     clearTimeout(timeout);
@@ -2244,13 +2293,16 @@ async function fetchUnifiedRates(forceFresh = false) {
       localStorage.setItem(CACHED_RATES_STORAGE_KEY, JSON.stringify(data));
     } catch (_) {}
   } catch (error) {
-    console.warn('Unified rates worker fetch failed, running fallbacks...', error);
+    if (error.name !== 'AbortError') {
+      console.warn('Unified rates worker fetch failed, running fallbacks...', error);
+    }
     await Promise.allSettled([
       fetchExchangeRatesFallback(),
       fetchLiveMetalsFallback()
     ]);
   } finally {
     isFetchingUnifiedRates = false;
+    activeFetchController = null;
   }
 }
 

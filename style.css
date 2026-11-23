@@ -83,10 +83,16 @@ body.light-mode .signature-img.clean-alpha { mix-blend-mode: normal; filter: inv
 
 .top-right-group { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
 .top-actions-row { display: flex; align-items: center; gap: 8px; }
-.refresh-btn { width: 34px; height: 34px; border-radius: 10px; background: var(--hamburger-bg); border: 1px solid var(--card-border); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--hamburger-color); transition: transform 0.15s ease, background 0.3s ease; }
+.refresh-btn { width: 34px; height: 34px; border-radius: 10px; background: var(--hamburger-bg); border: 1px solid var(--card-border); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--hamburger-color); transition: transform 0.15s ease, background 0.3s ease, opacity 0.2s ease; }
 .refresh-btn:active { transform: scale(0.9); }
-.refresh-btn svg { width: 17px; height: 17px; transition: transform 0.6s ease; }
-.refresh-btn.spinning svg { transform: rotate(360deg); }
+.refresh-btn svg { width: 17px; height: 17px; }
+.refresh-btn.spinning { pointer-events: none; opacity: 0.85; }
+.refresh-btn.spinning svg { animation: refreshSpin 0.65s linear infinite; }
+
+@keyframes refreshSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 .hamburger-btn { width: 38px; height: 34px; border-radius: 10px; background: var(--hamburger-bg); border: 1px solid var(--card-border); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4.5px; cursor: pointer; transition: transform 0.15s ease, background 0.3s ease; }
 .hamburger-btn:active { transform: scale(0.9); }
 .hamburger-btn span { display: block; width: 18px; height: 2px; background: var(--hamburger-color); border-radius: 2px; }

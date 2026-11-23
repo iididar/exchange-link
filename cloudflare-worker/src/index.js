@@ -53,12 +53,22 @@ function normalizeNumerals(str) {
 function parseTelegramHtml(html) {
   if (!html || typeof html !== "string") return null;
 
-  const postRegex = /class="[^"]*tgme_widget_message\b[^"]*"[^>]*data-post="([^"]+)"[\s\S]*?<time\b[^>]*datetime="([^"]+)"[\s\S]*?<div\b[^>]*class="[^"]*tgme_widget_message_text\b[^"]*"[^>]*>([\s\S]*?)<\/div>/gi;
-
+  const messageChunks = html.split(/<div\s+class="[^"]*tgme_widget_message_wrap/);
   const ratePosts = [];
-  let m;
-  while ((m = postRegex.exec(html)) !== null) {
-    const [, post, time, rawText] = m;
+
+  for (const chunk of messageChunks) {
+    if (!chunk.includes('data-post=')) continue;
+
+    const postMatch = chunk.match(/data-post="([^"]+)"/);
+    const timeMatch = chunk.match(/<time\b[^>]*datetime="([^"]+)"/);
+    const textMatch = chunk.match(/class="[^"]*tgme_widget_message_text\b[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+
+    if (!textMatch) continue;
+
+    const post = postMatch ? postMatch[1] : '';
+    const time = timeMatch ? timeMatch[1] : '';
+    const rawText = textMatch[1];
+
     const cleanText = normalizeNumerals(rawText.replace(/&#036;/g, "$").replace(/<[^>]+>/g, " ").trim());
     const rateMatch = cleanText.match(/(?<![\d.])100\s*\$\s*[=::]\s*([\d,]+(?:\.\d+)?)/i);
     if (rateMatch) {
@@ -150,7 +160,10 @@ export default {
     }
 
     const url = new URL(request.url);
-    const isBypassCache = url.searchParams.has("nocache") || url.searchParams.has("refresh");
+    const isBypassCache = url.searchParams.has("nocache") || 
+                          url.searchParams.has("refresh") || 
+                          url.searchParams.has("t") || 
+                          url.searchParams.has("_");
 
     // 1. Cloudflare Edge Cache lookup (15-second edge cache)
     const cache = caches.default;
@@ -338,9 +351,9 @@ export default {
     });
 
     // Store in Cloudflare Edge Cache for 15 seconds
-    if (!isBypassCache) {
+    try {
       ctx.waitUntil(cache.put(cacheKey, response.clone()));
-    }
+    } catch (_) {}
 
     return response;
   }
