@@ -2495,20 +2495,20 @@ function formatWalletMoney(value, currency = walletState.currency) {
   const abs = Math.abs(value);
 
   if (isIqd) {
-    // دینار: هەزارەکان بە خاڵ (.) جیا دەکرێنەوە، ئەگەر سەنت هەبێت بە فاریزە (،)
+    // دینار: هەزارەکان بە فاریزە (,) جیا دەکرێنەوە، ئەگەر سەنت هەبێت بە خاڵ (.)
     const hasDecimal = Math.abs(abs - Math.round(abs)) >= 0.01;
     if (hasDecimal) {
       const parts = abs.toFixed(2).split('.');
-      const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      return `${sign}${intPart},${parts[1]} IQD`;
+      const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return `${sign}${intPart}.${parts[1]} IQD`;
     }
-    const intPart = Math.round(abs).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const intPart = Math.round(abs).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     return `${sign}${intPart} IQD`;
   } else {
-    // دۆلار: هەزارەکان بە فاریزە (,) و سەنت دوای خاڵ (.)
+    // دۆلار: هەزارەکان بە خاڵ (.) و سەنت دوای فاریزە (,)
     const parts = abs.toFixed(2).split('.');
-    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return `${sign}${intPart}.${parts[1]} ${currency}`;
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${sign}${intPart},${parts[1]} ${currency}`;
   }
 }
 
