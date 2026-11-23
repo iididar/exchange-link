@@ -15,7 +15,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- فایلی دیزاین -->
-  <link rel="stylesheet" href="style.css?v=20261123-5">
+  <link rel="stylesheet" href="style.css?v=20261123-7">
 </head>
 <body>
 
@@ -287,6 +287,10 @@
         <button id="walletAssetPicker" class="wallet-picker-button" type="button">
           <span id="walletSelectedAsset"></span><span>⌄</span>
         </button>
+        <div id="walletFormUnitToggle" class="wallet-form-unit-toggle" hidden>
+          <button type="button" class="active" data-form-unit="misqal">مسقاڵ</button>
+          <button type="button" data-form-unit="gram">گرام</button>
+        </div>
       </label>
 
       <!-- 1. Quantity -->
@@ -334,48 +338,96 @@
           <button class="active" type="button" data-picker-category="gold"></button>
           <button type="button" data-picker-category="silver"></button>
         </div>
+        <div id="walletPickerUnitToggle" class="wallet-picker-unit-toggle">
+          <button type="button" class="active" data-picker-unit="misqal">مسقاڵ</button>
+          <button type="button" data-picker-unit="gram">گرام</button>
+        </div>
         <div id="walletPickerOptions" class="wallet-picker-options"></div>
       </div>
     </div>
     <div id="walletDetailBackdrop" class="wallet-detail-backdrop" hidden>
       <div class="wallet-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="walletDetailName">
         <div class="wallet-detail-top-bar">
+          <button id="walletDetailCloseBtn" class="wallet-detail-action-btn wallet-detail-close-btn" type="button" aria-label="Close">×</button>
           <button id="walletDetailEditBtn" class="wallet-detail-action-btn wallet-detail-edit-btn" type="button" aria-label="Edit">
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 20h9"></path>
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
             </svg>
           </button>
-          <button id="walletDetailCloseBtn" class="wallet-detail-action-btn wallet-detail-close-btn" type="button" aria-label="Close">×</button>
         </div>
+
         <div class="wallet-detail-hero">
-          <div id="walletDetailIcon" class="wallet-asset-icon wallet-detail-icon"></div>
+          <div class="wallet-detail-icon-halo">
+            <div id="walletDetailIcon" class="wallet-asset-icon wallet-detail-icon"></div>
+          </div>
           <h2 id="walletDetailName" class="wallet-detail-title"></h2>
-          <p id="walletDetailMeta" class="wallet-detail-meta"></p>
+          <div class="wallet-detail-meta-pill">
+            <span id="walletDetailMeta" class="wallet-detail-meta"></span>
+          </div>
+
+          <!-- Hero Profit & Value Section (At the top!) -->
+          <div id="walletDetailHeroPnlCard" class="wallet-detail-hero-pnl-card">
+            <span class="wallet-detail-hero-val-label">بەهای ئێستای بازاڕ</span>
+            <strong id="walletDetailHeroValue" class="wallet-detail-hero-value">—</strong>
+            <div class="wallet-detail-hero-profit-wrap">
+              <div id="walletDetailProfitVal" class="wallet-detail-profit-val"></div>
+            </div>
+          </div>
         </div>
+
         <div class="wallet-detail-content">
-          <div class="wallet-detail-card">
-            <span id="walletDetailBuyUnitLabel" class="wallet-detail-label">نرخی کڕینی تاک</span>
-            <strong id="walletDetailBuyUnitVal" class="wallet-detail-val"></strong>
+          <!-- Purchase Breakdown Section -->
+          <div class="wallet-detail-group-card buy-group">
+            <div class="wallet-detail-group-header">
+              <div class="wallet-detail-group-tag buy-tag">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+                <span>تێچووی کڕین</span>
+              </div>
+            </div>
+            <div class="wallet-detail-row">
+              <span id="walletDetailBuyUnitLabel" class="wallet-detail-label">نرخی کڕینی تاک</span>
+              <strong id="walletDetailBuyUnitVal" class="wallet-detail-val"></strong>
+            </div>
+            <div class="wallet-detail-row">
+              <span id="walletDetailBuyTotalLabel" class="wallet-detail-label">کۆی تێچووی کڕین</span>
+              <strong id="walletDetailBuyTotalVal" class="wallet-detail-val"></strong>
+            </div>
           </div>
-          <div class="wallet-detail-card">
-            <span id="walletDetailBuyTotalLabel" class="wallet-detail-label">نرخی کڕینی گشتی</span>
-            <strong id="walletDetailBuyTotalVal" class="wallet-detail-val"></strong>
+
+          <!-- Current Market Breakdown Section -->
+          <div class="wallet-detail-group-card live-group">
+            <div class="wallet-detail-group-header">
+              <div class="wallet-detail-group-tag live-tag">
+                <span class="live-pulse-dot" aria-hidden="true"></span>
+                <span>نرخی ئێستای بازاڕ</span>
+              </div>
+            </div>
+            <div class="wallet-detail-row">
+              <span id="walletDetailLiveUnitLabel" class="wallet-detail-label">نرخی ئێستای تاک</span>
+              <strong id="walletDetailLiveUnitVal" class="wallet-detail-val"></strong>
+            </div>
+            <div class="wallet-detail-row">
+              <span id="walletDetailLiveTotalLabel" class="wallet-detail-label">کۆی بەهای ئێستا</span>
+              <strong id="walletDetailLiveTotalVal" class="wallet-detail-val"></strong>
+            </div>
           </div>
-          <div class="wallet-detail-card">
-            <span id="walletDetailLiveUnitLabel" class="wallet-detail-label">نرخی ئێستای تاک</span>
-            <strong id="walletDetailLiveUnitVal" class="wallet-detail-val"></strong>
-          </div>
-          <div class="wallet-detail-card">
-            <span id="walletDetailLiveTotalLabel" class="wallet-detail-label">نرخی گشتی ئێستا</span>
-            <strong id="walletDetailLiveTotalVal" class="wallet-detail-val"></strong>
-          </div>
-          <div class="wallet-detail-card wallet-detail-card-pnl">
-            <span id="walletDetailProfitLabel" class="wallet-detail-label">قازانج</span>
-            <div id="walletDetailProfitVal" class="wallet-detail-profit-val"></div>
-          </div>
-          <div id="walletDetailNotesCard" class="wallet-detail-card wallet-detail-card-notes" hidden>
-            <span id="walletDetailNotesLabel" class="wallet-detail-label">تێبینی</span>
+
+          <!-- Notes Card -->
+          <div id="walletDetailNotesCard" class="wallet-detail-notes-card" hidden>
+            <div class="wallet-detail-notes-header">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              <span id="walletDetailNotesLabel">تێبینی</span>
+            </div>
             <p id="walletDetailNotesVal" class="wallet-detail-notes-val"></p>
           </div>
         </div>
@@ -427,6 +479,6 @@
   <div id="heroMorphOverlay" aria-hidden="true"></div>
 
   <!-- فایلی جاڤاسکریپت -->
-  <script src="script.js?v=20261123-6" defer></script>
+  <script src="script.js?v=20261123-7" defer></script>
 </body>
 </html>
