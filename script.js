@@ -2495,27 +2495,21 @@ function formatWalletMoney(value, currency = walletState.currency) {
   const abs = Math.abs(value);
 
   if (isIqd) {
-    // دینار: هەزارەکان بە فاریزە (,) جیا دەکرێنەوە، ئەگەر سەنت هەبێت بە خاڵ (.)
-    const hasDecimal = Math.abs(abs - Math.round(abs)) >= 0.01;
-    if (hasDecimal) {
-      const parts = abs.toFixed(2).split('.');
-      const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      return `${sign}${intPart}.${parts[1]} IQD`;
-    }
-    const intPart = Math.round(abs).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    // دینار: سەنتی نییە، تەنها ژمارەی تەواو
+    const rounded = Math.round(abs);
+    const intPart = rounded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     return `${sign}${intPart} IQD`;
   } else {
-    // دۆلار: هەزارەکان بە خاڵ (.) و سەنت دوای فاریزە (,)
+    // دۆلار: خاڵ (.) تەنها بۆ سەنت بەکاردێت و هێمای جیاکەرەوەی هەزارەکان لابراوە
     const parts = abs.toFixed(2).split('.');
-    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return `${sign}${intPart},${parts[1]} ${currency}`;
+    return `${sign}${parts[0]}.${parts[1]} ${currency}`;
   }
 }
 
 function formatInputNumber(val, currency) {
   if (!Number.isFinite(val) || isNaN(val)) return '';
   if (currency === 'IQD') {
-    return Math.abs(val - Math.round(val)) < 0.01 ? String(Math.round(val)) : String(parseFloat(val.toFixed(2)));
+    return String(Math.round(val));
   }
   return String(parseFloat(val.toFixed(2)));
 }
