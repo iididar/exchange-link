@@ -5,6 +5,8 @@
   "scripts": {
     "build": "node build-dist.js",
     "deploy": "node build-dist.js && npx wrangler pages deploy dist --project-name=exchange-link --branch=main",
+    "push": "git add . && git commit -m \"Update site\" && git push origin main",
+    "all": "npm run deploy && npm run push",
     "deploy:worker": "cd cloudflare-worker && npx wrangler deploy"
   },
   "keywords": [],
