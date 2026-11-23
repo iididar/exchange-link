@@ -2328,6 +2328,11 @@ const walletCopy = {
     confirmDeleteDesc: 'ئایا دڵنیایت لە سڕینەوەی ئەم سامانە؟',
     cancel: 'گەڕانەوە',
     confirmDelete: 'سڕینەوە',
+    buyUnitPrice: 'نرخی کڕینی تاک',
+    buyTotalPrice: 'نرخی کڕینی گشتی',
+    liveUnitPrice: 'نرخی ئێستای تاک',
+    liveTotalPrice: 'نرخی گشتی ئێستا',
+    profit: 'قازانج',
     unit: 'دانە',
     saved: 'پاشەکەوت کرا',
     purchase: 'نرخی کڕین',
@@ -2367,6 +2372,11 @@ const walletCopy = {
     confirmDeleteDesc: 'هل أنت متأكد من حذف هذا الأصل؟',
     cancel: 'رجوع',
     confirmDelete: 'حذف',
+    buyUnitPrice: 'سعر شراء الوحدة',
+    buyTotalPrice: 'إجمالي سعر الشراء',
+    liveUnitPrice: 'سعر الوحدة الحالي',
+    liveTotalPrice: 'إجمالي السعر الحالي',
+    profit: 'الربح',
     unit: 'وحدة',
     saved: 'تم الحفظ',
     purchase: 'سعر الشراء',
@@ -2406,6 +2416,11 @@ const walletCopy = {
     confirmDeleteDesc: 'Are you sure you want to delete this asset?',
     cancel: 'Cancel',
     confirmDelete: 'Delete',
+    buyUnitPrice: 'Purchase Unit Price',
+    buyTotalPrice: 'Total Purchase Price',
+    liveUnitPrice: 'Current Unit Price',
+    liveTotalPrice: 'Current Total Price',
+    profit: 'Profit',
     unit: 'units',
     saved: 'Saved',
     purchase: 'Purchase price',
@@ -2441,7 +2456,14 @@ const walletElementIds = [
   'walletFormCurrencyToggle', 'walletDateLabel', 'walletDateInput', 'walletNotesLabel', 'walletNotesInput',
   'walletSaveButton', 'walletFormDeleteBtn', 'walletPickerBackdrop', 'walletPickerTitle', 'walletPickerOptions', 'walletPickerClose',
   'walletConfirmBackdrop', 'walletConfirmTitle', 'walletConfirmDesc', 'walletConfirmItemPreview',
-  'walletConfirmCancelBtn', 'walletConfirmDeleteBtn', 'walletFab', 'walletFormBack'
+  'walletConfirmCancelBtn', 'walletConfirmDeleteBtn', 'walletFab', 'walletFormBack',
+  'walletDetailBackdrop', 'walletDetailEditBtn', 'walletDetailCloseBtn', 'walletDetailIcon', 'walletDetailName', 'walletDetailMeta',
+  'walletDetailBuyUnitLabel', 'walletDetailBuyUnitVal',
+  'walletDetailBuyTotalLabel', 'walletDetailBuyTotalVal',
+  'walletDetailLiveUnitLabel', 'walletDetailLiveUnitVal',
+  'walletDetailLiveTotalLabel', 'walletDetailLiveTotalVal',
+  'walletDetailProfitLabel', 'walletDetailProfitVal',
+  'walletDetailNotesCard', 'walletDetailNotesLabel', 'walletDetailNotesVal'
 ];
 const walletEls = Object.fromEntries(walletElementIds.map(id => [id, document.getElementById(id)]));
 
@@ -2515,6 +2537,33 @@ function walletAssetUnit(key) {
   if (key.endsWith('Ounce')) return text.ounce;
   if (key === 'silverKg') return text.kg;
   return text.unit;
+}
+
+function getAssetIconSvg(key) {
+  if (key === 'dubaiLira') {
+    // دراوی ئاڵتوونی لیرەی دووبەی (Minted gold coin)
+    return `<svg class="wallet-coin-icon" viewBox="0 0 24 24" width="22" height="22" fill="none">
+      <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.8" fill="rgba(234, 179, 8, 0.16)"/>
+      <circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.1" stroke-dasharray="2 1.5"/>
+      <circle cx="12" cy="12" r="3.6" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M12 6.5v2M12 15.5v2M6.5 12h2M15.5 12h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
+    </svg>`;
+  }
+  if (key && key.startsWith('silver')) {
+    // خشتی زیو (Silver bullion)
+    return `<svg class="wallet-silver-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 16.5l3.5-7.5h9l3.5 7.5H4z" stroke-width="1.8" fill="rgba(148, 163, 184, 0.15)"/>
+      <path d="M8.5 16.5l2-7.5M15.5 16.5l-2-7.5" stroke-width="1.3"/>
+      <path d="M4 16.5l1.5 2.5h13l1.5-2.5" stroke-width="1.8"/>
+    </svg>`;
+  }
+  // خشتی زێڕ (Gold bullion / misqals)
+  return `<svg class="wallet-gold-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 16.5l3.5-7.5h9l3.5 7.5H4z" stroke-width="1.8" fill="rgba(234, 179, 8, 0.16)"/>
+    <path d="M8.5 16.5l2-7.5M15.5 16.5l-2-7.5" stroke-width="1.3"/>
+    <path d="M4 16.5l1.5 2.5h13l1.5-2.5" stroke-width="1.8"/>
+  </svg>`;
 }
 
 function getMetalLivePrice(key, currency = 'IQD') {
@@ -2740,6 +2789,102 @@ function hideDeleteConfirmation() {
   if (walletEls.walletConfirmBackdrop) walletEls.walletConfirmBackdrop.hidden = true;
 }
 
+let selectedDetailItem = null;
+
+function closeAllCardMenus() {
+  document.querySelectorAll('.wallet-card-menu-popover:not([hidden])').forEach(el => {
+    el.hidden = true;
+  });
+}
+
+function showWalletDetail(item) {
+  if (!item) return;
+  selectedDetailItem = item;
+  closeAllCardMenus();
+
+  const text = walletText();
+  const targetCurr = walletState.currency;
+  const usdIqd = getEffectiveUsdRate() / 100;
+  const qty = Number(item.amount) || 0;
+  const unit = walletAssetUnit(item.key);
+
+  if (walletEls.walletDetailIcon) {
+    walletEls.walletDetailIcon.className = `wallet-asset-icon wallet-detail-icon ${item.key.startsWith('silver') ? 'is-silver' : ''}`;
+    walletEls.walletDetailIcon.innerHTML = getAssetIconSvg(item.key);
+  }
+  if (walletEls.walletDetailName) {
+    walletEls.walletDetailName.textContent = walletAssetName(item.key);
+  }
+
+  const displayDate = item.date ? new Intl.DateTimeFormat(
+    state.language === 'en' ? 'en-US' : state.language === 'ar' ? 'ar-IQ' : 'ku-IQ',
+    { day: 'numeric', month: 'short', year: 'numeric' }
+  ).format(new Date(`${item.date}T12:00:00`)) : '';
+
+  if (walletEls.walletDetailMeta) {
+    walletEls.walletDetailMeta.textContent = `${item.amount} ${unit}${displayDate ? ' · ' + displayDate : ''}`;
+  }
+
+  // 1. نرخی کڕینی تاک
+  const unitPurchase = Number(item.unitPrice || item.purchasePrice) || 0;
+  if (walletEls.walletDetailBuyUnitLabel) walletEls.walletDetailBuyUnitLabel.textContent = text.buyUnitPrice || 'نرخی کڕینی تاک';
+  if (walletEls.walletDetailBuyUnitVal) walletEls.walletDetailBuyUnitVal.textContent = `${formatWalletMoney(unitPurchase, item.purchaseCurrency)} / ${unit}`;
+
+  // 2. نرخی کڕینی گشتی
+  const itemTotalPaid = Number(item.totalPrice) || (unitPurchase * qty);
+  if (walletEls.walletDetailBuyTotalLabel) walletEls.walletDetailBuyTotalLabel.textContent = text.buyTotalPrice || 'نرخی کڕینی گشتی';
+  if (walletEls.walletDetailBuyTotalVal) walletEls.walletDetailBuyTotalVal.textContent = formatWalletMoney(itemTotalPaid, item.purchaseCurrency);
+
+  // Live Unit & Current Value
+  const liveUnit = getMetalLivePrice(item.key, targetCurr);
+  const currentValue = (liveUnit != null && qty > 0) ? liveUnit * qty : null;
+
+  // 3. نرخی ئێستای تاک
+  if (walletEls.walletDetailLiveUnitLabel) walletEls.walletDetailLiveUnitLabel.textContent = text.liveUnitPrice || 'نرخی ئێستای تاک';
+  if (walletEls.walletDetailLiveUnitVal) walletEls.walletDetailLiveUnitVal.textContent = liveUnit != null ? `${formatWalletMoney(liveUnit, targetCurr)} / ${unit}` : '—';
+
+  // 4. نرخی گشتی ئێستا
+  if (walletEls.walletDetailLiveTotalLabel) walletEls.walletDetailLiveTotalLabel.textContent = text.liveTotalPrice || 'نرخی گشتی ئێستا';
+  if (walletEls.walletDetailLiveTotalVal) walletEls.walletDetailLiveTotalVal.textContent = currentValue != null ? formatWalletMoney(currentValue, targetCurr) : '—';
+
+  // 5. قازانج
+  let costInTarget = itemTotalPaid;
+  if (item.purchaseCurrency !== targetCurr && usdIqd > 0) {
+    if (item.purchaseCurrency === 'USD' && targetCurr === 'IQD') {
+      costInTarget = itemTotalPaid * usdIqd;
+    } else if (item.purchaseCurrency === 'IQD' && targetCurr === 'USD') {
+      costInTarget = itemTotalPaid / usdIqd;
+    }
+  }
+
+  const itemPnl = (currentValue != null && Number.isFinite(costInTarget)) ? currentValue - costInTarget : null;
+  const itemPnlPct = (costInTarget > 0 && itemPnl != null) ? (itemPnl / costInTarget) * 100 : null;
+  const pnlInfo = formatPnlValues(itemPnl, itemPnlPct, targetCurr);
+
+  if (walletEls.walletDetailProfitLabel) walletEls.walletDetailProfitLabel.textContent = text.profit || 'قازانج';
+  if (walletEls.walletDetailProfitVal) {
+    walletEls.walletDetailProfitVal.className = `wallet-detail-profit-val is-${pnlInfo.status}`;
+    walletEls.walletDetailProfitVal.innerHTML = `<span class="pnl-amount">${pnlInfo.amountStr}</span> <span class="pnl-percent">(${pnlInfo.percentStr})</span>`;
+  }
+
+  if (walletEls.walletDetailNotesCard) {
+    if (item.notes && item.notes.trim()) {
+      walletEls.walletDetailNotesCard.hidden = false;
+      if (walletEls.walletDetailNotesLabel) walletEls.walletDetailNotesLabel.textContent = text.notes || 'تێبینی';
+      if (walletEls.walletDetailNotesVal) walletEls.walletDetailNotesVal.textContent = item.notes;
+    } else {
+      walletEls.walletDetailNotesCard.hidden = true;
+    }
+  }
+
+  if (walletEls.walletDetailBackdrop) walletEls.walletDetailBackdrop.hidden = false;
+}
+
+function hideWalletDetail() {
+  selectedDetailItem = null;
+  if (walletEls.walletDetailBackdrop) walletEls.walletDetailBackdrop.hidden = true;
+}
+
 function renderWallet() {
   const list = walletEls.walletAssetList;
   list.replaceChildren();
@@ -2779,13 +2924,24 @@ function renderWallet() {
     const unit = walletAssetUnit(item.key);
     const card = document.createElement('article');
     card.className = 'wallet-asset-card card-surface';
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    card.setAttribute('aria-label', `${walletAssetName(item.key)} details`);
+
+    // کلیک لەسەر کارتەکە پەنجەرەی وردەکاری دەکاتەوە
+    card.addEventListener('click', event => {
+      if (event.target.closest('.wallet-card-menu-btn') || event.target.closest('.wallet-card-menu-popover')) {
+        return;
+      }
+      showWalletDetail(item);
+    });
 
     const info = document.createElement('div');
     info.className = 'wallet-asset-info';
 
     const icon = document.createElement('span');
-    icon.className = 'wallet-asset-icon';
-    icon.textContent = '✦';
+    icon.className = `wallet-asset-icon ${item.key.startsWith('silver') ? 'is-silver' : ''}`;
+    icon.innerHTML = getAssetIconSvg(item.key);
 
     const details = document.createElement('div');
     details.className = 'wallet-asset-details';
@@ -2799,13 +2955,9 @@ function renderWallet() {
     ).format(new Date(`${item.date}T12:00:00`)) : '';
 
     const meta = document.createElement('small');
-    meta.textContent = `${item.amount} ${unit} · ${displayDate}`;
+    meta.textContent = `${item.amount} ${unit}${displayDate ? ' · ' + displayDate : ''}`;
 
-    const purchase = document.createElement('small');
-    const unitPurchase = Number(item.unitPrice || item.purchasePrice);
-    purchase.textContent = `${text.purchase}: ${formatWalletMoney(unitPurchase, item.purchaseCurrency)} / ${unit}`;
-
-    details.append(name, meta, purchase);
+    details.append(name, meta);
     info.append(icon, details);
 
     const stats = document.createElement('div');
@@ -2813,32 +2965,82 @@ function renderWallet() {
 
     const pnlInfo = formatPnlValues(itemPnl, itemPnlPct, targetCurr);
 
-    const profitEl = document.createElement('strong');
-    profitEl.className = `wallet-profit-text is-${pnlInfo.status}`;
-    profitEl.textContent = pnlInfo.amountStr;
+    // تەنها ڕێژەی قازانج لەسەر کارتەکە دەنووسرێت
+    const profitEl = document.createElement('span');
+    profitEl.className = `wallet-card-profit-badge is-${pnlInfo.status}`;
+    profitEl.textContent = pnlInfo.percentStr || '0.00%';
 
-    const currentEl = document.createElement('small');
-    currentEl.textContent = currentValue != null ? formatWalletMoney(currentValue, targetCurr) : '—';
+    // دوگمەی ٣ نوقتە (kebab menu) بۆ دەستکاری و سڕینەوە
+    const menuWrap = document.createElement('div');
+    menuWrap.className = 'wallet-card-menu-wrap';
 
-    const actions = document.createElement('div');
-    actions.className = 'wallet-card-actions';
+    const menuBtn = document.createElement('button');
+    menuBtn.type = 'button';
+    menuBtn.className = 'wallet-card-menu-btn';
+    menuBtn.setAttribute('aria-label', 'Options');
+    menuBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+        <circle cx="12" cy="5" r="2"/>
+        <circle cx="12" cy="12" r="2"/>
+        <circle cx="12" cy="19" r="2"/>
+      </svg>
+    `;
 
-    const edit = document.createElement('button');
-    edit.type = 'button';
-    edit.textContent = text.edit;
-    edit.addEventListener('click', () => openWalletForm(item));
+    const popover = document.createElement('div');
+    popover.className = 'wallet-card-menu-popover';
+    popover.hidden = true;
 
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.textContent = text.delete;
-    remove.addEventListener('click', () => {
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'wallet-card-menu-item';
+    editBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20h9"></path>
+        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+      </svg>
+      <span>${text.edit}</span>
+    `;
+    editBtn.addEventListener('click', event => {
+      event.stopPropagation();
+      closeAllCardMenus();
+      openWalletForm(item);
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'wallet-card-menu-item is-delete';
+    removeBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"></polyline>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+      </svg>
+      <span>${text.delete}</span>
+    `;
+    removeBtn.addEventListener('click', event => {
+      event.stopPropagation();
+      closeAllCardMenus();
       showDeleteConfirmation(item.id, false);
     });
 
-    stats.append(profitEl, currentEl, actions);
-    actions.append(edit, remove);
+    popover.append(editBtn, removeBtn);
+    menuWrap.append(menuBtn, popover);
+
+    menuBtn.addEventListener('click', event => {
+      event.stopPropagation();
+      const willOpen = popover.hidden;
+      closeAllCardMenus();
+      if (willOpen) {
+        popover.hidden = false;
+      }
+    });
+
+    stats.append(profitEl, menuWrap);
     card.append(info, stats);
     list.append(card);
+
+    if (selectedDetailItem && selectedDetailItem.id === item.id) {
+      showWalletDetail(item);
+    }
   });
 
   const hasAssets = walletState.items.length > 0;
@@ -2874,6 +3076,8 @@ function persistWallet() {
 }
 
 function openWalletForm(item = null) {
+  hideWalletDetail();
+  closeAllCardMenus();
   walletState.editingId = item?.id || null;
   walletState.selectedKey = item?.key || (walletAssets[0]?.key || 'gold21k');
   walletState.formCurrency = item?.purchaseCurrency || walletState.currency;
@@ -3045,6 +3249,9 @@ if (walletEls.walletConfirmBackdrop) {
 if (walletEls.walletConfirmDeleteBtn) {
   walletEls.walletConfirmDeleteBtn.addEventListener('click', () => {
     if (pendingDeleteId) {
+      if (selectedDetailItem && selectedDetailItem.id === pendingDeleteId) {
+        hideWalletDetail();
+      }
       walletState.items = walletState.items.filter(entry => entry.id !== pendingDeleteId);
       persistWallet();
       const shouldCloseForm = pendingDeleteFromForm;
@@ -3057,6 +3264,39 @@ if (walletEls.walletConfirmDeleteBtn) {
     }
   });
 }
+
+if (walletEls.walletDetailCloseBtn) {
+  walletEls.walletDetailCloseBtn.addEventListener('click', hideWalletDetail);
+}
+if (walletEls.walletDetailBackdrop) {
+  walletEls.walletDetailBackdrop.addEventListener('click', event => {
+    if (event.target === walletEls.walletDetailBackdrop) hideWalletDetail();
+  });
+}
+if (walletEls.walletDetailEditBtn) {
+  walletEls.walletDetailEditBtn.addEventListener('click', () => {
+    if (selectedDetailItem) {
+      const it = selectedDetailItem;
+      hideWalletDetail();
+      openWalletForm(it);
+    }
+  });
+}
+
+document.addEventListener('click', event => {
+  if (!event.target.closest('.wallet-card-menu-wrap')) {
+    closeAllCardMenus();
+  }
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    closeAllCardMenus();
+    hideWalletDetail();
+    hideDeleteConfirmation();
+    if (walletEls.walletPickerBackdrop) walletEls.walletPickerBackdrop.hidden = true;
+  }
+});
 
 walletEls.walletAssetPicker.addEventListener('click', () => {
   const currentAsset = walletAssets.find(a => a.key === walletState.selectedKey);
