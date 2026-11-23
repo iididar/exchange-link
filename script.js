@@ -2889,6 +2889,7 @@ function renderWalletLabels() {
   if (silverTabBtn) silverTabBtn.textContent = text.silverTab;
 
   walletCurrencyButtons.forEach(button => button.classList.toggle('active', button.dataset.walletCurrency === walletState.currency));
+  document.querySelectorAll('[data-detail-currency]').forEach(button => button.classList.toggle('active', button.dataset.detailCurrency === walletState.currency));
   updateFormLivePriceBanner();
   renderWallet();
 }
@@ -2943,10 +2944,15 @@ function showWalletDetail(item) {
   closeAllCardMenus();
 
   const text = walletText();
-  const detailCurr = item.purchaseCurrency || 'IQD';
+  const targetCurr = walletState.currency || 'IQD';
+  const usdIqd = getEffectiveUsdRate() / 100;
   const qty = Number(item.amount) || 0;
   const unit = walletAssetUnit(item.key);
   const isSilver = item.key.startsWith('silver');
+
+  document.querySelectorAll('[data-detail-currency]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.detailCurrency === targetCurr);
+  });
 
   if (walletEls.walletDetailIcon) {
     walletEls.walletDetailIcon.className = `wallet-asset-icon wallet-detail-icon ${isSilver ? 'is-silver' : ''}`;
@@ -2966,36 +2972,49 @@ function showWalletDetail(item) {
     walletEls.walletDetailMeta.textContent = `${item.amount} ${unit}${displayDate ? ' · ' + displayDate : ''}`;
   }
 
-  // 1. نرخی کڕینی تاک
+  // 1. تێچووی کڕین (Purchase Breakdown converted to targetCurr)
   const unitPurchase = Number(item.unitPrice || item.purchasePrice) || 0;
-  if (walletEls.walletDetailBuyUnitLabel) walletEls.walletDetailBuyUnitLabel.textContent = text.buyUnitPrice || 'نرخی کڕینی تاک';
-  if (walletEls.walletDetailBuyUnitVal) walletEls.walletDetailBuyUnitVal.textContent = `${formatWalletMoney(unitPurchase, detailCurr)} / ${unit}`;
-
-  // 2. نرخی کڕینی گشتی
   const itemTotalPaid = Number(item.totalPrice) || (unitPurchase * qty);
-  if (walletEls.walletDetailBuyTotalLabel) walletEls.walletDetailBuyTotalLabel.textContent = text.buyTotalPrice || 'کۆی تێچووی کڕین';
-  if (walletEls.walletDetailBuyTotalVal) walletEls.walletDetailBuyTotalVal.textContent = formatWalletMoney(itemTotalPaid, detailCurr);
 
-  // Live Unit & Current Value in detailCurr
-  const liveUnit = getMetalLivePrice(item.key, detailCurr);
+  let buyUnitInTarget = unitPurchase;
+  let buyTotalInTarget = itemTotalPaid;
+
+  if (item.purchaseCurrency !== targetCurr && usdIqd > 0) {
+    if (item.purchaseCurrency === 'USD' && targetCurr === 'IQD') {
+      buyUnitInTarget = unitPurchase * usdIqd;
+      buyTotalInTarget = itemTotalPaid * usdIqd;
+    } else if (item.purchaseCurrency === 'IQD' && targetCurr === 'USD') {
+      buyUnitInTarget = unitPurchase / usdIqd;
+      buyTotalInTarget = itemTotalPaid / usdIqd;
+    }
+  }
+
+  if (walletEls.walletDetailBuyUnitLabel) walletEls.walletDetailBuyUnitLabel.textContent = text.buyUnitPrice || 'نرخی کڕینی تاک';
+  if (walletEls.walletDetailBuyUnitVal) walletEls.walletDetailBuyUnitVal.textContent = `${formatWalletMoney(buyUnitInTarget, targetCurr)} / ${unit}`;
+
+  if (walletEls.walletDetailBuyTotalLabel) walletEls.walletDetailBuyTotalLabel.textContent = text.buyTotalPrice || 'کۆی تێچووی کڕین';
+  if (walletEls.walletDetailBuyTotalVal) walletEls.walletDetailBuyTotalVal.textContent = formatWalletMoney(buyTotalInTarget, targetCurr);
+
+  // 2. نرخی ئێستای بازاڕ (Live Market Breakdown in targetCurr)
+  const liveUnit = getMetalLivePrice(item.key, targetCurr);
   const currentValue = (liveUnit != null && qty > 0) ? liveUnit * qty : null;
 
   // 3. نرخی ئێستای تاک
   if (walletEls.walletDetailLiveUnitLabel) walletEls.walletDetailLiveUnitLabel.textContent = text.liveUnitPrice || 'نرخی ئێستای تاک';
-  if (walletEls.walletDetailLiveUnitVal) walletEls.walletDetailLiveUnitVal.textContent = liveUnit != null ? `${formatWalletMoney(liveUnit, detailCurr)} / ${unit}` : '—';
+  if (walletEls.walletDetailLiveUnitVal) walletEls.walletDetailLiveUnitVal.textContent = liveUnit != null ? `${formatWalletMoney(liveUnit, targetCurr)} / ${unit}` : '—';
 
   // 4. نرخی گشتی ئێستا
   if (walletEls.walletDetailLiveTotalLabel) walletEls.walletDetailLiveTotalLabel.textContent = text.liveTotalPrice || 'کۆی بەهای ئێستا';
-  if (walletEls.walletDetailLiveTotalVal) walletEls.walletDetailLiveTotalVal.textContent = currentValue != null ? formatWalletMoney(currentValue, detailCurr) : '—';
+  if (walletEls.walletDetailLiveTotalVal) walletEls.walletDetailLiveTotalVal.textContent = currentValue != null ? formatWalletMoney(currentValue, targetCurr) : '—';
 
   // 5. قازانج و زیان
-  const itemPnl = (currentValue != null && Number.isFinite(itemTotalPaid)) ? currentValue - itemTotalPaid : null;
-  const itemPnlPct = (itemTotalPaid > 0 && itemPnl != null) ? (itemPnl / itemTotalPaid) * 100 : null;
-  const pnlInfo = formatPnlValues(itemPnl, itemPnlPct, detailCurr);
+  const itemPnl = (currentValue != null && Number.isFinite(buyTotalInTarget)) ? currentValue - buyTotalInTarget : null;
+  const itemPnlPct = (buyTotalInTarget > 0 && itemPnl != null) ? (itemPnl / buyTotalInTarget) * 100 : null;
+  const pnlInfo = formatPnlValues(itemPnl, itemPnlPct, targetCurr);
 
   // HERO HIGHLIGHT AT THE TOP (وە ڕێژەی قازانجیش بهێنەرە بەشی سەرەوە)
   if (walletEls.walletDetailHeroValue) {
-    walletEls.walletDetailHeroValue.textContent = currentValue != null ? formatWalletMoney(currentValue, detailCurr) : '—';
+    walletEls.walletDetailHeroValue.textContent = currentValue != null ? formatWalletMoney(currentValue, targetCurr) : '—';
   }
 
   if (walletEls.walletDetailProfitVal) {
@@ -3202,6 +3221,7 @@ function renderWallet() {
   walletEls.walletProfitPercent.className = `wallet-profit-badge is-${netPnlInfo.status}`;
 
   walletCurrencyButtons.forEach(button => button.classList.toggle('active', button.dataset.walletCurrency === walletState.currency));
+  document.querySelectorAll('[data-detail-currency]').forEach(button => button.classList.toggle('active', button.dataset.detailCurrency === walletState.currency));
 }
 
 function persistWallet() {
@@ -3519,11 +3539,27 @@ document.querySelectorAll('[data-form-unit]').forEach(button => {
   });
 });
 
+function setWalletCurrency(currency) {
+  walletState.currency = currency;
+  localStorage.setItem('walletCurrency', walletState.currency);
+  walletCurrencyButtons.forEach(button => button.classList.toggle('active', button.dataset.walletCurrency === walletState.currency));
+  document.querySelectorAll('[data-detail-currency]').forEach(button => button.classList.toggle('active', button.dataset.detailCurrency === walletState.currency));
+  document.querySelectorAll('[data-detail-currency]').forEach(button => button.classList.toggle('active', button.dataset.detailCurrency === walletState.currency));
+  renderWallet();
+  if (selectedDetailItem) {
+    showWalletDetail(selectedDetailItem);
+  }
+}
+
 walletCurrencyButtons.forEach(button => {
   button.addEventListener('click', () => {
-    walletState.currency = button.dataset.walletCurrency;
-    localStorage.setItem('walletCurrency', walletState.currency);
-    renderWallet();
+    setWalletCurrency(button.dataset.walletCurrency);
+  });
+});
+
+document.querySelectorAll('[data-detail-currency]').forEach(button => {
+  button.addEventListener('click', () => {
+    setWalletCurrency(button.dataset.detailCurrency);
   });
 });
 
