@@ -3220,7 +3220,13 @@ function activateMainView(view) {
 
 bottomNavItems.forEach(button => button.addEventListener('click', () => activateMainView(button.dataset.view)));
 walletEls.walletEmptyAdd.addEventListener('click', () => openWalletForm());
-walletEls.walletFab.addEventListener('click', () => openWalletForm());
+walletEls.walletFab.addEventListener('click', () => {
+  walletEls.walletFab.classList.add('fab-tapped');
+  setTimeout(() => {
+    walletEls.walletFab.classList.remove('fab-tapped');
+    openWalletForm();
+  }, 200);
+});
 walletEls.walletFormBack.addEventListener('click', closeWalletForm);
 if (walletEls.walletFormDeleteBtn) {
   walletEls.walletFormDeleteBtn.addEventListener('click', () => {
