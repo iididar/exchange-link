@@ -2514,6 +2514,33 @@ function formatInputNumber(val, currency) {
   return String(parseFloat(val.toFixed(2)));
 }
 
+function formatWalletDate(dateStr) {
+  if (!dateStr) return '';
+  const clean = String(dateStr).split('T')[0].trim();
+  const sep = clean.includes('-') ? '-' : (clean.includes('/') ? '/' : null);
+  if (sep) {
+    const parts = clean.split(sep);
+    if (parts.length === 3) {
+      if (parts[0].length === 4) {
+        const [year, month, day] = parts;
+        return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+      }
+      if (parts[2].length === 4) {
+        const [day, month, year] = parts;
+        return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+      }
+    }
+  }
+  const d = new Date(clean.includes('T') ? clean : `${clean}T12:00:00`);
+  if (!isNaN(d.getTime())) {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return dateStr;
+}
+
 function walletText() {
   return walletCopy[state.language] || walletCopy.en;
 }
@@ -2810,10 +2837,7 @@ function showWalletDetail(item) {
     walletEls.walletDetailName.textContent = walletAssetName(item.key);
   }
 
-  const displayDate = item.date ? new Intl.DateTimeFormat(
-    state.language === 'en' ? 'en-US' : state.language === 'ar' ? 'ar-IQ' : 'ku-IQ',
-    { day: 'numeric', month: 'short', year: 'numeric' }
-  ).format(new Date(`${item.date}T12:00:00`)) : '';
+  const displayDate = formatWalletDate(item.date);
 
   if (walletEls.walletDetailMeta) {
     walletEls.walletDetailMeta.textContent = `${item.amount} ${unit}${displayDate ? ' · ' + displayDate : ''}`;
@@ -2943,10 +2967,7 @@ function renderWallet() {
     const name = document.createElement('strong');
     name.textContent = walletAssetName(item.key);
 
-    const displayDate = item.date ? new Intl.DateTimeFormat(
-      state.language === 'en' ? 'en-US' : state.language === 'ar' ? 'ar-IQ' : 'ku-IQ',
-      { day: 'numeric', month: 'short', year: 'numeric' }
-    ).format(new Date(`${item.date}T12:00:00`)) : '';
+    const displayDate = formatWalletDate(item.date);
 
     const meta = document.createElement('small');
     meta.textContent = `${item.amount} ${unit}${displayDate ? ' · ' + displayDate : ''}`;
