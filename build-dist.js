@@ -26,12 +26,21 @@ if (fs.existsSync(DIST_DIR)) {
 fs.mkdirSync(DIST_DIR, { recursive: true });
 
 // Copy public assets
+const buildTimestamp = Date.now();
 for (const file of PUBLIC_FILES) {
   const src = path.join(ROOT_DIR, file);
   const dest = path.join(DIST_DIR, file);
   if (fs.existsSync(src)) {
-    fs.copyFileSync(src, dest);
-    console.log(`Copied: ${file}`);
+    if (file === 'index.html') {
+      let content = fs.readFileSync(src, 'utf8');
+      content = content.replace(/style\.css(\?v=[^"']*)?/g, `style.css?v=${buildTimestamp}`);
+      content = content.replace(/script\.js(\?v=[^"']*)?/g, `script.js?v=${buildTimestamp}`);
+      fs.writeFileSync(dest, content, 'utf8');
+      console.log(`Processed: ${file} (auto cache buster v=${buildTimestamp})`);
+    } else {
+      fs.copyFileSync(src, dest);
+      console.log(`Copied: ${file}`);
+    }
   } else {
     console.warn(`Warning: Missing ${file}`);
   }
