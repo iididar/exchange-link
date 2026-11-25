@@ -12,6 +12,20 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// ڕێکخستنەوەی سکڕۆڵ و ڤیوپۆرت بۆ ئایفۆن (iOS standalone PWA viewport fix)
+function resetIosViewport() {
+  window.scrollTo(0, 0);
+  if (document.documentElement) document.documentElement.scrollTop = 0;
+  if (document.body) document.body.scrollTop = 0;
+}
+resetIosViewport();
+window.addEventListener('load', resetIosViewport);
+window.addEventListener('pageshow', resetIosViewport);
+window.addEventListener('resize', resetIosViewport);
+window.addEventListener('orientationchange', () => {
+  setTimeout(resetIosViewport, 100);
+});
+
 // =====================================================
 // ٢. بارکردنی خێرای وێنەکان (.jpeg لە پێشەوەیە)
 // =====================================================
@@ -585,6 +599,7 @@ discountToggle.checked = state.minus1000Active;
 darkModeToggle.checked = state.isDarkMode;
 if (!state.isDarkMode) {
   document.body.classList.add('light-mode');
+  document.documentElement.classList.add('light-mode');
 }
 
 function getEffectiveUsdRate() {
@@ -1972,8 +1987,10 @@ darkModeToggle.addEventListener('change', (e) => {
   localStorage.setItem('darkMode', state.isDarkMode);
   if (state.isDarkMode) {
     document.body.classList.remove('light-mode');
+    document.documentElement.classList.remove('light-mode');
   } else {
     document.body.classList.add('light-mode');
+    document.documentElement.classList.add('light-mode');
   }
 });
 
