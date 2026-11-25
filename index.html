@@ -15,29 +15,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- فایلی دیزاین -->
-  <link rel="stylesheet" href="style.css?v=20261125-3">
-
-  <!-- خوارەوە بردنی خۆکاری شاشە (Auto Swipe Down) بۆ ئایفۆن -->
-  <script>
-    (function() {
-      if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-      }
-      function autoSwipeDown() {
-        window.scrollTo(0, 1);
-        window.scrollTo(0, 0);
-        if (document.documentElement) document.documentElement.scrollTop = 0;
-        if (document.body) document.body.scrollTop = 0;
-      }
-      autoSwipeDown();
-      [30, 80, 150, 300, 500, 800, 1200].forEach(function(t) {
-        setTimeout(autoSwipeDown, t);
-      });
-      window.addEventListener('DOMContentLoaded', autoSwipeDown);
-      window.addEventListener('load', autoSwipeDown);
-      window.addEventListener('pageshow', autoSwipeDown);
-    })();
-  </script>
+  <link rel="stylesheet" href="style.css?v=20261123-7">
 </head>
 <body>
 
