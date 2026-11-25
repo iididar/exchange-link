@@ -527,8 +527,37 @@ const metalState = {
   isFetching: false,
   isSwitching: false,
   goldOunce: getPositivePrice(localStorage.getItem(METAL_CACHE_KEYS.gold)),
-  silverOunce: getPositivePrice(localStorage.getItem(METAL_CACHE_KEYS.silver))
+  silverOunce: getPositivePrice(localStorage.getItem(METAL_CACHE_KEYS.silver)),
+  rudawGold: (() => {
+    try {
+      return JSON.parse(localStorage.getItem('rudaw_gold_prices_v1') || 'null');
+    } catch (_) { return null; }
+  })()
 };
+
+function applyRudawGoldPrices(goldData) {
+  if (!goldData || typeof goldData !== 'object') return;
+  metalState.rudawGold = metalState.rudawGold || {};
+  if (goldData.mithqal18k) metalState.rudawGold.gold18k = Number(goldData.mithqal18k);
+  if (goldData.mithqal21k) metalState.rudawGold.gold21k = Number(goldData.mithqal21k);
+  if (goldData.mithqal22k) metalState.rudawGold.gold22k = Number(goldData.mithqal22k);
+  if (goldData.mithqal24k) metalState.rudawGold.gold24k = Number(goldData.mithqal24k);
+  if (goldData.dubaiLira) metalState.rudawGold.dubaiLira = Number(goldData.dubaiLira);
+  if (goldData.goldOunce && Number.isFinite(Number(goldData.goldOunce))) {
+    metalState.goldOunce = Number(goldData.goldOunce);
+    cacheMetalPrice(METAL_CACHE_KEYS.gold, metalState.goldOunce);
+  }
+  if (goldData.silverOunce && Number.isFinite(Number(goldData.silverOunce))) {
+    metalState.silverOunce = Number(goldData.silverOunce);
+    cacheMetalPrice(METAL_CACHE_KEYS.silver, metalState.silverOunce);
+  }
+  try {
+    localStorage.setItem('rudaw_gold_prices_v1', JSON.stringify(metalState.rudawGold));
+  } catch (_) {}
+  if (typeof renderMetalPrices === 'function') {
+    renderMetalPrices();
+  }
+}
 
 const GOLD_PRICE_ITEMS = [
   { key: 'goldOunce', currency: 'USD', calculate: gold => gold },
@@ -1143,11 +1172,24 @@ function renderMetalPrices() {
     const number = card.querySelector('.metal-price-number');
     const unit = card.querySelector('.metal-price-unit');
     if (item.currency === 'IQD' && state.baseRatePer100USD <= 0) return;
-    const rawPrice = item.calculate(ouncePrice);
-    const price = item.currency === 'IQD'
-      ? Math.round((rawPrice * state.baseRatePer100USD / 100) / 1000) * 1000
-      : rawPrice;
+    let price = null;
+    if (metalState.rudawGold && metalState.rudawGold[item.key]) {
+      const rudawVal = metalState.rudawGold[item.key];
+      if (item.currency === 'IQD') {
+        price = Math.round(rudawVal / 1000) * 1000;
+      } else if (item.currency === 'USD') {
+        const usdRate = state.baseRatePer100USD > 0 ? (state.baseRatePer100USD / 100) : 1700;
+        price = Math.round((rudawVal / usdRate) * 100) / 100;
+      }
+    }
+    if (price === null) {
+      const rawPrice = item.calculate(ouncePrice);
+      price = item.currency === 'IQD'
+        ? Math.round((rawPrice * state.baseRatePer100USD / 100) / 1000) * 1000
+        : rawPrice;
+    }
     if (!Number.isFinite(price)) return;
+    card.dataset.price = price;
 
     const formattedValue = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: item.currency === 'USD' ? 2 : 0,
@@ -1396,6 +1438,29 @@ async function fetchLiveMetalsFallback() {
   try {
     let goldPrice = null;
     let silverPrice = null;
+
+    try {
+      const rudawData = await fetchJsonWithTimeout('https://rudawindex.net/api/prices', 'Rudaw Index');
+      if (rudawData && rudawData.kurdistanPrices) {
+        const kp = rudawData.kurdistanPrices;
+        const m21 = Number(kp.mithqal21K || 0);
+        const m22 = Number(kp.mithqal22K || 0);
+        const m18 = Number(kp.mithqal18K || 0);
+        const m24 = m21 > 0 ? Math.round((m21 / 21) * 24) : 0;
+        const lira = Number(kp.goldCoinFull || kp.local22K || m22);
+        applyRudawGoldPrices({
+          mithqal18k: m18,
+          mithqal21k: m21,
+          mithqal22k: m22,
+          mithqal24k: m24,
+          dubaiLira: lira,
+          goldOunce: Number(kp.globalGoldPrice || 0),
+          silverOunce: Number(kp.globalSilverPrice || 0)
+        });
+        if (kp.globalGoldPrice) goldPrice = Number(kp.globalGoldPrice);
+        if (kp.globalSilverPrice) silverPrice = Number(kp.globalSilverPrice);
+      }
+    } catch (_) {}
     const readSwissquotePrice = data => {
       const quote = data?.[0]?.spreadProfilePrices?.[0];
       return getPositivePrice(quote?.ask) || getPositivePrice(quote?.bid);
@@ -2219,6 +2284,12 @@ function applyUnifiedRates(data) {
     recalculateUsdFxQuotes();
   }
 
+  if (data?.rudaw?.gold) {
+    applyRudawGoldPrices(data.rudaw.gold);
+  } else if (data?.rates?.rudaw?.gold) {
+    applyRudawGoldPrices(data.rates.rudaw.gold);
+  }
+
   // 4. Metals Quotes (Gold & Silver)
   const goldPrice = Number(data?.rates?.metals?.goldOunce ?? data?.rates?.metals?.goldOunceUsd);
   if (Number.isFinite(goldPrice) && goldPrice > 0) {
@@ -2261,6 +2332,9 @@ async function fetchExchangeRatesFallback() {
     if (data.rudaw) {
       applyRudawFxQuotes(data.rudaw);
       applyRudawTomanRate(data.rudaw);
+      if (data.rudaw.gold) {
+        applyRudawGoldPrices(data.rudaw.gold);
+      }
     }
   } catch (error) {
     console.warn('Fallback rates snapshot error:', error);
@@ -2671,7 +2745,14 @@ function getMetalLivePrice(key, currency = 'IQD') {
   const isGramGold = key.endsWith('_gram');
   const baseKey = isGramGold ? key.replace('_gram', '') : key;
 
-  if (['gold18k', 'gold21k', 'gold22k', 'gold24k'].includes(baseKey)) {
+  if (['gold18k', 'gold21k', 'gold22k', 'gold24k'].includes(baseKey) && metalState.rudawGold && metalState.rudawGold[baseKey]) {
+    const rudawMithqalIqd = metalState.rudawGold[baseKey];
+    unitPriceIqd = isGramGold ? (rudawMithqalIqd / 5) : rudawMithqalIqd;
+    unitPriceUsd = unitPriceIqd / usdIqd;
+  } else if (key === 'dubaiLira' && metalState.rudawGold && metalState.rudawGold.dubaiLira) {
+    unitPriceIqd = metalState.rudawGold.dubaiLira;
+    unitPriceUsd = unitPriceIqd / usdIqd;
+  } else if (['gold18k', 'gold21k', 'gold22k', 'gold24k'].includes(baseKey)) {
     const item = GOLD_PRICE_ITEMS.find(i => i.key === baseKey);
     if (!item) return null;
     const misqalUsd = item.calculate(ounce); // 1 misqal in USD

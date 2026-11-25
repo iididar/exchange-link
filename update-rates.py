@@ -191,12 +191,39 @@ def read_rudaw_rates():
                 return rate
         raise ValueError(f"Rudaw response is missing a Buy rate for {codes[0]}")
 
-    return {
+    result = {
         "gbpUsdPer100": get_buy("gb", "gbp"),
         "eurUsdPer100": get_buy("eu", "eur"),
         "tryPer100": get_buy("tr", "try"),
         "tomanPer100000Iqd": get_buy("ir", "irr", "irt"),
     }
+
+    kurdistan = data.get("kurdistanPrices")
+    if isinstance(kurdistan, dict):
+        try:
+            m21 = float(kurdistan.get("mithqal21K") or 0)
+            m22 = float(kurdistan.get("mithqal22K") or 0)
+            m18 = float(kurdistan.get("mithqal18K") or 0)
+            m24 = round((m21 / 21) * 24) if m21 > 0 else 0
+            lira = float(kurdistan.get("goldCoinFull") or kurdistan.get("local22K") or m22)
+            global_gold = float(kurdistan.get("globalGoldPrice") or 0)
+            global_silver = float(kurdistan.get("globalSilverPrice") or 0)
+
+            gold_dict = {}
+            if m18 > 0: gold_dict["mithqal18k"] = round(m18)
+            if m21 > 0: gold_dict["mithqal21k"] = round(m21)
+            if m22 > 0: gold_dict["mithqal22k"] = round(m22)
+            if m24 > 0: gold_dict["mithqal24k"] = round(m24)
+            if lira > 0: gold_dict["dubaiLira"] = round(lira)
+            if global_gold > 0: gold_dict["goldOunce"] = round(global_gold, 2)
+            if global_silver > 0: gold_dict["silverOunce"] = round(global_silver, 2)
+            if kurdistan.get("lastUpdated"): gold_dict["lastUpdated"] = str(kurdistan["lastUpdated"])
+            if gold_dict:
+                result["gold"] = gold_dict
+        except (TypeError, ValueError):
+            pass
+
+    return result
 
 
 def main():
