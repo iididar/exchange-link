@@ -205,7 +205,7 @@ def read_rudaw_rates():
             m22 = float(kurdistan.get("mithqal22K") or 0)
             m18 = float(kurdistan.get("mithqal18K") or 0)
             m24 = round((m21 / 21) * 24) if m21 > 0 else 0
-            lira = float(kurdistan.get("goldCoinFull") or kurdistan.get("local22K") or m22)
+            lira = float(kurdistan.get("goldCoinHalf") or kurdistan.get("goldCoinFull") or kurdistan.get("local22K") or m22)
             global_gold = float(kurdistan.get("globalGoldPrice") or 0)
             global_silver = float(kurdistan.get("globalSilverPrice") or 0)
 

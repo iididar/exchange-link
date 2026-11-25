@@ -153,7 +153,7 @@ function parseRudawData(data) {
       const m22 = parseFloat(kp.mithqal22K) || 0;
       const m18 = parseFloat(kp.mithqal18K) || 0;
       const m24 = m21 > 0 ? Math.round((m21 / 21) * 24) : 0;
-      const lira = parseFloat(kp.goldCoinFull) || parseFloat(kp.local22K) || m22 || 0;
+      const lira = parseFloat(kp.goldCoinHalf) || parseFloat(kp.goldCoinFull) || parseFloat(kp.local22K) || m22 || 0;
       const globalGold = parseFloat(kp.globalGoldPrice) || 0;
       const globalSilver = parseFloat(kp.globalSilverPrice) || 0;
 

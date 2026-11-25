@@ -561,7 +561,7 @@ function applyRudawGoldPrices(goldData) {
 
 const GOLD_PRICE_ITEMS = [
   { key: 'goldOunce', currency: 'USD', calculate: gold => gold },
-  { key: 'dubaiLira', currency: 'IQD', calculate: gold => (gold * 0.2035) * (state.baseRatePer100USD / 100) },
+  { key: 'dubaiLira', currency: 'USD', calculate: gold => gold * 0.2035 },
   { key: 'gold18k', currency: 'IQD', calculate: gold => (gold / 31.1035) * 5 * (18 / 24) },
   { key: 'gold21k', currency: 'IQD', calculate: gold => (gold / 31.1035) * 5 * (21 / 24) },
   { key: 'gold22k', currency: 'IQD', calculate: gold => (gold / 31.1035) * 5 * (22 / 24) },
@@ -1178,7 +1178,9 @@ function renderMetalPrices() {
       if (item.currency === 'IQD') {
         price = Math.round(rudawVal);
       } else if (item.currency === 'USD') {
-        const usdRate = state.baseRatePer100USD > 0 ? (state.baseRatePer100USD / 100) : 1700;
+        const usdRate = (typeof getEffectiveUsdRate === 'function' && getEffectiveUsdRate() > 0)
+          ? (getEffectiveUsdRate() / 100)
+          : (state.baseRatePer100USD > 0 ? (state.baseRatePer100USD / 100) : 1700);
         price = Math.round((rudawVal / usdRate) * 100) / 100;
       }
     }
@@ -1447,7 +1449,7 @@ async function fetchLiveMetalsFallback() {
         const m22 = Number(kp.mithqal22K || 0);
         const m18 = Number(kp.mithqal18K || 0);
         const m24 = m21 > 0 ? Math.round((m21 / 21) * 24) : 0;
-        const lira = Number(kp.goldCoinFull || kp.local22K || m22);
+        const lira = Number(kp.goldCoinHalf || kp.goldCoinFull || kp.local22K || m22);
         applyRudawGoldPrices({
           mithqal18k: m18,
           mithqal21k: m21,
