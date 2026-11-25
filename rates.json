@@ -1,13 +1,13 @@
 {
   "telegram": {
-    "iqdPer100Usd": 169550,
-    "latestPostAt": "2026-11-24T13:31:24Z",
-    "usdRatePostAt": "2026-11-24T13:31:24Z"
+    "iqdPer100Usd": 170150,
+    "latestPostAt": "2026-11-25T11:14:37Z",
+    "usdRatePostAt": "2026-11-25T11:14:37Z"
   },
   "rudaw": {
-    "gbpUsdPer100": 129.25,
+    "gbpUsdPer100": 129.35,
     "eurUsdPer100": 108.5,
-    "tryPer100": 5100.0,
-    "tomanPer100000Iqd": 26900000.0
+    "tryPer100": 5095.0,
+    "tomanPer100000Iqd": 27500000.0
   }
 }
