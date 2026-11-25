@@ -26,6 +26,13 @@ window.addEventListener('orientationchange', () => {
   setTimeout(resetIosViewport, 100);
 });
 
+function applyThemeMetaColor(isDark) {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    meta.setAttribute('content', isDark ? '#11100d' : '#f5e4c3');
+  }
+}
+
 // =====================================================
 // ٢. بارکردنی خێرای وێنەکان (.jpeg لە پێشەوەیە)
 // =====================================================
@@ -601,6 +608,7 @@ if (!state.isDarkMode) {
   document.body.classList.add('light-mode');
   document.documentElement.classList.add('light-mode');
 }
+applyThemeMetaColor(state.isDarkMode);
 
 function getEffectiveUsdRate() {
   return state.minus1000Active ? (state.baseRatePer100USD - 1000) : state.baseRatePer100USD;
@@ -1992,6 +2000,7 @@ darkModeToggle.addEventListener('change', (e) => {
     document.body.classList.add('light-mode');
     document.documentElement.classList.add('light-mode');
   }
+  applyThemeMetaColor(state.isDarkMode);
 });
 
 // Refreshes only the data pipeline for the currently visible screen (using Cloudflare Worker).

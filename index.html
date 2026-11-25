@@ -1,13 +1,28 @@
 <!DOCTYPE html>
-<html lang="ku" dir="rtl" style="background-color: #11100d;">
+<html lang="ku" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Exchange App">
   <meta name="theme-color" content="#11100d">
   <title>نرخی دراوەکان - Exchange App</title>
+
+  <script>
+    (function() {
+      try {
+        var isDark = localStorage.getItem('darkMode') !== 'false';
+        if (!isDark) {
+          document.documentElement.classList.add('light-mode');
+        }
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) {
+          meta.setAttribute('content', isDark ? '#11100d' : '#f5e4c3');
+        }
+      } catch(e) {}
+    })();
+  </script>
 
   <!-- ئایکۆنی بەرنامەکە -->
   <link id="faviconLink" rel="icon" type="image/jpeg" href="IMG_6140.jpg">
@@ -15,7 +30,7 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- فایلی دیزاین -->
-  <link rel="stylesheet" href="style.css?v=20261125-1">
+  <link rel="stylesheet" href="style.css?v=20261125-2">
 </head>
 <body>
 
