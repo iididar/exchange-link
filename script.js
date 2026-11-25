@@ -83,17 +83,26 @@ resolveImageFile('IMG_6071', (validPath, loadedImg) => {
 
 const introOverlayEl = document.getElementById('introOverlay');
 const introImgEl = document.getElementById('introImg');
+function autoSwipeDown() {
+  window.scrollTo(0, 1);
+  window.scrollTo(0, 0);
+  if (document.documentElement) document.documentElement.scrollTop = 0;
+  if (document.body) document.body.scrollTop = 0;
+}
 resolveImageFile(
   'IMG_6165',
   (validPath) => {
     introImgEl.src = validPath;
     introImgEl.style.display = 'block';
+    autoSwipeDown();
     setTimeout(() => {
       introOverlayEl.classList.add('hide');
+      autoSwipeDown();
     }, 2300);
   },
   () => {
     introOverlayEl.classList.add('hide');
+    autoSwipeDown();
   }
 );
 
