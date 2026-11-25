@@ -561,7 +561,7 @@ function applyRudawGoldPrices(goldData) {
 
 const GOLD_PRICE_ITEMS = [
   { key: 'goldOunce', currency: 'USD', calculate: gold => gold },
-  { key: 'dubaiLira', currency: 'USD', calculate: gold => gold * 0.2035 },
+  { key: 'dubaiLira', currency: 'IQD', calculate: gold => (gold * 0.2035) * (state.baseRatePer100USD / 100) },
   { key: 'gold18k', currency: 'IQD', calculate: gold => (gold / 31.1035) * 5 * (18 / 24) },
   { key: 'gold21k', currency: 'IQD', calculate: gold => (gold / 31.1035) * 5 * (21 / 24) },
   { key: 'gold22k', currency: 'IQD', calculate: gold => (gold / 31.1035) * 5 * (22 / 24) },
@@ -1176,7 +1176,7 @@ function renderMetalPrices() {
     if (metalState.rudawGold && metalState.rudawGold[item.key]) {
       const rudawVal = metalState.rudawGold[item.key];
       if (item.currency === 'IQD') {
-        price = Math.round(rudawVal / 1000) * 1000;
+        price = Math.round(rudawVal);
       } else if (item.currency === 'USD') {
         const usdRate = state.baseRatePer100USD > 0 ? (state.baseRatePer100USD / 100) : 1700;
         price = Math.round((rudawVal / usdRate) * 100) / 100;
@@ -1185,7 +1185,7 @@ function renderMetalPrices() {
     if (price === null) {
       const rawPrice = item.calculate(ouncePrice);
       price = item.currency === 'IQD'
-        ? Math.round((rawPrice * state.baseRatePer100USD / 100) / 1000) * 1000
+        ? Math.round(rawPrice * state.baseRatePer100USD / 100)
         : rawPrice;
     }
     if (!Number.isFinite(price)) return;
@@ -2284,10 +2284,11 @@ function applyUnifiedRates(data) {
     recalculateUsdFxQuotes();
   }
 
-  if (data?.rudaw?.gold) {
-    applyRudawGoldPrices(data.rudaw.gold);
-  } else if (data?.rates?.rudaw?.gold) {
-    applyRudawGoldPrices(data.rates.rudaw.gold);
+  const goldData = data?.rates?.gold || data?.rudaw?.gold || data?.rates?.rudaw?.gold;
+  if (goldData) {
+    applyRudawGoldPrices(goldData);
+  } else if (!metalState.rudawGold) {
+    fetchExchangeRatesFallback();
   }
 
   // 4. Metals Quotes (Gold & Silver)

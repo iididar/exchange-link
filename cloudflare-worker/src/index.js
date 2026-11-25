@@ -121,30 +121,56 @@ function extractSwissquotePrice(data) {
 }
 
 /**
- * Parse Rudaw Index currency list
+ * Parse Rudaw Index currency list & Kurdistan gold prices
  */
-function parseRudawCurrencies(data) {
+function parseRudawData(data) {
   const result = {
     tomanPer100000Iqd: null,
     gbpUsdPer100: null,
     eurUsdPer100: null,
-    tryPer100: null
+    tryPer100: null,
+    gold: null
   };
   try {
     const list = data?.currencies;
-    if (!Array.isArray(list)) return result;
+    if (Array.isArray(list)) {
+      const map = {};
+      for (const item of list) {
+        const code = String(item?.code || item?.id || "").toLowerCase();
+        const buy = parseFloat(String(item?.buy || "").replace(/,/g, ""));
+        if (Number.isFinite(buy) && buy > 0) map[code] = buy;
+      }
 
-    const map = {};
-    for (const item of list) {
-      const code = String(item?.code || item?.id || "").toLowerCase();
-      const buy = parseFloat(String(item?.buy || "").replace(/,/g, ""));
-      if (Number.isFinite(buy) && buy > 0) map[code] = buy;
+      result.tomanPer100000Iqd = map.ir || map.irr || map.irt || null;
+      result.gbpUsdPer100 = map.gb || map.gbp || null;
+      result.eurUsdPer100 = map.eu || map.eur || null;
+      result.tryPer100 = map.tr || map.try || null;
     }
 
-    result.tomanPer100000Iqd = map.ir || map.irr || map.irt || null;
-    result.gbpUsdPer100 = map.gb || map.gbp || null;
-    result.eurUsdPer100 = map.eu || map.eur || null;
-    result.tryPer100 = map.tr || map.try || null;
+    const kp = data?.kurdistanPrices;
+    if (kp && typeof kp === "object") {
+      const m21 = parseFloat(kp.mithqal21K) || 0;
+      const m22 = parseFloat(kp.mithqal22K) || 0;
+      const m18 = parseFloat(kp.mithqal18K) || 0;
+      const m24 = m21 > 0 ? Math.round((m21 / 21) * 24) : 0;
+      const lira = parseFloat(kp.goldCoinFull) || parseFloat(kp.local22K) || m22 || 0;
+      const globalGold = parseFloat(kp.globalGoldPrice) || 0;
+      const globalSilver = parseFloat(kp.globalSilverPrice) || 0;
+
+      const goldObj = {};
+      if (m18 > 0) goldObj.mithqal18k = Math.round(m18);
+      if (m21 > 0) goldObj.mithqal21k = Math.round(m21);
+      if (m22 > 0) goldObj.mithqal22k = Math.round(m22);
+      if (m24 > 0) goldObj.mithqal24k = Math.round(m24);
+      if (lira > 0) goldObj.dubaiLira = Math.round(lira);
+      if (globalGold > 0) goldObj.goldOunce = Number(globalGold.toFixed(2));
+      if (globalSilver > 0) goldObj.silverOunce = Number(globalSilver.toFixed(2));
+      if (kp.lastUpdated) goldObj.lastUpdated = String(kp.lastUpdated);
+
+      if (Object.keys(goldObj).length > 0) {
+        result.gold = goldObj;
+      }
+    }
   } catch (_) {}
   return result;
 }
@@ -207,7 +233,8 @@ export default {
     const fallbackRudaw = githubData?.rudaw || {};
 
     // Parse Rudaw API
-    const liveRudaw = rudawResult.status === "fulfilled" ? parseRudawCurrencies(rudawResult.value) : {};
+    const liveRudaw = rudawResult.status === "fulfilled" ? parseRudawData(rudawResult.value) : {};
+    const rudawGold = liveRudaw.gold || fallbackRudaw?.gold || null;
 
     // 3. Resolve USD/IQD from live Telegram directly (with GitHub fallback)
     let iqdPer100Usd = null;
@@ -316,11 +343,12 @@ export default {
           USDTRY: Number(tryQuote.toFixed(4))
         },
         metals: {
-          goldOunce: Number(goldPrice.toFixed(2)),
-          goldOunceUsd: Number(goldPrice.toFixed(2)),
-          silverOunce: Number(silverPrice.toFixed(2)),
-          silverOunceUsd: Number(silverPrice.toFixed(2))
-        }
+          goldOunce: Number(((rudawGold && rudawGold.goldOunce) || goldPrice).toFixed(2)),
+          goldOunceUsd: Number(((rudawGold && rudawGold.goldOunce) || goldPrice).toFixed(2)),
+          silverOunce: Number(((rudawGold && rudawGold.silverOunce) || silverPrice).toFixed(2)),
+          silverOunceUsd: Number(((rudawGold && rudawGold.silverOunce) || silverPrice).toFixed(2))
+        },
+        gold: rudawGold
       },
       calculated: {
         gbpIqdPer100,
@@ -337,7 +365,8 @@ export default {
         gbpUsdPer100: Number((gbpQuote * 100).toFixed(2)),
         eurUsdPer100: Number((eurQuote * 100).toFixed(2)),
         tryPer100: Number((tryQuote * 100).toFixed(2)),
-        tomanPer100000Iqd: Math.round(tomanRate)
+        tomanPer100000Iqd: Math.round(tomanRate),
+        gold: rudawGold
       }
     };
 
