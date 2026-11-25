@@ -6,18 +6,18 @@
   },
   "rudaw": {
     "gbpUsdPer100": 129.35,
-    "eurUsdPer100": 108.75,
+    "eurUsdPer100": 108.85,
     "tryPer100": 5095.0,
     "tomanPer100000Iqd": 27500000.0,
     "gold": {
-      "mithqal18k": 660161,
-      "mithqal21k": 770187,
-      "mithqal22k": 806863,
-      "mithqal24k": 880214,
-      "dubaiLira": 780187,
-      "goldOunce": 3551.58,
-      "silverOunce": 40.83,
-      "lastUpdated": "2026-11-25T20:03:40.465Z"
+      "mithqal18k": 664229,
+      "mithqal21k": 774934,
+      "mithqal22k": 811835,
+      "mithqal24k": 885639,
+      "dubaiLira": 784934,
+      "goldOunce": 3573.68,
+      "silverOunce": 40.9,
+      "lastUpdated": "2026-11-25T20:20:45.806Z"
     }
   }
 }
