@@ -1,23 +1,23 @@
 {
   "telegram": {
     "iqdPer100Usd": 169450,
-    "latestPostAt": "2026-11-26T13:00:36Z",
+    "latestPostAt": "2026-11-27T07:10:21Z",
     "usdRatePostAt": "2026-11-26T13:00:36Z"
   },
   "rudaw": {
     "gbpUsdPer100": 129.5,
-    "eurUsdPer100": 108.85,
+    "eurUsdPer100": 108.8,
     "tryPer100": 5095.0,
     "tomanPer100000Iqd": 27750000.0,
     "gold": {
-      "mithqal18k": 674937,
-      "mithqal21k": 787426,
-      "mithqal22k": 824922,
-      "mithqal24k": 899915,
-      "dubaiLira": 1143893,
-      "goldOunce": 3631.86,
-      "silverOunce": 43.57,
-      "lastUpdated": "2026-11-27T03:48:26.986Z"
+      "mithqal18k": 681297,
+      "mithqal21k": 794847,
+      "mithqal22k": 832696,
+      "mithqal24k": 908397,
+      "dubaiLira": 1154579,
+      "goldOunce": 3666.42,
+      "silverOunce": 43.99,
+      "lastUpdated": "2026-11-27T13:12:11.593Z"
     }
   }
 }
