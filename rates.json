@@ -5,19 +5,19 @@
     "usdRatePostAt": "2026-11-26T13:00:36Z"
   },
   "rudaw": {
-    "gbpUsdPer100": 129.5,
-    "eurUsdPer100": 108.8,
+    "gbpUsdPer100": 129.0,
+    "eurUsdPer100": 108.5,
     "tryPer100": 5095.0,
     "tomanPer100000Iqd": 27750000.0,
     "gold": {
-      "mithqal18k": 681297,
-      "mithqal21k": 794847,
-      "mithqal22k": 832696,
-      "mithqal24k": 908397,
-      "dubaiLira": 1154579,
-      "goldOunce": 3666.42,
-      "silverOunce": 43.99,
-      "lastUpdated": "2026-11-27T13:12:11.593Z"
+      "mithqal18k": 678703,
+      "mithqal21k": 791820,
+      "mithqal22k": 829526,
+      "mithqal24k": 904937,
+      "dubaiLira": 1150221,
+      "goldOunce": 3652.32,
+      "silverOunce": 43.73,
+      "lastUpdated": "2026-11-27T21:58:32.875Z"
     }
   }
 }
