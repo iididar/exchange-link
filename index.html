@@ -35,10 +35,22 @@
       <!-- دەستەواژەی یەکەم: ڕاست = کوژاوە (Off) | چەپ = کارا (On) -->
       <div id="discountSettingRow" class="menu-item">
         <div id="discountText" class="menu-item-text">وەرگرتنی دۆلار</div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="discountToggle">
-          <span class="toggle-slider"></span>
-        </label>
+        <div class="discount-actions">
+          <button id="discountInfoBtn" class="discount-info-btn" type="button" aria-label="زانیاری">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </button>
+          <label class="toggle-switch">
+            <input type="checkbox" id="discountToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div id="discountInfoBox" class="discount-info-box" hidden>
+        <div id="discountInfoText" class="discount-info-text">کاتێک ئەمە کارا دەکەیت، نرخی دۆلار بە ١٠٠٠ دینار کەمتر وەردەگیرێت، هەروەها سێ ژمارەی کۆتایی سفر دەکرێنەوە (بۆ نموونە: ئەگەر ١٦٩،٥٠٠ بێت دەبێتە ١٦٨،٠٠٠ ڕێک).</div>
       </div>
 
       <!-- دەستەواژەی دووەم: ڕاست = کوژاوە (Off) | چەپ = کارا (On) -->

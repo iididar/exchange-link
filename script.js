@@ -115,6 +115,7 @@ const TRANSLATIONS = {
     menuTitle: 'ڕێکخستنەکان',
     close: 'داخستن',
     discount: 'وەرگرتنی دۆلار',
+    discountInfo: 'کاتێک ئەم هەڵبژاردەیە کارا دەکەیت، نرخی دۆلار بە ١٠٠٠ دینار کەمتر دەبێتەوە بۆ وەرگرتن، هەروەها سێ ژمارەی کۆتایی سفر دەکرێنەوە (بۆ نموونە: ئەگەر ١٦٩،٥٠٠ بێت دەبێتە ١٦٨،٠٠٠ ڕێک).',
     darkMode: 'دۆخی تاریک',
     language: 'زمان',
     currenciesLabel: 'هەڵبژاردنی دراو',
@@ -181,6 +182,7 @@ const TRANSLATIONS = {
     menuTitle: 'الإعدادات',
     close: 'إغلاق',
     discount: 'استلام الدولار',
+    discountInfo: 'عند تفعيل هذا الخيار، يتم احتساب سعر الدولار بأقل من ١٠٠٠ دينار عند الاستلام مع تصفير الأرقام الثلاثة الأخيرة (مثال: ١٦٩،٥٠٠ تصبح ١٦٨،٠٠٠ تماماً).',
     darkMode: 'الوضع الداكن',
     language: 'اللغة',
     currenciesLabel: 'اختيار العملة',
@@ -249,6 +251,7 @@ const TRANSLATIONS = {
     menuTitle: 'Settings',
     close: 'Close',
     discount: 'Receive USD',
+    discountInfo: 'When enabled, the USD rate is reduced by 1,000 IQD for buying dollars, and the last three digits are rounded down to zeros (e.g. 169,500 becomes 168,000 exact).',
     darkMode: 'Dark mode',
     language: 'Language',
     currenciesLabel: 'Select currency',
@@ -644,6 +647,8 @@ function applyLanguage(language, animateCurrencyRates = false, animateCurrencyRo
   menuTitleEl.textContent = text.menuTitle;
   menuCloseBtn.setAttribute('aria-label', text.close);
   discountTextEl.textContent = text.discount;
+  const discountInfoTextEl = document.getElementById('discountInfoText');
+  if (discountInfoTextEl) discountInfoTextEl.textContent = text.discountInfo;
   darkModeTextEl.textContent = text.darkMode;
   if (languageSelectorLabelEl) languageSelectorLabelEl.textContent = text.language;
   if (currencySelectorLabelEl) currencySelectorLabelEl.textContent = text.currenciesLabel;
@@ -2032,13 +2037,29 @@ silverTab.addEventListener('click', () => {
   switchMetalTab(true);
 });
 
+const discountInfoBtn = document.getElementById('discountInfoBtn');
+const discountInfoBox = document.getElementById('discountInfoBox');
+
+if (discountInfoBtn && discountInfoBox) {
+  discountInfoBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isHidden = discountInfoBox.hidden;
+    discountInfoBox.hidden = !isHidden;
+    discountInfoBtn.classList.toggle('is-active', isHidden);
+  });
+}
+
 menuCloseBtn.addEventListener('click', () => {
   menuBackdrop.classList.remove('open');
+  if (discountInfoBox) discountInfoBox.hidden = true;
+  if (discountInfoBtn) discountInfoBtn.classList.remove('is-active');
 });
 
 menuBackdrop.addEventListener('click', (e) => {
   if (e.target === menuBackdrop) {
     menuBackdrop.classList.remove('open');
+    if (discountInfoBox) discountInfoBox.hidden = true;
+    if (discountInfoBtn) discountInfoBtn.classList.remove('is-active');
   }
 });
 

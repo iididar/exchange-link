@@ -114,6 +114,15 @@ body.light-mode .signature-img.clean-alpha { mix-blend-mode: normal; filter: inv
 .menu-close-btn { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--menu-item-bg); color: var(--text-white); font-size: 1rem; display: flex; justify-content: center; align-items: center; cursor: pointer; }
 .menu-item { background: var(--menu-item-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .menu-item-text { font-size: 0.9rem; font-weight: 700; color: var(--text-white); line-height: 1.4; flex: 1; }
+.discount-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.discount-info-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--card-border); background: var(--btn-bg); color: var(--text-muted); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.25s ease; padding: 0; flex-shrink: 0; }
+.discount-info-btn svg { width: 16px; height: 16px; stroke: currentColor; }
+.discount-info-btn:hover, .discount-info-btn.is-active { color: var(--gold-primary); border-color: var(--gold-primary); background: rgba(245, 166, 35, 0.12); transform: scale(1.06); }
+.discount-info-btn:active { transform: scale(0.92); }
+.discount-info-box { background: color-mix(in srgb, var(--gold-primary) 8%, var(--card-bg)); border: 1px solid color-mix(in srgb, var(--gold-primary) 32%, var(--card-border)); border-radius: 14px; padding: 12px 14px; margin-top: -4px; animation: discountInfoIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.discount-info-box[hidden] { display: none; }
+.discount-info-text { font-size: 0.82rem; font-weight: 600; line-height: 1.6; color: var(--text-white); text-align: justify; }
+@keyframes discountInfoIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 
 .currency-selector-box { background: var(--menu-item-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
 .currency-selector-label { font-size: 0.9rem; font-weight: 800; color: var(--gold-primary); text-align: right; }
