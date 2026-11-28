@@ -1,8 +1,8 @@
 {
   "telegram": {
-    "iqdPer100Usd": 167200,
-    "latestPostAt": "2026-11-28T07:37:35Z",
-    "usdRatePostAt": "2026-11-28T07:37:35Z"
+    "iqdPer100Usd": 167000,
+    "latestPostAt": "2026-11-28T08:04:50Z",
+    "usdRatePostAt": "2026-11-28T08:04:50Z"
   },
   "rudaw": {
     "gbpUsdPer100": 129.5,
@@ -18,7 +18,7 @@
       "usdRate": 153000,
       "goldOunce": 3652.32,
       "silverOunce": 43.73,
-      "lastUpdated": "2026-11-28T08:00:38.845Z"
+      "lastUpdated": "2026-11-28T08:09:57.984Z"
     }
   }
 }
