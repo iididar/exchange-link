@@ -1461,3 +1461,273 @@ body.light-mode .wallet-field input { color-scheme: light; }
 .wallet-view:not([hidden]) { animation: wallet-screen-in .24s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .wallet-view:not([hidden]) { animation: none; } }
 html.wallet-open, body.wallet-open { touch-action: pan-y; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   DESKTOP & TABLET ADAPTIVE LAYOUT (Screens >= 768px)
+   - Navigation moved to the TOP
+   - Spacious 2-column grid layout for rates and metals
+   - Centered executive calculator and wallet experience
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 768px) {
+  html, body {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* ── App Container Expansion on Desktop ───────────────────────── */
+  .app-container {
+    max-width: 880px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+    margin: 0 auto;
+    padding: 94px 24px 44px 24px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 18px;
+  }
+
+  /* ── Navigation moved to TOP on Desktop ───────────────────────── */
+  .bottom-nav {
+    position: fixed !important;
+    top: 18px !important;
+    bottom: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: auto !important;
+    min-width: 500px !important;
+    max-width: 580px !important;
+    min-height: 52px !important;
+    height: 52px !important;
+    padding: 5px 8px !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 999px !important;
+    background: var(--menu-bg) !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.42), 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    z-index: 850 !important;
+    gap: 6px !important;
+  }
+
+  body.light-mode .bottom-nav {
+    box-shadow: 0 12px 32px rgba(166, 97, 18, 0.16), 0 0 1px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .bottom-nav-item {
+    flex: 1 1 0 !important;
+    height: 40px !important;
+    padding: 0 14px !important;
+    gap: 8px !important;
+    border-radius: 999px !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    transition: flex 0.22s ease, padding 0.22s ease, color 0.2s ease, background-color 0.2s ease, transform 0.15s ease !important;
+  }
+
+  .bottom-nav-item > span:not(.wallet-nav-orb) {
+    max-width: 12em !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
+
+  .bottom-nav-item:not(.active):hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: var(--text-white) !important;
+  }
+
+  body.light-mode .bottom-nav-item:not(.active):hover {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: var(--title-color) !important;
+  }
+
+  .bottom-nav-item.active {
+    flex-grow: 1.15 !important;
+    color: var(--gold-primary) !important;
+    background: color-mix(in srgb, var(--gold-primary) 15%, transparent) !important;
+    font-weight: 800 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18) !important;
+  }
+
+  body.light-mode .bottom-nav-item.active {
+    box-shadow: 0 2px 8px rgba(184, 115, 26, 0.18) !important;
+  }
+
+  /* ── Desktop Top Bar ──────────────────────────────────────────── */
+  .top-bar {
+    width: 100% !important;
+    min-height: 56px !important;
+    margin-bottom: 10px !important;
+    align-items: center !important;
+  }
+
+  .signature-link {
+    margin-top: 0 !important;
+    width: 90px !important;
+    height: 60px !important;
+  }
+
+  .top-right-group {
+    flex-direction: row-reverse !important;
+    align-items: center !important;
+    gap: 16px !important;
+  }
+
+  .datetime-box {
+    align-items: flex-end !important;
+  }
+
+  /* ── Desktop Currency Rates View (2-Column Grid) ──────────────── */
+  .currency-rates-view {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    padding-bottom: 24px !important;
+  }
+
+  .currency-rates-heading {
+    margin-bottom: 12px !important;
+  }
+
+  .currency-rates-title {
+    font-size: 1.85rem !important;
+  }
+
+  .currency-base-toggle {
+    max-width: 330px !important;
+    margin: 0 auto 16px !important;
+  }
+
+  .currency-rate-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+
+  .currency-rate-card {
+    min-height: 72px !important;
+    padding: 14px 18px !important;
+  }
+
+  /* Primary currency (USD / IQD) spans full width at the top */
+  .currency-rate-list .currency-rate-card:first-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  /* ── Desktop Precious Metals View (2-Column Grid) ─────────────── */
+  .metals-view {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    padding-bottom: 24px !important;
+  }
+
+  .metals-heading {
+    max-width: 330px !important;
+    margin: 0 auto 14px !important;
+  }
+
+  .metal-price-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+    width: 100% !important;
+    padding: 2px 0 10px !important;
+  }
+
+  .metal-price-card {
+    min-height: 72px !important;
+    padding: 14px 18px !important;
+  }
+
+  /* ── Desktop Calculator View ──────────────────────────────────── */
+  .calculator-view {
+    max-width: 440px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding-bottom: 24px !important;
+  }
+
+  .metal-investment-view {
+    max-width: 480px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding-bottom: 24px !important;
+  }
+
+  /* ── Desktop Wallet View ──────────────────────────────────────── */
+  .wallet-view {
+    position: fixed !important;
+    z-index: 840 !important;
+    inset: auto !important;
+    top: 90px !important;
+    bottom: 24px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: min(calc(100% - 48px), 880px) !important;
+    margin: 0 auto !important;
+    padding: 24px 28px !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 26px !important;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.45) !important;
+    background: var(--bg-gradient) !important;
+    overflow-y: auto !important;
+  }
+
+  .wallet-summary {
+    padding: 22px 24px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .wallet-asset-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+    padding-bottom: 24px !important;
+  }
+
+  .wallet-form-view {
+    max-width: 500px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+  }
+
+  .wallet-fab {
+    left: max(32px, calc(50vw - 440px + 24px)) !important;
+    bottom: 40px !important;
+    width: 56px !important;
+    height: 56px !important;
+    font-size: 2.1rem !important;
+    box-shadow: 0 8px 24px var(--gold-glow) !important;
+  }
+
+  /* ── Centered Desktop Dialogs & Sheets ────────────────────────── */
+  .menu-sheet {
+    max-width: 440px !important;
+    border-radius: 26px !important;
+  }
+
+  .wallet-picker-sheet {
+    max-width: 460px !important;
+    margin: auto !important;
+    border-radius: 26px !important;
+  }
+
+  .wallet-detail-sheet {
+    max-width: 440px !important;
+    margin: auto !important;
+    border-radius: 28px !important;
+  }
+
+  .wallet-confirm-sheet {
+    max-width: 380px !important;
+    margin: auto !important;
+    border-radius: 26px !important;
+  }
+}
+
