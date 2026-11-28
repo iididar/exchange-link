@@ -1598,8 +1598,23 @@ html.wallet-open, body.wallet-open { touch-action: pan-y; }
   }
 
   .currency-base-toggle {
-    max-width: 330px !important;
-    margin: 0 auto 16px !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    min-height: 58px !important;
+    margin: 0 auto 18px !important;
+    display: flex !important;
+  }
+
+  .currency-base-option {
+    flex: 1 1 50% !important;
+    min-width: 0 !important;
+    font-size: 1.25rem !important;
+    padding: 10px 18px !important;
+    text-align: center !important;
+  }
+
+  .currency-base-indicator {
+    width: calc((100% - 8px) / 2) !important;
   }
 
   .currency-rate-list {
@@ -1628,8 +1643,24 @@ html.wallet-open, body.wallet-open { touch-action: pan-y; }
   }
 
   .metals-heading {
-    max-width: 330px !important;
-    margin: 0 auto 14px !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    min-height: 58px !important;
+    margin: 0 auto 16px !important;
+    display: flex !important;
+    direction: rtl !important;
+  }
+
+  .metal-tab {
+    flex: 1 1 50% !important;
+    min-width: 0 !important;
+    font-size: 1.25rem !important;
+    padding: 10px 18px !important;
+    text-align: center !important;
+  }
+
+  .tab-glider {
+    width: calc((100% - 8px) / 2) !important;
   }
 
   .metal-price-list {
