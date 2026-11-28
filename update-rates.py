@@ -208,6 +208,7 @@ def read_rudaw_rates():
             lira = float(kurdistan.get("goldCoinHalf") or kurdistan.get("goldCoinFull") or kurdistan.get("local22K") or m22)
             global_gold = float(kurdistan.get("globalGoldPrice") or 0)
             global_silver = float(kurdistan.get("globalSilverPrice") or 0)
+            usd_rate = float(kurdistan.get("usdRate") or 153000)
 
             gold_dict = {}
             if m18 > 0: gold_dict["mithqal18k"] = round(m18)
@@ -215,6 +216,7 @@ def read_rudaw_rates():
             if m22 > 0: gold_dict["mithqal22k"] = round(m22)
             if m24 > 0: gold_dict["mithqal24k"] = round(m24)
             if lira > 0: gold_dict["dubaiLira"] = round(lira)
+            if usd_rate > 0: gold_dict["usdRate"] = round(usd_rate)
             if global_gold > 0: gold_dict["goldOunce"] = round(global_gold, 2)
             if global_silver > 0: gold_dict["silverOunce"] = round(global_silver, 2)
             if kurdistan.get("lastUpdated"): gold_dict["lastUpdated"] = str(kurdistan["lastUpdated"])

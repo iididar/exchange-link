@@ -114,7 +114,7 @@ const TRANSLATIONS = {
     footer: 'Developed by (Didar Ahmad)',
     menuTitle: 'ڕێکخستنەکان',
     close: 'داخستن',
-    discount: 'کاراکردنی (١٠٠٠) دینار کەمتر بۆ وەرگرتنی دۆلار',
+    discount: 'وەرگرتنی دۆلار',
     darkMode: 'دۆخی تاریک',
     language: 'زمان',
     currenciesLabel: 'هەڵبژاردنی دراو',
@@ -180,7 +180,7 @@ const TRANSLATIONS = {
     footer: 'Developed by (Didar Ahmad)',
     menuTitle: 'الإعدادات',
     close: 'إغلاق',
-    discount: 'تفعيل خصم ١٠٠٠ دينار عند شراء الدولار',
+    discount: 'استلام الدولار',
     darkMode: 'الوضع الداكن',
     language: 'اللغة',
     currenciesLabel: 'اختيار العملة',
@@ -248,7 +248,7 @@ const TRANSLATIONS = {
     footer: 'Developed by (Didar Ahmad)',
     menuTitle: 'Settings',
     close: 'Close',
-    discount: 'Apply 1,000 IQD discount when buying dollars',
+    discount: 'Receive USD',
     darkMode: 'Dark mode',
     language: 'Language',
     currenciesLabel: 'Select currency',
@@ -543,6 +543,8 @@ function applyRudawGoldPrices(goldData) {
   if (goldData.mithqal22k) metalState.rudawGold.gold22k = Number(goldData.mithqal22k);
   if (goldData.mithqal24k) metalState.rudawGold.gold24k = Number(goldData.mithqal24k);
   if (goldData.dubaiLira) metalState.rudawGold.dubaiLira = Number(goldData.dubaiLira);
+  if (goldData.usdRate) metalState.rudawGold.usdRate = Number(goldData.usdRate);
+  else if (!metalState.rudawGold.usdRate) metalState.rudawGold.usdRate = 153000;
   if (goldData.goldOunce && Number.isFinite(Number(goldData.goldOunce))) {
     metalState.goldOunce = Number(goldData.goldOunce);
     cacheMetalPrice(METAL_CACHE_KEYS.gold, metalState.goldOunce);
@@ -617,7 +619,10 @@ if (!state.isDarkMode) {
 }
 
 function getEffectiveUsdRate() {
-  return state.minus1000Active ? (state.baseRatePer100USD - 1000) : state.baseRatePer100USD;
+  if (!(state.baseRatePer100USD > 0)) return 0;
+  if (!state.minus1000Active) return state.baseRatePer100USD;
+  // ١٠٠٠ دینار کەمتر بۆ وەرگرتنی دۆلار و سفرکردنەوەی ٣ ژمارەی کۆتایی (وەک: ١٦٩،٥٠٠ -> ١٦٨،٠٠٠)
+  return Math.floor((state.baseRatePer100USD - 1000) / 1000) * 1000;
 }
 
 function getTranslations() {
@@ -1175,19 +1180,29 @@ function renderMetalPrices() {
     let price = null;
     if (metalState.rudawGold && metalState.rudawGold[item.key]) {
       const rudawVal = metalState.rudawGold[item.key];
+      const rudawUsdRate = (metalState.rudawGold.usdRate && metalState.rudawGold.usdRate > 0)
+        ? (metalState.rudawGold.usdRate / 100)
+        : 1530;
+      // نرخی دۆلاری زێڕەکە لە ڕووداو (چونکە ڕووداو بە دۆلاری ١٥٣٠ کردوویەتی بە دینار)
+      const itemUsd = rudawVal / rudawUsdRate;
+
       if (item.currency === 'IQD') {
-        price = Math.round(rudawVal);
-      } else if (item.currency === 'USD') {
-        const usdRate = (typeof getEffectiveUsdRate === 'function' && getEffectiveUsdRate() > 0)
+        const marketUsdRate = (typeof getEffectiveUsdRate === 'function' && getEffectiveUsdRate() > 0)
           ? (getEffectiveUsdRate() / 100)
           : (state.baseRatePer100USD > 0 ? (state.baseRatePer100USD / 100) : 1700);
-        price = Math.round((rudawVal / usdRate) * 100) / 100;
+        // گۆڕینی نرخی دۆلار بۆ نرخی ئەمڕۆی بازاڕ بە دینار
+        price = Math.round(itemUsd * marketUsdRate);
+      } else if (item.currency === 'USD') {
+        price = Math.round(itemUsd * 100) / 100;
       }
     }
     if (price === null) {
       const rawPrice = item.calculate(ouncePrice);
+      const marketUsdRate = (typeof getEffectiveUsdRate === 'function' && getEffectiveUsdRate() > 0)
+        ? (getEffectiveUsdRate() / 100)
+        : (state.baseRatePer100USD > 0 ? (state.baseRatePer100USD / 100) : 1700);
       price = item.currency === 'IQD'
-        ? Math.round(rawPrice * state.baseRatePer100USD / 100)
+        ? Math.round(rawPrice * marketUsdRate)
         : rawPrice;
     }
     if (!Number.isFinite(price)) return;
@@ -1456,6 +1471,7 @@ async function fetchLiveMetalsFallback() {
           mithqal22k: m22,
           mithqal24k: m24,
           dubaiLira: lira,
+          usdRate: Number(kp.usdRate || 153000),
           goldOunce: Number(kp.globalGoldPrice || 0),
           silverOunce: Number(kp.globalSilverPrice || 0)
         });
@@ -2032,6 +2048,8 @@ discountToggle.addEventListener('change', (e) => {
   renderRateBanner();
   calculateAndRender();
   renderCurrencyRateList();
+  renderMetalPrices();
+  window.dispatchEvent(new Event('wallet-rates-updated'));
 });
 
 darkModeToggle.addEventListener('change', (e) => {
@@ -2748,13 +2766,18 @@ function getMetalLivePrice(key, currency = 'IQD') {
   const isGramGold = key.endsWith('_gram');
   const baseKey = isGramGold ? key.replace('_gram', '') : key;
 
+  const rudawUsdRate = (metalState.rudawGold && metalState.rudawGold.usdRate > 0)
+    ? (metalState.rudawGold.usdRate / 100)
+    : 1530;
+
   if (['gold18k', 'gold21k', 'gold22k', 'gold24k'].includes(baseKey) && metalState.rudawGold && metalState.rudawGold[baseKey]) {
     const rudawMithqalIqd = metalState.rudawGold[baseKey];
-    unitPriceIqd = isGramGold ? (rudawMithqalIqd / 5) : rudawMithqalIqd;
-    unitPriceUsd = unitPriceIqd / usdIqd;
+    const itemUsd = rudawMithqalIqd / rudawUsdRate;
+    unitPriceUsd = isGramGold ? (itemUsd / 5) : itemUsd;
+    unitPriceIqd = unitPriceUsd * usdIqd;
   } else if (key === 'dubaiLira' && metalState.rudawGold && metalState.rudawGold.dubaiLira) {
-    unitPriceIqd = metalState.rudawGold.dubaiLira;
-    unitPriceUsd = unitPriceIqd / usdIqd;
+    unitPriceUsd = metalState.rudawGold.dubaiLira / rudawUsdRate;
+    unitPriceIqd = unitPriceUsd * usdIqd;
   } else if (['gold18k', 'gold21k', 'gold22k', 'gold24k'].includes(baseKey)) {
     const item = GOLD_PRICE_ITEMS.find(i => i.key === baseKey);
     if (!item) return null;

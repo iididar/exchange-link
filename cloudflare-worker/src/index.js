@@ -156,6 +156,7 @@ function parseRudawData(data) {
       const lira = parseFloat(kp.goldCoinHalf) || parseFloat(kp.goldCoinFull) || parseFloat(kp.local22K) || m22 || 0;
       const globalGold = parseFloat(kp.globalGoldPrice) || 0;
       const globalSilver = parseFloat(kp.globalSilverPrice) || 0;
+      const usdRate = parseFloat(kp.usdRate) || 153000;
 
       const goldObj = {};
       if (m18 > 0) goldObj.mithqal18k = Math.round(m18);
@@ -163,6 +164,7 @@ function parseRudawData(data) {
       if (m22 > 0) goldObj.mithqal22k = Math.round(m22);
       if (m24 > 0) goldObj.mithqal24k = Math.round(m24);
       if (lira > 0) goldObj.dubaiLira = Math.round(lira);
+      if (usdRate > 0) goldObj.usdRate = Math.round(usdRate);
       if (globalGold > 0) goldObj.goldOunce = Number(globalGold.toFixed(2));
       if (globalSilver > 0) goldObj.silverOunce = Number(globalSilver.toFixed(2));
       if (kp.lastUpdated) goldObj.lastUpdated = String(kp.lastUpdated);
