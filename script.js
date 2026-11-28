@@ -2356,6 +2356,7 @@ function applyUnifiedRates(data) {
 
   // 5. Render UI
   renderRateBanner();
+  renderDateOrDay();
   calculateAndRender();
   renderCurrencyRateList();
   window.dispatchEvent(new Event('wallet-rates-updated'));
@@ -3773,6 +3774,9 @@ window.addEventListener('storage', event => {
 window.addEventListener('wallet-rates-updated', () => {
   renderWallet();
   updateFormLivePriceBanner();
+  if (selectedDetailItem && walletEls.walletDetailBackdrop && !walletEls.walletDetailBackdrop.hidden) {
+    showWalletDetail(selectedDetailItem, walletState.currency);
+  }
 });
 
 window.walletInitialized = true;
